@@ -1,0 +1,10 @@
+
+KEY_MEMO_ADD = '新增 '
+KEY_MEMO_REMOVE = '刪除 '
+KEY_MEMO_MODIFY = '修改 '
+KEY_MEMO_CHECK = '確認行事曆'
+KEY_MONTHLY_MEMO_ADD = '新增每月待辦 '
+KEY_MONTHLY_MEMO_REMOVE = '刪除每月待辦 '
+KEY_MONTHLY_MEMO_MODIFY = '修改每月待辦 '
+KEY_MONTHLY_MEMO_CHECK = '確認每月待辦'
+KEY_BUY = '買 '

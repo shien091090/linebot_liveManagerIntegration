@@ -103,8 +103,50 @@ def receiveMessage(event):
 
     actionInfo.sendRequest()
 
-    replyFlexMessage = flexMessageManager.getFlexMessage(actionInfo.title, actionInfo.statusMsg, actionInfo.resposeMsg)
-    print(f"[SNTest] replyFlexMessage = {replyFlexMessage}")
+    # replyFlexMessage = flexMessageManager.getFlexMessage(actionInfo.title, actionInfo.statusMsg, actionInfo.resposeMsg)
+    # print(f"[SNTest] replyFlexMessage = {replyFlexMessage}")
+    replyFlexMessage = """{
+        "type": "bubble",
+        "header": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+            {
+                "type": "text",
+                "text": "總長度最多可到十一個字",
+                "size": "xl",
+                "weight": "bold",
+                "color": "#587cbe"
+            }
+            ]
+        },
+        "hero": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+            {
+                "type": "text",
+                "text": "[StatusMassage]",
+                "offsetStart": "xxl",
+                "color": "#5e637e"
+            }
+            ]
+        },
+        "body": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+            {
+                "type": "text",
+                "text": "1.AAA\n2.BBB",
+                "wrap": true,
+                "color": "#666666",
+                "size": "sm",
+                "flex": 5
+            }
+            ]
+        }
+        }"""
     flexMessageJsonDict = json.loads(replyFlexMessage)
 
     line_bot_api.reply_message(

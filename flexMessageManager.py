@@ -11,7 +11,7 @@ class flexMessageManager:
             "contents": [
             {
                 "type": "text",
-                "text": "Á`ªø«×³Ì¦h¥i¨ì¤Q¤@­Ó¦r",
+                "text": "ç¸½é•·åº¦æœ€å¤šå¯åˆ°",
                 "size": "xl",
                 "weight": "bold",
                 "color": "#587cbe"

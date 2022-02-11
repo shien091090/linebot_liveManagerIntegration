@@ -104,7 +104,6 @@ def receiveMessage(event):
     actionInfo.sendRequest()
 
     replyFlexMessage = flexMessageManager.getFlexMessage(actionInfo.title, actionInfo.statusMsg, actionInfo.resposeMsg)
-    print("[SNTest] replyFlexMessage = {0}".format(replyFlexMessage))
     flexMessageJsonDict = json.loads(replyFlexMessage)
 
     line_bot_api.reply_message(

@@ -1,9 +1,9 @@
 import json
 import datetime
-from TextParser import checkHeaderByKeyWord
+from textParser import checkHeaderByKeyWord
 from dateManager import parseHeaderDateString
 
-HEADER_MONTHLY = '(æ¯æœˆ)'
+HEADER_MONTHLY = '(¨C¤ë)'
 
 class NoteRecordItem:
     def __init__(self, content_str, sender_str, memoTime_str):
@@ -72,10 +72,10 @@ class NoteRecordManager:
         return ouputRecordList
 
     def getCurrentMemoShowText_daily(record_list):
-        return NoteRecordManager.getCurrentMemoShowText(record_list, 'ç›®å‰è¡Œäº‹æ›†é …ç›®:\n')
+        return NoteRecordManager.getCurrentMemoShowText(record_list, '¥Ø«e¦æ¨Æ¾ä¶µ¥Ø:\n')
 
     def getCurrentMemoShowText_monthly(record_list):
-        return NoteRecordManager.getCurrentMemoShowText(record_list, 'ç›®å‰æ¯æœˆå¾…è¾¦é …ç›®:\n')
+        return NoteRecordManager.getCurrentMemoShowText(record_list, '¥Ø«e¨C¤ë«İ¿ì¶µ¥Ø:\n')
 
     def getCurrentMemoShowText(record_list, caption_str):
         sortedRecordList = NoteRecordManager.getSortedRecordList(record_list)

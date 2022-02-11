@@ -231,7 +231,7 @@ def receiveMessage(event):
     "contents": [
       {
         "type": "text",
-        "text": "1.AAA\n2.BBB",
+        "text": "1.AAA\\n2.BBB",
         "wrap": true,
         "color": "#666666",
         "size": "sm",

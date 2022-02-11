@@ -10,7 +10,7 @@ class flexMessageManager:
         "contents": [
         {
             "type": "text",
-            "text": ""{0}"",
+            "text": \"{0}\",
             "size": "xl",
             "weight": "bold",
             "color": "#587cbe"
@@ -23,7 +23,7 @@ class flexMessageManager:
         "contents": [
         {
             "type": "text",
-            "text": ""{1}"",
+            "text": \"{1}\",
             "offsetStart": "xxl",
             "color": "#5e637e"
         }
@@ -35,7 +35,7 @@ class flexMessageManager:
         "contents": [
         {
             "type": "text",
-            "text": ""{2}"",
+            "text": \"{2}\",
             "wrap": true,
             "color": "#666666",
             "size": "sm",

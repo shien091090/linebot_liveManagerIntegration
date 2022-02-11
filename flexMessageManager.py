@@ -2,8 +2,7 @@
 class flexMessageManager:
 
     def getFlexMessage(str_title, str_statusMessage, str_content):
-        return \
-        """{
+        return """{
         "type": "bubble",
         "header": {
             "type": "box",

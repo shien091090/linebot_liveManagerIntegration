@@ -3,7 +3,7 @@ class flexMessageManager:
 
     def getFlexMessage(str_title, str_statusMessage, str_content):
         newContent = str_content.replace('\n', '\\n')
-
+        print("newContent = {0}".format(newContent))
         return \
         f'"{{ \
         "type": "bubble", \

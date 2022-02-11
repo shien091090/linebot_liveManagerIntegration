@@ -47,4 +47,4 @@ class flexMessageManager:
 #     ]
 #   }
 # }"""
-        return f'"{{"type": "bubble", "header": {{"type": "box", "layout": "vertical", "contents": [{{"type": "text", "text": "A", "size": "xl", "weight": "bold", "color": "#587cbe"}}]}}, "hero": {{ "type": "box", "layout": "vertical", "contents": [{{"type": "text", "text": "AAA", "offsetStart": "xxl", "color": "#5e637e"}}]}}, "body": {{"type": "box", "layout": "vertical", "contents": [{{"type": "text", "text": "BBB", "wrap": true, "color": "#666666", "size": "sm", "flex": 5}}]}}}}"'
+        return f'{{"type": "bubble", "header": {{"type": "box", "layout": "vertical", "contents": [{{"type": "text", "text": "A", "size": "xl", "weight": "bold", "color": "#587cbe"}}]}}, "hero": {{ "type": "box", "layout": "vertical", "contents": [{{"type": "text", "text": "AAA", "offsetStart": "xxl", "color": "#5e637e"}}]}}, "body": {{"type": "box", "layout": "vertical", "contents": [{{"type": "text", "text": "BBB", "wrap": true, "color": "#666666", "size": "sm", "flex": 5}}]}}}}'

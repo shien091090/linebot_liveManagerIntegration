@@ -2,9 +2,8 @@
 class flexMessageManager:
 
     def getFlexMessage(str_title, str_statusMessage, str_content):
-        print("[SNTest] str_content = {0}".format(str_content))
-        newContent = str_content.replace("\n", "\\\n")
-        print("[SNTest] newContent = {0}".format(newContent))
+        newContent = str_content.replace("\n", "\\n")
+
         return f'{{ \
         "type": "bubble", \
         "header": {{ \
@@ -13,7 +12,7 @@ class flexMessageManager:
             "contents": [ \
             {{ \
                 "type": "text", \
-                "text": "A", \
+                "text": "{str_title}", \
                 "size": "xl", \
                 "weight": "bold", \
                 "color": "#587cbe" \
@@ -26,7 +25,7 @@ class flexMessageManager:
             "contents": [ \
             {{ \
                 "type": "text", \
-                "text": "AAA", \
+                "text": "{str_statusMessage}", \
                 "offsetStart": "xxl", \
                 "color": "#5e637e" \
             }} \
@@ -38,7 +37,7 @@ class flexMessageManager:
             "contents": [ \
             {{ \
                 "type": "text", \
-                "text": "BBB", \
+                "text": "{newContent}", \
                 "wrap": true, \
                 "color": "#666666", \
                 "size": "sm", \

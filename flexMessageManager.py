@@ -3,7 +3,7 @@ class flexMessageManager:
 
     def getFlexMessage(str_title, str_statusMessage, str_content):
         return \
-        f'{{ \
+        f'"{{ \
         "type": "bubble", \
         "header": {{ \
             "type": "box", \
@@ -44,4 +44,4 @@ class flexMessageManager:
             }} \
             ]] \
         }} \
-        }}'
+        }}"'

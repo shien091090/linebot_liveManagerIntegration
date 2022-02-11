@@ -10,7 +10,7 @@ class flexMessageManager:
         "contents": [
         {
             "type": "text",
-            "text": "Test",
+            "text": {0},
             "size": "xl",
             "weight": "bold",
             "color": "#587cbe"
@@ -23,7 +23,7 @@ class flexMessageManager:
         "contents": [
         {
             "type": "text",
-            "text": "Test11",
+            "text": {1},
             "offsetStart": "xxl",
             "color": "#5e637e"
         }
@@ -35,7 +35,7 @@ class flexMessageManager:
         "contents": [
         {
             "type": "text",
-            "text": "SASA",
+            "text": {2},
             "wrap": true,
             "color": "#666666",
             "size": "sm",
@@ -46,6 +46,5 @@ class flexMessageManager:
     }"""
 
     def getFlexMessage(str_title, str_statusMessage, str_content):
-        # print("[SNTest] str_title = {0}, str_statusMessage = {1}, str_content = {2}".format(str_title, str_statusMessage, str_content))
-        # return flexMessageManager.FLEX_MESSAGE_FORMAT.format(str_title, str_statusMessage, str_content)
-        return flexMessageManager.FLEX_MESSAGE_FORMAT
+        print("[SNTest] str_title = {0}, str_statusMessage = {1}, str_content = {2}".format(str_title, str_statusMessage, str_content))
+        return flexMessageManager.FLEX_MESSAGE_FORMAT.format(str_title, str_statusMessage, str_content)

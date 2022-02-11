@@ -23,7 +23,7 @@ class flexMessageManager:
         "contents": [
         {
             "type": "text",
-            "text": "{1}}",
+            "text": "{1}",
             "offsetStart": "xxl",
             "color": "#5e637e"
         }

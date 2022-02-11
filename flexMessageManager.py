@@ -2,8 +2,9 @@
 class flexMessageManager:
 
     def getFlexMessage(str_title, str_statusMessage, str_content):
-        newContent = str_content.replace('\n', '\\n')
-        print("newContent = {0}".format(newContent))
+        print("[SNTest] str_content = {0}".format(str_content))
+        newContent = str_content.replace("\n", "\\n")
+        print("[SNTest] newContent = {0}".format(newContent))
         return \
         f'"{{ \
         "type": "bubble", \

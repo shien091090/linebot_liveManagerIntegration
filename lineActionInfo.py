@@ -5,8 +5,9 @@ import json
 
 class LineActionInfo:
 
-    def __init__(self, str_requestType, requestParam):
-        print("[SNTest] str_requestType = {0}, requestParam = {1}".format(str_requestType, requestParam))
+    def __init__(self, str_title, str_requestType, requestParam):
+        print("[SNTest]str_title = {0}, str_requestType = {1}, requestParam = {2}".format(str_title, str_requestType, requestParam))
+        self.title = str_title
         self.requestType = str_requestType
         self.requestParam = requestParam
         self.statusCode = 0

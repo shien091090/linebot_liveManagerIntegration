@@ -148,55 +148,98 @@ def receiveMessage(event):
         }
         }"""
 
+    # flex_message_json_string = """{
+    # "type": "bubble",
+    # "hero": {
+    #     "type": "box",
+    #     "layout": "vertical",
+    #     "contents": [
+    #     {
+    #         "type": "text",
+    #         "text": "[SN]Title",
+    #         "size": "xl",
+    #         "margin": "xl",
+    #         "offsetStart": "lg",
+    #         "weight": "bold"
+    #     }
+    #     ]
+    # },
+    # "body": {
+    #     "type": "box",
+    #     "layout": "horizontal",
+    #     "contents": [
+    #     {
+    #         "type": "box",
+    #         "layout": "horizontal",
+    #         "contents": [
+    #         {
+    #             "type": "text",
+    #             "text": "1\\n1",
+    #             "wrap": true,
+    #             "margin": "md"
+    #         }
+    #         ],
+    #         "width": "30px",
+    #         "margin": "xs"
+    #     },
+    #     {
+    #         "type": "box",
+    #         "layout": "horizontal",
+    #         "contents": [
+    #         {
+    #             "type": "text",
+    #             "text": "[SN]Content[SN]Content",
+    #             "wrap": true,
+    #             "margin": "sm"
+    #         }
+    #         ]
+    #     }
+    #     ]
+    # }
+    # }"""
+
     flex_message_json_string = """{
-    "type": "bubble",
-    "hero": {
-        "type": "box",
-        "layout": "vertical",
-        "contents": [
-        {
-            "type": "text",
-            "text": "[SN]Title",
-            "size": "xl",
-            "margin": "xl",
-            "offsetStart": "lg",
-            "weight": "bold"
-        }
-        ]
-    },
-    "body": {
-        "type": "box",
-        "layout": "horizontal",
-        "contents": [
-        {
-            "type": "box",
-            "layout": "horizontal",
-            "contents": [
-            {
-                "type": "text",
-                "text": "1\\n1",
-                "wrap": true,
-                "margin": "md"
-            }
-            ],
-            "width": "30px",
-            "margin": "xs"
-        },
-        {
-            "type": "box",
-            "layout": "horizontal",
-            "contents": [
-            {
-                "type": "text",
-                "text": "[SN]Content[SN]Content",
-                "wrap": true,
-                "margin": "sm"
-            }
-            ]
-        }
-        ]
-    }
-    }"""
+  "type": "bubble",
+  "header": {
+    "type": "box",
+    "layout": "vertical",
+    "contents": [
+      {
+        "type": "text",
+        "text": "總長度最多可到十一個字",
+        "size": "xl",
+        "weight": "bold",
+        "color": "#587cbe"
+      }
+    ]
+  },
+  "hero": {
+    "type": "box",
+    "layout": "vertical",
+    "contents": [
+      {
+        "type": "text",
+        "text": "[StatusMassage]",
+        "offsetStart": "xxl",
+        "color": "#5e637e"
+      }
+    ]
+  },
+  "body": {
+    "type": "box",
+    "layout": "vertical",
+    "contents": [
+      {
+        "type": "text",
+        "text": "1.AAA\n2.BBB",
+        "wrap": true,
+        "color": "#666666",
+        "size": "sm",
+        "flex": 5
+      }
+    ]
+  }
+}"""
     flex_message_json_dict = json.loads(flex_message_json_string)
     # flexMessageJsonDict = json.loads(replyFlexMessage)
 

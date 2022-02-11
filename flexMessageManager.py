@@ -14,7 +14,7 @@ class flexMessageManager:
             "contents": [ \
             {{ \
                 "type": "text", \
-                "text": "{str_title}", \
+                "text": "A", \
                 "size": "xl", \
                 "weight": "bold", \
                 "color": "#587cbe" \
@@ -27,7 +27,7 @@ class flexMessageManager:
             "contents": [ \
             {{ \
                 "type": "text", \
-                "text": "{str_statusMessage}", \
+                "text": "AAA", \
                 "offsetStart": "xxl", \
                 "color": "#5e637e" \
             }} \
@@ -39,7 +39,7 @@ class flexMessageManager:
             "contents": [ \
             {{ \
                 "type": "text", \
-                "text": "{newContent}", \
+                "text": "BBB", \
                 "wrap": true, \
                 "color": "#666666", \
                 "size": "sm", \

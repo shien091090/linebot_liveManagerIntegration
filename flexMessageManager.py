@@ -8,7 +8,7 @@ class flexMessageManager:
         "header": {{ \
             "type": "box", \
             "layout": "vertical", \
-            "contents": [[ \
+            "contents": [ \
             {{ \
                 "type": "text", \
                 "text": "{str_title}", \
@@ -16,24 +16,24 @@ class flexMessageManager:
                 "weight": "bold", \
                 "color": "#587cbe" \
             }} \
-            ]] \
+            ] \
         }}, \
         "hero": {{ \
             "type": "box", \
             "layout": "vertical", \
-            "contents": [[ \
+            "contents": [ \
             {{ \
                 "type": "text", \
                 "text": "{str_statusMessage}", \
                 "offsetStart": "xxl", \
                 "color": "#5e637e" \
             }} \
-            ]] \
+            ] \
         }}, \
         "body": {{ \
             "type": "box", \
             "layout": "vertical", \
-            "contents": [[ \
+            "contents": [ \
             {{ \
                 "type": "text", \
                 "text": "{str_content}", \
@@ -42,6 +42,6 @@ class flexMessageManager:
                 "size": "sm", \
                 "flex": 5 \
             }} \
-            ]] \
+            ] \
         }} \
         }}"'

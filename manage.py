@@ -147,11 +147,62 @@ def receiveMessage(event):
             ]
         }
         }"""
-    flexMessageJsonDict = json.loads(replyFlexMessage)
+
+    flex_message_json_string = """{
+    "type": "bubble",
+    "hero": {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+        {
+            "type": "text",
+            "text": "[SN]Title",
+            "size": "xl",
+            "margin": "xl",
+            "offsetStart": "lg",
+            "weight": "bold"
+        }
+        ]
+    },
+    "body": {
+        "type": "box",
+        "layout": "horizontal",
+        "contents": [
+        {
+            "type": "box",
+            "layout": "horizontal",
+            "contents": [
+            {
+                "type": "text",
+                "text": "1\\n1",
+                "wrap": true,
+                "margin": "md"
+            }
+            ],
+            "width": "30px",
+            "margin": "xs"
+        },
+        {
+            "type": "box",
+            "layout": "horizontal",
+            "contents": [
+            {
+                "type": "text",
+                "text": "[SN]Content[SN]Content",
+                "wrap": true,
+                "margin": "sm"
+            }
+            ]
+        }
+        ]
+    }
+    }"""
+    flex_message_json_dict = json.loads(flex_message_json_string)
+    # flexMessageJsonDict = json.loads(replyFlexMessage)
 
     line_bot_api.reply_message(
         event.reply_token,
-        FlexSendMessage(alt_text=actionInfo.title, contents=flexMessageJsonDict))
+        FlexSendMessage(alt_text=actionInfo.title, contents=flex_message_json_dict))
 
     # line_bot_api.reply_message(
     #     event.reply_token,

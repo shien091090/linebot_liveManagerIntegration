@@ -104,12 +104,7 @@ def receiveMessage(event):
             lineActionInfo.API_ACTION_BUY)
 
     if actionInfo is None:
-        actionInfo = LineActionInfo(
-            KeyWordSetting.TITLE_COMMAND_FAILED,
-            REQUEST_TYPE_BYPASS,
-            NONE)
-        actionInfo.statusMsg = 'N'
-        actionInfo.resposeMsg = KeyWordSetting.getCommandKeyList()
+        quit()
 
     actionInfo.sendRequest()
     actionInfo.PrintLog()

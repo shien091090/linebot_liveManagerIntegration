@@ -19,7 +19,7 @@ KEY_MONTHLY_MEMO_MODIFY = '修改每月待辦 '
 KEY_MONTHLY_MEMO_CHECK = '確認每月待辦'
 KEY_BUY = '買 '
 
-TITLE_COMMAND_FAILED = '指令錯誤'
+TITLE_COMMAND_LIST = '指令列表'
 TITLE_MEMO_ADD = '新增每日待辦事項'
 TITLE_MEMO_REMOVE = '刪除每日待辦事項'
 TITLE_MEMO_MODIFY = '修改每日待辦事項'

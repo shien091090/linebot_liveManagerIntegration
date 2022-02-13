@@ -14,7 +14,7 @@ class flexMessageManager:
             {{ \
                 "type": "text", \
                 "text": "{str_title}", \
-                "size": "xl", \
+                "size": "lg", \
                 "weight": "bold", \
                 "color": "#587cbe" \
             }} \
@@ -28,8 +28,8 @@ class flexMessageManager:
                 "type": "text", \
                 "text": "{newStatusMessage}", \
                 "wrap": true, \
-                "offsetStart": "xxl", \
-                "size": "sm", \
+                "offsetStart": "20px", \
+                "size": "xs", \
                 "color": "#5e637e" \
             }} \
             ] \
@@ -42,6 +42,7 @@ class flexMessageManager:
                 "type": "text", \
                 "text": "{newContent}", \
                 "wrap": true, \
+                "size": "md", \
                 "color": "#666666", \
                 "flex": 5 \
             }} \

@@ -104,6 +104,7 @@ def receiveMessage(event):
             lineActionInfo.API_ACTION_BUY)
 
     if actionInfo is None:
+        print('[SNTest] Invalid Command')
         quit()
 
     actionInfo.sendRequest()

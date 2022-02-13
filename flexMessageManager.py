@@ -2,7 +2,7 @@
 class flexMessageManager:
 
     def getFlexMessage(str_title, str_statusMessage, str_content):
-        newStatusMessage = str_statusMessage.replace("\n", "111")
+        newStatusMessage = str_statusMessage.replace("\n", "\\n")
         newContent = str_content.replace("\n", "\\n")
 
         return f'{{ \

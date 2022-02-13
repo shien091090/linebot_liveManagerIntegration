@@ -6,7 +6,6 @@ from TextParser import TextParser
 from dateManager import dateManager
 from flexMessageManager import flexMessageManager
 from lineActionInfo import LineActionInfo
-
 from flask import Flask, request, abort
 import KeyWordSetting
 import lineActionInfo
@@ -42,6 +41,7 @@ def receiveMessage(event):
 
     printReceiverLog(event)
     receiveTxt = event.message.text
+    actionInfo = None
 
     #新增待辦事項
     if TextParser.checkHeaderByKeyWord(receiveTxt, KeyWordSetting.KEY_MEMO_ADD):
@@ -101,6 +101,12 @@ def receiveMessage(event):
             REQUEST_TYPE_GAS,
             lineActionInfo.API_ACTION_BUY)
 
+    if actionInfo is None:
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(text='Failed'))
+        quit()
+
     actionInfo.sendRequest()
 
     replyFlexMessage = flexMessageManager.getFlexMessage(actionInfo.title, actionInfo.statusMsg, actionInfo.resposeMsg)
@@ -109,11 +115,6 @@ def receiveMessage(event):
     line_bot_api.reply_message(
         event.reply_token,
         FlexSendMessage(alt_text=actionInfo.title, contents=flexMessageJsonDict))
-
-    # line_bot_api.reply_message(
-    #     event.reply_token,
-    #     TextSendMessage(text=replyTxt)
-    #)
 
 def printReceiverLog(event):
     eventType = str(event.source.type)

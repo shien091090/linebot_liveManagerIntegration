@@ -6,7 +6,7 @@ import json
 class LineActionInfo:
 
     def __init__(self, str_title, str_requestType, requestParam):
-        print("[SNTest]str_title = {0}, str_requestType = {1}, requestParam = {2}".format(str_title, str_requestType, requestParam))
+        print("[SNTest] [LineActionInfo Init] str_title = {0}, str_requestType = {1}, requestParam = {2}".format(str_title, str_requestType, requestParam))
         self.title = str_title
         self.requestType = str_requestType
         self.requestParam = requestParam
@@ -24,6 +24,10 @@ class LineActionInfo:
             req = requests.get(settings.URL_GAS_API, params=self.requestParam)
             print("[SNTest] req.text = {0}".format(req.text))
             jsonDct = json.loads(req.text, object_hook=self.parseResponseJsonDct)
+
+    def PrintLog(self):
+        print("[SNTest] [LineActionInfo PrintLog] title = {0}, requestType = {1}, requestParam = {2}, statusCode = {3}, statusMsg = {4}, resposeMsg = {5}"
+        .format(self.title, self.requestType, self.requestParam, self.statusCode, self.statusMsg, self.resposeMsg))
 
 API_ACTION_BUY = 'action_buy'
 API_ACTION_MEMO_GET_DATA = 'action_memo_get_data'

@@ -112,6 +112,7 @@ def receiveMessage(event):
         actionInfo.resposeMsg = KeyWordSetting.getCommandKeyList()
 
     actionInfo.sendRequest()
+    actionInfo.PrintLog()
 
     replyFlexMessage = flexMessageManager.getFlexMessage(actionInfo.title, actionInfo.statusMsg, actionInfo.resposeMsg)
     flexMessageJsonDict = json.loads(replyFlexMessage)

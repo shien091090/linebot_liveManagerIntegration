@@ -26,8 +26,8 @@ class flexMessageManager:
             "contents": [ \
             {{ \
                 "type": "text", \
-                "text": "{str_statusMessage}", \
-                "offsetStart": "xxl", \
+                "text": "{newStatusMessage}", \
+                "offsetStart": "sm", \
                 "color": "#5e637e" \
             }} \
             ] \
@@ -41,7 +41,7 @@ class flexMessageManager:
                 "text": "{newContent}", \
                 "wrap": true, \
                 "color": "#666666", \
-                "size": "sm", \
+                "size": "xxl", \
                 "flex": 5 \
             }} \
             ] \

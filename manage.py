@@ -1,4 +1,5 @@
 import imp
+from pickle import NONE
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextSendMessage, TextMessage, FlexSendMessage
@@ -12,6 +13,7 @@ import lineActionInfo
 import settings
 import json
 
+REQUEST_TYPE_BYPASS = 'request_type_bypass'
 REQUEST_TYPE_GAS = 'request_type_gas'
 
 STATUS_CODE_SUCCESS = 200
@@ -44,11 +46,11 @@ def receiveMessage(event):
     actionInfo = None
 
     #新增待辦事項
-    if TextParser.checkHeaderByKeyWord(receiveTxt, KeyWordSetting.KEY_MEMO_ADD):
+    if TextParser.checkHeaderByKeyWord(receiveTxt, KeyWordSetting.keyWordEnum['KEY_MEMO_ADD']):
         actionInfo = LineActionInfo(
             KeyWordSetting.TITLE_MEMO_ADD,
             REQUEST_TYPE_GAS,
-            {'action':lineActionInfo.API_ACTION_MEMO_ADD,'content':TextParser.getSubStringByKeyWord(receiveTxt, KeyWordSetting.KEY_MEMO_ADD)})
+            {'action':lineActionInfo.API_ACTION_MEMO_ADD,'content':TextParser.getSubStringByKeyWord(receiveTxt, KeyWordSetting.keyWordEnum['KEY_MEMO_ADD'])})
     
     #刪除待辦事項
     elif TextParser.checkHeaderByKeyWord(receiveTxt, KeyWordSetting.KEY_MEMO_REMOVE):
@@ -102,10 +104,12 @@ def receiveMessage(event):
             lineActionInfo.API_ACTION_BUY)
 
     if actionInfo is None:
-        line_bot_api.reply_message(
-            event.reply_token,
-            TextSendMessage(text='Failed'))
-        quit()
+        actionInfo = LineActionInfo(
+            KeyWordSetting.TITLE_COMMAND_FAILED,
+            REQUEST_TYPE_BYPASS,
+            NONE)
+        actionInfo.statusMsg = ''
+        actionInfo.resposeMsg = KeyWordSetting.getCommandKeyList()
 
     actionInfo.sendRequest()
 

@@ -1,5 +1,3 @@
-import imp
-from pickle import NONE
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextSendMessage, TextMessage, FlexSendMessage
@@ -44,6 +42,15 @@ def receiveMessage(event):
     printReceiverLog(event)
     receiveTxt = event.message.text
     actionInfo = None
+
+    #指令列表
+    if TextParser.checkHeaderByKeyWord(receiveTxt, KeyWordSetting.keyWordEnum['KEY_COMMAND_LIST']):
+        actionInfo = LineActionInfo(
+            KeyWordSetting.TITLE_COMMAND_LIST,
+            REQUEST_TYPE_BYPASS,
+            None)
+        actionInfo.statusMsg = '可使用的指令如下:'
+        actionInfo.resposeMsg = KeyWordSetting.getCommandKeyList()
 
     #新增待辦事項
     if TextParser.checkHeaderByKeyWord(receiveTxt, KeyWordSetting.keyWordEnum['KEY_MEMO_ADD']):

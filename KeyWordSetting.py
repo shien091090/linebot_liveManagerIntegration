@@ -1,4 +1,5 @@
 keyWordEnum = {
+    'KEY_COMMAND_LIST': '指令',
     'KEY_MEMO_ADD': '新增 ',
     'KEY_MEMO_REMOVE': '刪除 ',
     'KEY_MEMO_MODIFY': '修改 ',

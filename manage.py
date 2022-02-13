@@ -108,7 +108,7 @@ def receiveMessage(event):
             KeyWordSetting.TITLE_COMMAND_FAILED,
             REQUEST_TYPE_BYPASS,
             NONE)
-        actionInfo.statusMsg = ''
+        actionInfo.statusMsg = 'N'
         actionInfo.resposeMsg = KeyWordSetting.getCommandKeyList()
 
     actionInfo.sendRequest()

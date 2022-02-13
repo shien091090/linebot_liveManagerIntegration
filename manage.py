@@ -60,11 +60,11 @@ def receiveMessage(event):
             {'action':lineActionInfo.API_ACTION_MEMO_ADD,'content':TextParser.getSubStringByKeyWord(receiveTxt, KeyWordSetting.keyWordEnum['KEY_MEMO_ADD'])})
     
     #刪除待辦事項
-    elif TextParser.checkHeaderByKeyWord(receiveTxt, KeyWordSetting.KEY_MEMO_REMOVE):
+    elif TextParser.checkHeaderByKeyWord(receiveTxt, KeyWordSetting.keyWordEnum['KEY_MEMO_REMOVE']):
         actionInfo = LineActionInfo(
             KeyWordSetting.TITLE_MEMO_REMOVE,
             REQUEST_TYPE_GAS,
-            {'action':lineActionInfo.API_ACTION_MEMO_REMOVE,'content':TextParser.getNumberByKeyWordAndNumber(receiveTxt, KeyWordSetting.KEY_MEMO_REMOVE)})
+            {'action':lineActionInfo.API_ACTION_MEMO_REMOVE,'content':TextParser.getNumberByKeyWordAndNumber(receiveTxt, KeyWordSetting.keyWordEnum['KEY_MEMO_REMOVE'])})
 
     #修改待辦事項
     elif TextParser.checkHeaderByKeyWord(receiveTxt, KeyWordSetting.KEY_MEMO_MODIFY):

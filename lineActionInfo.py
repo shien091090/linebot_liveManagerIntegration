@@ -29,8 +29,6 @@ class LineActionInfo:
         print("[SNTest] [LineActionInfo PrintLog] title = {0}, requestType = {1}, requestParam = {2}, statusCode = {3}, statusMsg = {4}, resposeMsg = {5}"
         .format(self.title, self.requestType, self.requestParam, self.statusCode, self.statusMsg, self.resposeMsg))
 
-API_ACTION_BUY = 'action_buy'
-API_ACTION_MEMO_GET_DATA = 'action_memo_get_data'
 API_ACTION_MEMO_ADD = 'action_memo_add'
 API_ACTION_MEMO_REMOVE = 'action_memo_remove'
 API_ACTION_MEMO_MODIFY = 'action_memo_modify'
@@ -40,3 +38,4 @@ API_ACTION_MONTHLY_MEMO_ADD = 'action_monthly_memo_add'
 API_ACTION_MONTHLY_MEMO_REMOVE = 'action_monthly_memo_remove'
 API_ACTION_MONTHLY_MEMO_MODIFY = 'action_monthly_memo_modify'
 API_ACTION_MONTHLY_MEMO_CHECK = 'action_monthly_memo_check'
+API_ACTION_BUY = 'action_buy'

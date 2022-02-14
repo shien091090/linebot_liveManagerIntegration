@@ -5,7 +5,7 @@ class TextParser:
         isContain = index != 0
         return isContain
 
-    def getSubStringByKeyWord(parent_str, find_str):
+    def returnSubStringAfterExtractKeyword(parent_str, find_str):
         index = parent_str.find(find_str)
         if index != 0:
             return ''
@@ -13,7 +13,7 @@ class TextParser:
             subStr = parent_str.replace(find_str, '')
             return subStr
 
-    def getSubStringByKeyWordAndNumber(parent_str, find_str):
+    def returnSubStringAfterExtractKeywordAndNumber(parent_str, find_str):
         index = parent_str.find(find_str)
         if index != 0:
             return ''
@@ -28,7 +28,7 @@ class TextParser:
         resultSubStr = newContent.replace(subStr + ' ', '')
         return resultSubStr
 
-    def getNumberByKeyWordAndNumber(parent_str, find_str):
+    def returnNumberAfterExtractKeyword(parent_str, find_str):
         index = parent_str.find(find_str)
         if index != 0:
             return -1
@@ -39,11 +39,25 @@ class TextParser:
         subStr = newContent[0:spaceIndex]
         isNum = subStr.isdigit()
         if isNum == False:
-            return -3
+            return -1
         parseNum = int(subStr)
         return parseNum
 
-    def checkHeaderByKeyWord(parent_str, find_str):
+    def returnNumberAndSubStringAfterExtractKeyword(parent_str, find_str):
+        index = parent_str.find(find_str)
+        if index != 0:
+            return ''
+        newContent = parent_str.replace(find_str, '')
+        spaceIndex = newContent.find(' ')
+        if spaceIndex < 0:
+            return ''
+        subStr = newContent[0:spaceIndex]
+        isNum = subStr.isdigit()
+        if isNum == False:
+            return ''
+        return newContent
+
+    def checkTextBeginIsKeyWord(parent_str, find_str):
         index = parent_str.find(find_str)
         if index != 0:
             return False

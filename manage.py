@@ -44,7 +44,7 @@ def receiveMessage(event):
     actionInfo = None
 
     #指令列表
-    if TextParser.checkHeaderByKeyWord(receiveTxt, KeyWordSetting.keyWordEnum['KEY_COMMAND_LIST']):
+    if TextParser.checkTextBeginIsKeyWord(receiveTxt, KeyWordSetting.keyWordEnum['KEY_COMMAND_LIST']):
         actionInfo = LineActionInfo(
             KeyWordSetting.TITLE_COMMAND_LIST,
             REQUEST_TYPE_BYPASS,
@@ -53,58 +53,58 @@ def receiveMessage(event):
         actionInfo.resposeMsg = KeyWordSetting.getCommandKeyList()
 
     #新增待辦事項
-    if TextParser.checkHeaderByKeyWord(receiveTxt, KeyWordSetting.keyWordEnum['KEY_MEMO_ADD']):
+    if TextParser.checkTextBeginIsKeyWord(receiveTxt, KeyWordSetting.keyWordEnum['KEY_MEMO_ADD']):
         actionInfo = LineActionInfo(
             KeyWordSetting.TITLE_MEMO_ADD,
             REQUEST_TYPE_GAS,
-            {'action':lineActionInfo.API_ACTION_MEMO_ADD,'content':TextParser.getSubStringByKeyWord(receiveTxt, KeyWordSetting.keyWordEnum['KEY_MEMO_ADD'])})
+            {'action':lineActionInfo.API_ACTION_MEMO_ADD,'content':TextParser.returnSubStringAfterExtractKeyword(receiveTxt, KeyWordSetting.keyWordEnum['KEY_MEMO_ADD'])})
     
     #刪除待辦事項
-    elif TextParser.checkHeaderByKeyWord(receiveTxt, KeyWordSetting.keyWordEnum['KEY_MEMO_REMOVE']):
+    elif TextParser.checkTextBeginIsKeyWord(receiveTxt, KeyWordSetting.keyWordEnum['KEY_MEMO_REMOVE']):
         actionInfo = LineActionInfo(
             KeyWordSetting.TITLE_MEMO_REMOVE,
             REQUEST_TYPE_GAS,
-            {'action':lineActionInfo.API_ACTION_MEMO_REMOVE,'content':TextParser.getNumberByKeyWordAndNumber(receiveTxt, KeyWordSetting.keyWordEnum['KEY_MEMO_REMOVE'])})
+            {'action':lineActionInfo.API_ACTION_MEMO_REMOVE,'content':TextParser.returnNumberAfterExtractKeyword(receiveTxt, KeyWordSetting.keyWordEnum['KEY_MEMO_REMOVE'])})
 
     #修改待辦事項
-    elif TextParser.checkHeaderByKeyWord(receiveTxt, KeyWordSetting.KEY_MEMO_MODIFY):
+    elif TextParser.checkTextBeginIsKeyWord(receiveTxt, KeyWordSetting.keyWordEnum['KEY_MEMO_MODIFY']):
         actionInfo = LineActionInfo(
             KeyWordSetting.TITLE_MEMO_MODIFY,
             REQUEST_TYPE_GAS,
-            {'action':lineActionInfo.API_ACTION_MEMO_MODIFY,'content':TextParser.getNumberByKeyWordAndNumber(receiveTxt, KeyWordSetting.KEY_MEMO_MODIFY)})
+            {'action':lineActionInfo.API_ACTION_MEMO_MODIFY,'content':TextParser.returnNumberAndSubStringAfterExtractKeyword(receiveTxt, KeyWordSetting.keyWordEnum['KEY_MEMO_MODIFY'])})
 
     #確認待辦事項
-    elif TextParser.checkHeaderByKeyWord(receiveTxt, KeyWordSetting.KEY_MEMO_CHECK):
+    elif TextParser.checkTextBeginIsKeyWord(receiveTxt, KeyWordSetting.KEY_MEMO_CHECK):
         actionInfo = LineActionInfo(
             KeyWordSetting.TITLE_MEMO_CHECK,
             REQUEST_TYPE_GAS,
             {'action':lineActionInfo.API_ACTION_MEMO_CHECK,'content':''})
 
-    elif TextParser.checkHeaderByKeyWord(receiveTxt, KeyWordSetting.KEY_MONTHLY_MEMO_ADD):
+    elif TextParser.checkTextBeginIsKeyWord(receiveTxt, KeyWordSetting.KEY_MONTHLY_MEMO_ADD):
         actionInfo = LineActionInfo(
             KeyWordSetting.TITLE_MONTHLY_MEMO_ADD,
             REQUEST_TYPE_GAS,
             lineActionInfo.API_ACTION_MONTHLY_MEMO_ADD)
 
-    elif TextParser.checkHeaderByKeyWord(receiveTxt, KeyWordSetting.KEY_MONTHLY_MEMO_REMOVE):
+    elif TextParser.checkTextBeginIsKeyWord(receiveTxt, KeyWordSetting.KEY_MONTHLY_MEMO_REMOVE):
         actionInfo = LineActionInfo(
             KeyWordSetting.TITLE_MONTHLY_MEMO_REMOVE,
             REQUEST_TYPE_GAS,
             lineActionInfo.API_ACTION_MONTHLY_MEMO_REMOVE)
 
-    elif TextParser.checkHeaderByKeyWord(receiveTxt, KeyWordSetting.KEY_MONTHLY_MEMO_MODIFY):
+    elif TextParser.checkTextBeginIsKeyWord(receiveTxt, KeyWordSetting.KEY_MONTHLY_MEMO_MODIFY):
         actionInfo = LineActionInfo(
             KeyWordSetting.TITLE_MONTHLY_MEMO_MODIFY,
             REQUEST_TYPE_GAS,
             lineActionInfo.API_ACTION_MONTHLY_MEMO_MODIFY)
 
-    elif TextParser.checkHeaderByKeyWord(receiveTxt, KeyWordSetting.KEY_MONTHLY_MEMO_CHECK):
+    elif TextParser.checkTextBeginIsKeyWord(receiveTxt, KeyWordSetting.KEY_MONTHLY_MEMO_CHECK):
         actionInfo = LineActionInfo(
             KeyWordSetting.TITLE_MONTHLY_MEMO_CHECK,
             REQUEST_TYPE_GAS,
             lineActionInfo.API_ACTION_MONTHLY_MEMO_CHECK)
 
-    elif TextParser.checkHeaderByKeyWord(receiveTxt, KeyWordSetting.KEY_BUY):
+    elif TextParser.checkTextBeginIsKeyWord(receiveTxt, KeyWordSetting.KEY_BUY):
         actionInfo = LineActionInfo(
             KeyWordSetting.TITLE_BUY,
             REQUEST_TYPE_GAS,

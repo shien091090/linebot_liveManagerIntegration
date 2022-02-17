@@ -74,37 +74,42 @@ def receiveMessage(event):
             {'action':lineActionInfo.API_ACTION_MEMO_MODIFY,'content':TextParser.returnNumberAndSubStringAfterExtractKeyword(receiveTxt, KeyWordSetting.keyWordEnum['KEY_MEMO_MODIFY'])})
 
     #確認待辦事項
-    elif TextParser.checkTextBeginIsKeyWord(receiveTxt, KeyWordSetting.KEY_MEMO_CHECK):
+    elif TextParser.checkTextBeginIsKeyWord(receiveTxt, KeyWordSetting.keyWordEnum['KEY_MEMO_GET']):
         actionInfo = LineActionInfo(
-            KeyWordSetting.TITLE_MEMO_CHECK,
+            KeyWordSetting.TITLE_MEMO_GET,
             REQUEST_TYPE_GAS,
-            {'action':lineActionInfo.API_ACTION_MEMO_CHECK,'content':''})
+            {'action':lineActionInfo.API_ACTION_MEMO_GET,'content':''})
 
-    elif TextParser.checkTextBeginIsKeyWord(receiveTxt, KeyWordSetting.KEY_MONTHLY_MEMO_ADD):
+    #新增週期行程
+    elif TextParser.checkTextBeginIsKeyWord(receiveTxt, KeyWordSetting.keyWordEnum['KEY_SCHEDULE_ADD']):
         actionInfo = LineActionInfo(
-            KeyWordSetting.TITLE_MONTHLY_MEMO_ADD,
+            KeyWordSetting.TITLE_SCHEDULE_ADD,
             REQUEST_TYPE_GAS,
-            lineActionInfo.API_ACTION_MONTHLY_MEMO_ADD)
+            {'action':lineActionInfo.API_ACTION_SCHEDULE_ADD,'content':TextParser.returnSubStringAfterExtractKeyword(receiveTxt, KeyWordSetting.keyWordEnum['KEY_SCHEDULE_ADD'])})
 
-    elif TextParser.checkTextBeginIsKeyWord(receiveTxt, KeyWordSetting.KEY_MONTHLY_MEMO_REMOVE):
+    #刪除週期行程
+    elif TextParser.checkTextBeginIsKeyWord(receiveTxt, KeyWordSetting.keyWordEnum['KEY_SCHEDULE_REMOVE']):
         actionInfo = LineActionInfo(
-            KeyWordSetting.TITLE_MONTHLY_MEMO_REMOVE,
+            KeyWordSetting.TITLE_SCHEDULE_REMOVE,
             REQUEST_TYPE_GAS,
-            lineActionInfo.API_ACTION_MONTHLY_MEMO_REMOVE)
+            {'action':lineActionInfo.API_ACTION_SCHEDULE_REMOVE,'content':TextParser.returnNumberAfterExtractKeyword(receiveTxt, KeyWordSetting.keyWordEnum['KEY_SCHEDULE_REMOVE'])})
 
-    elif TextParser.checkTextBeginIsKeyWord(receiveTxt, KeyWordSetting.KEY_MONTHLY_MEMO_MODIFY):
+    #修改週期行程
+    elif TextParser.checkTextBeginIsKeyWord(receiveTxt, KeyWordSetting.keyWordEnum['KEY_SCHEDULE_MODIFY']):
         actionInfo = LineActionInfo(
-            KeyWordSetting.TITLE_MONTHLY_MEMO_MODIFY,
+            KeyWordSetting.TITLE_SCHEDULE_MODIFY,
             REQUEST_TYPE_GAS,
-            lineActionInfo.API_ACTION_MONTHLY_MEMO_MODIFY)
+            {'action':lineActionInfo.API_ACTION_SCHEDULE_MODIFY,'content':TextParser.returnNumberAndSubStringAfterExtractKeyword(receiveTxt, KeyWordSetting.keyWordEnum['KEY_SCHEDULE_MODIFY'])})
 
-    elif TextParser.checkTextBeginIsKeyWord(receiveTxt, KeyWordSetting.KEY_MONTHLY_MEMO_CHECK):
+    #確認週期行程
+    elif TextParser.checkTextBeginIsKeyWord(receiveTxt, KeyWordSetting.keyWordEnum['KEY_SCHEDULE_GET']):
         actionInfo = LineActionInfo(
-            KeyWordSetting.TITLE_MONTHLY_MEMO_CHECK,
+            KeyWordSetting.TITLE_SCHEDULE_GET,
             REQUEST_TYPE_GAS,
-            lineActionInfo.API_ACTION_MONTHLY_MEMO_CHECK)
+            {'action':lineActionInfo.API_ACTION_SCHEDULE_GET,'content':''})
 
-    elif TextParser.checkTextBeginIsKeyWord(receiveTxt, KeyWordSetting.KEY_BUY):
+    #記帳
+    elif TextParser.checkTextBeginIsKeyWord(receiveTxt, KeyWordSetting.keyWordEnum['KEY_BUY']):
         actionInfo = LineActionInfo(
             KeyWordSetting.TITLE_BUY,
             REQUEST_TYPE_GAS,

@@ -43,7 +43,7 @@ def receiveMessage(event):
     receiveTxt = event.message.text
     actionInfo = None
 
-    print("[SNTest]" + receiveTxt)
+    print("[SNTest] receiveTxt = {0}".format(receiveTxt))
 
     #指令列表
     if TextParser.checkTextBeginIsKeyWord(receiveTxt, KeyWordSetting.keyWordEnum['KEY_COMMAND_LIST']):

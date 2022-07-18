@@ -201,36 +201,38 @@ class TextParseResult:
         else:
             return False
 
-rawContentArr = [
-    ' ',
-    '指令',
-    '指令 ',
-    '指令 1',
-    '指令 A',
-    '指令 A ',
-    ' 指令 A ',
-    '1 abc',
-    '1 abc aa',
-    '1 abc aa 5 aaw',
-    ' 1 abc',
-    ' 1 abasd 1',
-    '1 atttt 5',
-    '指令 1 A',
-    ' 指令 1 A',
-    '指令 A 1',
-    '指令 A 1 B',
-    '指令  A 1 B',
-    '指令 Aqweq 15 Baa',
-    '指令 Aqweq 15 Baa yyy',
-    '指令 88 15 Baa yyy',
-    '指令 A 1 ',
-    '指令 AA BB CC 2',
-    '5 AA BB CC 2']
+# rawContentArr = [
+#     ' ',
+#     '指令',
+#     '指令 ',
+#     '指令 1',
+#     '指令 A',
+#     '指令 A ',
+#     ' 指令 A ',
+#     '1 abc',
+#     '1 abc aa',
+#     '1 abc aa 5 aaw',
+#     ' 1 abc',
+#     ' 1 abasd 1',
+#     '1 atttt 5',
+#     '指令 1 A',
+#     ' 指令 1 A',
+#     '指令 A 1',
+#     '指令 A 1 B',
+#     '指令  A 1 B',
+#     '指令 Aqweq 15 Baa',
+#     '指令 Aqweq 15 Baa yyy',
+#     '指令 88 15 Baa yyy',
+#     '指令 A 1 ',
+#     '指令 AA BB CC 2',
+#     '5 AA BB CC 2']
 
-for c in rawContentArr:
-    print(f'input : "{c}"')
+# findArr = [TextType_SubContent, TextType_Number]
 
-    textParser = TextParser()
-    result = textParser.GetParseTextResult(DEFAULT_SPLIT_CHAR, c)
-    result.PrintLog()
-    print(result.GetCombineContentByTypeArray(findArr))
+# for c in rawContentArr:
+#     print(f'input : "{c}"')
+
+#     textParser = TextParser()
+#     result = textParser.GetParseTextResult(DEFAULT_SPLIT_CHAR, c)
+#     result.PrintLog()
+#     print(result.GetCombineContentByTypeArray(findArr))

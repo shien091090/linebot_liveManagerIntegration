@@ -2,7 +2,7 @@ import imp
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextSendMessage, TextMessage, FlexSendMessage
-from TextParser import TextParser
+from TextParserManager import TextParser
 from dateManager import dateManager
 from flexMessageManager import flexMessageManager
 from lineActionInfo import LineActionInfo
@@ -11,7 +11,7 @@ import KeyWordSetting
 import lineActionInfo
 import settings
 import json
-import TextParser
+import TextParserManager
 
 REQUEST_TYPE_BYPASS = 'request_type_bypass'
 REQUEST_TYPE_GAS = 'request_type_gas'
@@ -46,7 +46,7 @@ def receiveMessage(event):
     actionInfo = None
 
     textParser = TextParser()
-    textParseResult = textParser.GetParseTextResult(TextParser.DEFAULT_SPLIT_CHAR, receiveTxt)
+    textParseResult = textParser.GetParseTextResult(TextParserManager.DEFAULT_SPLIT_CHAR, receiveTxt)
 
     textParseResult.PrintLog()
 
@@ -64,21 +64,21 @@ def receiveMessage(event):
         actionInfo = LineActionInfo(
             KeyWordSetting.TITLE_MEMO_ADD,
             REQUEST_TYPE_GAS,
-            {'action':lineActionInfo.API_ACTION_MEMO_ADD,'content':textParseResult.GetCombineContentByTypeArray([TextParser.TextType_SubContent])})
+            {'action':lineActionInfo.API_ACTION_MEMO_ADD,'content':textParseResult.GetCombineContentByTypeArray([TextParserManager.TextType_SubContent])})
     
     #刪除待辦事項
     elif textParseResult.IsKeyWordMatch(KeyWordSetting.keyWordEnum['KEY_MEMO_REMOVE']):
         actionInfo = LineActionInfo(
             KeyWordSetting.TITLE_MEMO_REMOVE,
             REQUEST_TYPE_GAS,
-            {'action':lineActionInfo.API_ACTION_MEMO_REMOVE,'content':TextParser.returnNumberAfterExtractKeyword(receiveTxt, KeyWordSetting.keyWordEnum['KEY_MEMO_REMOVE'])})
+            {'action':lineActionInfo.API_ACTION_MEMO_REMOVE,'content':TextParserManager.returnNumberAfterExtractKeyword(receiveTxt, KeyWordSetting.keyWordEnum['KEY_MEMO_REMOVE'])})
 
     #修改待辦事項
     elif textParseResult.IsKeyWordMatch(KeyWordSetting.keyWordEnum['KEY_MEMO_MODIFY']):
         actionInfo = LineActionInfo(
             KeyWordSetting.TITLE_MEMO_MODIFY,
             REQUEST_TYPE_GAS,
-            {'action':lineActionInfo.API_ACTION_MEMO_MODIFY,'content':TextParser.returnNumberAndSubStringAfterExtractKeyword(receiveTxt, KeyWordSetting.keyWordEnum['KEY_MEMO_MODIFY'])})
+            {'action':lineActionInfo.API_ACTION_MEMO_MODIFY,'content':TextParserManager.returnNumberAndSubStringAfterExtractKeyword(receiveTxt, KeyWordSetting.keyWordEnum['KEY_MEMO_MODIFY'])})
 
     #確認待辦事項
     elif textParseResult.IsKeyWordMatch(KeyWordSetting.keyWordEnum['KEY_MEMO_GET']):
@@ -92,21 +92,21 @@ def receiveMessage(event):
         actionInfo = LineActionInfo(
             KeyWordSetting.TITLE_SCHEDULE_ADD,
             REQUEST_TYPE_GAS,
-            {'action':lineActionInfo.API_ACTION_SCHEDULE_ADD,'content':TextParser.returnSubStringAfterExtractKeyword(receiveTxt, KeyWordSetting.keyWordEnum['KEY_SCHEDULE_ADD'])})
+            {'action':lineActionInfo.API_ACTION_SCHEDULE_ADD,'content':TextParserManager.returnSubStringAfterExtractKeyword(receiveTxt, KeyWordSetting.keyWordEnum['KEY_SCHEDULE_ADD'])})
 
     #刪除週期行程
     elif textParseResult.IsKeyWordMatch(KeyWordSetting.keyWordEnum['KEY_SCHEDULE_REMOVE']):
         actionInfo = LineActionInfo(
             KeyWordSetting.TITLE_SCHEDULE_REMOVE,
             REQUEST_TYPE_GAS,
-            {'action':lineActionInfo.API_ACTION_SCHEDULE_REMOVE,'content':TextParser.returnNumberAfterExtractKeyword(receiveTxt, KeyWordSetting.keyWordEnum['KEY_SCHEDULE_REMOVE'])})
+            {'action':lineActionInfo.API_ACTION_SCHEDULE_REMOVE,'content':TextParserManager.returnNumberAfterExtractKeyword(receiveTxt, KeyWordSetting.keyWordEnum['KEY_SCHEDULE_REMOVE'])})
 
     #修改週期行程
     elif textParseResult.IsKeyWordMatch(KeyWordSetting.keyWordEnum['KEY_SCHEDULE_MODIFY']):
         actionInfo = LineActionInfo(
             KeyWordSetting.TITLE_SCHEDULE_MODIFY,
             REQUEST_TYPE_GAS,
-            {'action':lineActionInfo.API_ACTION_SCHEDULE_MODIFY,'content':TextParser.returnNumberAndSubStringAfterExtractKeyword(receiveTxt, KeyWordSetting.keyWordEnum['KEY_SCHEDULE_MODIFY'])})
+            {'action':lineActionInfo.API_ACTION_SCHEDULE_MODIFY,'content':TextParserManager.returnNumberAndSubStringAfterExtractKeyword(receiveTxt, KeyWordSetting.keyWordEnum['KEY_SCHEDULE_MODIFY'])})
 
     #確認週期行程
     elif textParseResult.IsKeyWordMatch(KeyWordSetting.keyWordEnum['KEY_SCHEDULE_GET']):

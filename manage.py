@@ -67,7 +67,7 @@ def receiveMessage(event):
         actionInfo = LineActionInfo(
             KeyWordSetting.TITLE_MEMO_ADD,
             REQUEST_TYPE_GAS,
-            str(sendParam))
+            sendParam)
     
     #刪除待辦事項
     elif textParseResult.IsKeyWordMatch(KeyWordSetting.keyWordEnum['KEY_MEMO_REMOVE']):

@@ -63,7 +63,7 @@ def receiveMessage(event):
     #新增待辦事項
     if textParseResult.IsKeyWordMatch(KeyWordSetting.keyWordEnum['KEY_MEMO_ADD']):
         sendParam["action"] = lineActionInfo.API_ACTION_MEMO_ADD
-        sendParam["subContent"] = textParseResult.GetSpecificTextTypeValue(TextParserManager.TextType_SubContent)
+        sendParam["content"] = textParseResult.GetSpecificTextTypeValue(TextParserManager.TextType_SubContent)
         actionInfo = LineActionInfo(
             KeyWordSetting.TITLE_MEMO_ADD,
             REQUEST_TYPE_GAS,

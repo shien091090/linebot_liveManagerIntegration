@@ -47,6 +47,7 @@ def receiveMessage(event):
 
     textParser = TextParser()
     textParseResult = textParser.GetParseTextResult(TextParserManager.DEFAULT_SPLIT_CHAR, receiveTxt)
+    sendParam = {}
 
     textParseResult.PrintLog()
 
@@ -61,10 +62,12 @@ def receiveMessage(event):
 
     #新增待辦事項
     if textParseResult.IsKeyWordMatch(KeyWordSetting.keyWordEnum['KEY_MEMO_ADD']):
+        sendParam["action"] = lineActionInfo.API_ACTION_MEMO_ADD
+        sendParam["SubContent"] = textParseResult.GetSpecificTextTypeValue(TextParserManager.TextType_SubContent)
         actionInfo = LineActionInfo(
             KeyWordSetting.TITLE_MEMO_ADD,
             REQUEST_TYPE_GAS,
-            {'action':lineActionInfo.API_ACTION_MEMO_ADD,'content':textParseResult.GetCombineContentByTypeArray([TextParserManager.TextType_SubContent])})
+            str(sendParam))
     
     #刪除待辦事項
     elif textParseResult.IsKeyWordMatch(KeyWordSetting.keyWordEnum['KEY_MEMO_REMOVE']):

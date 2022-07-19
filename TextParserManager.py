@@ -146,18 +146,18 @@ class TextParseResult:
 
     def GetSpecificTextTypeValue(self, textType_TextCombineTypeEnum):
         if self.IsInvalid():
-            return None
+            return ''
         
         if textType_TextCombineTypeEnum in self.combineTypes == False:
-            return None
+            return ''
 
         if textType_TextCombineTypeEnum not in self.combineTypes:
-            return None
+            return ''
 
         index = self.combineTypes.index(textType_TextCombineTypeEnum)
 
         if index >= len(self.elements):
-            return None
+            return ''
         
         return self.elements[index]
 
@@ -183,6 +183,8 @@ class TextParseResult:
     def IsKeyWordMatch(self, keyWord_str):
         ownKeyWord = self.GetSpecificTextTypeValue(TextType_KeyWord)
         if ownKeyWord is None:
+            return False
+        elif ownKeyWord == '':
             return False
         else:
             return keyWord_str == ownKeyWord

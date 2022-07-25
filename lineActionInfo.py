@@ -3,7 +3,7 @@ import requests
 import settings
 import json
 
-class LineActionInfo:
+class RequestInfo:
 
     def __init__(self, str_title, str_requestType, requestParam):
         print("[SNTest] [LineActionInfo Init] str_title = {0}, str_requestType = {1}, requestParam = {2}".format(str_title, str_requestType, requestParam))

@@ -5,7 +5,7 @@ from linebot.models import MessageEvent, TextSendMessage, TextMessage, FlexSendM
 from TextParserManager import TextParser
 from dateManager import dateManager
 from flexMessageManager import flexMessageManager
-from lineActionInfo import LineActionInfo
+from lineActionInfo import RequestInfo
 from flask import Flask, request, abort
 import KeyWordSetting
 import lineActionInfo
@@ -43,7 +43,7 @@ def receiveMessage(event):
 
     printReceiverLog(event)
     receiveTxt = event.message.text
-    actionInfo = None
+    reqInfo = None
 
     textParser = TextParser()
     textParseResult = textParser.GetParseTextResult(TextParserManager.DEFAULT_SPLIT_CHAR, receiveTxt)
@@ -53,91 +53,110 @@ def receiveMessage(event):
 
     #指令列表
     if textParseResult.IsKeyWordMatch(KeyWordSetting.keyWordEnum['KEY_COMMAND_LIST']):
-        actionInfo = LineActionInfo(
+        reqInfo = RequestInfo(
             KeyWordSetting.TITLE_COMMAND_LIST,
             REQUEST_TYPE_BYPASS,
             None)
-        actionInfo.statusMsg = '可使用的指令如下:'
-        actionInfo.resposeMsg = KeyWordSetting.getCommandKeyList()
+        reqInfo.statusMsg = '可使用的指令如下:'
+        reqInfo.resposeMsg = KeyWordSetting.getCommandKeyList()
 
     #新增待辦事項
     if textParseResult.IsKeyWordMatch(KeyWordSetting.keyWordEnum['KEY_MEMO_ADD']):
         sendParam["action"] = lineActionInfo.API_ACTION_MEMO_ADD
         sendParam["subContent"] = textParseResult.GetSpecificTextTypeValue(TextParserManager.TextType_SubContent)
-        actionInfo = LineActionInfo(
+        reqInfo = RequestInfo(
             KeyWordSetting.TITLE_MEMO_ADD,
             REQUEST_TYPE_GAS,
             sendParam)
     
     #刪除待辦事項
     elif textParseResult.IsKeyWordMatch(KeyWordSetting.keyWordEnum['KEY_MEMO_REMOVE']):
-        actionInfo = LineActionInfo(
+        sendParam["action"] = lineActionInfo.API_ACTION_MEMO_REMOVE
+        sendParam["number"] = textParseResult.GetSpecificTextTypeValue(TextParserManager.TextType_Number)
+        reqInfo = RequestInfo(
             KeyWordSetting.TITLE_MEMO_REMOVE,
             REQUEST_TYPE_GAS,
-            {'action':lineActionInfo.API_ACTION_MEMO_REMOVE,'content':TextParserManager.returnNumberAfterExtractKeyword(receiveTxt, KeyWordSetting.keyWordEnum['KEY_MEMO_REMOVE'])})
+            sendParam)
 
     #修改待辦事項
     elif textParseResult.IsKeyWordMatch(KeyWordSetting.keyWordEnum['KEY_MEMO_MODIFY']):
-        actionInfo = LineActionInfo(
+        sendParam["action"] = lineActionInfo.API_ACTION_MEMO_MODIFY
+        sendParam["number"] = textParseResult.GetSpecificTextTypeValue(TextParserManager.TextType_Number)
+        sendParam["subContent"] = textParseResult.GetSpecificTextTypeValue(TextParserManager.TextType_SubContent)
+        reqInfo = RequestInfo(
             KeyWordSetting.TITLE_MEMO_MODIFY,
             REQUEST_TYPE_GAS,
-            {'action':lineActionInfo.API_ACTION_MEMO_MODIFY,'content':TextParserManager.returnNumberAndSubStringAfterExtractKeyword(receiveTxt, KeyWordSetting.keyWordEnum['KEY_MEMO_MODIFY'])})
+            sendParam)
 
     #確認待辦事項
     elif textParseResult.IsKeyWordMatch(KeyWordSetting.keyWordEnum['KEY_MEMO_GET']):
-        actionInfo = LineActionInfo(
+        sendParam["action"] = lineActionInfo.API_ACTION_MEMO_GET
+        reqInfo = RequestInfo(
             KeyWordSetting.TITLE_MEMO_GET,
             REQUEST_TYPE_GAS,
-            {'action':lineActionInfo.API_ACTION_MEMO_GET,'content':''})
+            sendParam)
 
     #新增週期行程
     elif textParseResult.IsKeyWordMatch(KeyWordSetting.keyWordEnum['KEY_SCHEDULE_ADD']):
-        actionInfo = LineActionInfo(
+        sendParam["action"] = lineActionInfo.API_ACTION_SCHEDULE_ADD
+        sendParam["subContent"] = textParseResult.GetSpecificTextTypeValue(TextParserManager.TextType_SubContent)
+        sendParam["number"] = textParseResult.GetSpecificTextTypeValue(TextParserManager.TextType_Number)
+        sendParam["additionalContent"] = textParseResult.GetSpecificTextTypeValue(TextParserManager.TextType_AdditionalContent)
+        reqInfo = RequestInfo(
             KeyWordSetting.TITLE_SCHEDULE_ADD,
             REQUEST_TYPE_GAS,
-            {'action':lineActionInfo.API_ACTION_SCHEDULE_ADD,'content':TextParserManager.returnSubStringAfterExtractKeyword(receiveTxt, KeyWordSetting.keyWordEnum['KEY_SCHEDULE_ADD'])})
+            sendParam)
 
     #刪除週期行程
     elif textParseResult.IsKeyWordMatch(KeyWordSetting.keyWordEnum['KEY_SCHEDULE_REMOVE']):
-        actionInfo = LineActionInfo(
+        sendParam["action"] = lineActionInfo.API_ACTION_SCHEDULE_REMOVE
+        sendParam["number"] = textParseResult.GetSpecificTextTypeValue(TextParserManager.TextType_Number)
+        reqInfo = RequestInfo(
             KeyWordSetting.TITLE_SCHEDULE_REMOVE,
             REQUEST_TYPE_GAS,
-            {'action':lineActionInfo.API_ACTION_SCHEDULE_REMOVE,'content':TextParserManager.returnNumberAfterExtractKeyword(receiveTxt, KeyWordSetting.keyWordEnum['KEY_SCHEDULE_REMOVE'])})
+            sendParam)
 
     #修改週期行程
     elif textParseResult.IsKeyWordMatch(KeyWordSetting.keyWordEnum['KEY_SCHEDULE_MODIFY']):
-        actionInfo = LineActionInfo(
+        sendParam["action"] = lineActionInfo.API_ACTION_SCHEDULE_MODIFY
+        sendParam["number"] = textParseResult.GetSpecificTextTypeValue(TextParserManager.TextType_Number)
+        sendParam["subContent"] = textParseResult.GetSpecificTextTypeValue(TextParserManager.TextType_SubContent)
+        reqInfo = RequestInfo(
             KeyWordSetting.TITLE_SCHEDULE_MODIFY,
             REQUEST_TYPE_GAS,
-            {'action':lineActionInfo.API_ACTION_SCHEDULE_MODIFY,'content':TextParserManager.returnNumberAndSubStringAfterExtractKeyword(receiveTxt, KeyWordSetting.keyWordEnum['KEY_SCHEDULE_MODIFY'])})
+            sendParam)
 
     #確認週期行程
     elif textParseResult.IsKeyWordMatch(KeyWordSetting.keyWordEnum['KEY_SCHEDULE_GET']):
-        actionInfo = LineActionInfo(
+        sendParam["action"] = lineActionInfo.API_ACTION_SCHEDULE_GET
+        reqInfo = RequestInfo(
             KeyWordSetting.TITLE_SCHEDULE_GET,
             REQUEST_TYPE_GAS,
-            {'action':lineActionInfo.API_ACTION_SCHEDULE_GET,'content':''})
+            sendParam)
 
     #記帳
     elif textParseResult.IsKeyWordMatch(KeyWordSetting.keyWordEnum['KEY_BUY']):
-        actionInfo = LineActionInfo(
+        sendParam["action"] = lineActionInfo.API_ACTION_BUY
+        sendParam["subContent"] = textParseResult.GetSpecificTextTypeValue(TextParserManager.TextType_SubContent)
+        sendParam["number"] = textParseResult.GetSpecificTextTypeValue(TextParserManager.TextType_Number)
+        reqInfo = RequestInfo(
             KeyWordSetting.TITLE_BUY,
             REQUEST_TYPE_GAS,
-            lineActionInfo.API_ACTION_BUY)
+            sendParam)
 
-    if actionInfo is None:
+    if reqInfo is None:
         print('[SNTest] Invalid Command')
         quit()
 
-    actionInfo.sendRequest()
-    actionInfo.PrintLog()
+    reqInfo.sendRequest()
+    reqInfo.PrintLog()
 
-    replyFlexMessage = flexMessageManager.getFlexMessage(actionInfo.title, actionInfo.statusMsg, actionInfo.resposeMsg)
+    replyFlexMessage = flexMessageManager.getFlexMessage(reqInfo.title, reqInfo.statusMsg, reqInfo.resposeMsg)
     flexMessageJsonDict = json.loads(replyFlexMessage)
 
     line_bot_api.reply_message(
         event.reply_token,
-        FlexSendMessage(alt_text=actionInfo.title, contents=flexMessageJsonDict))
+        FlexSendMessage(alt_text=reqInfo.title, contents=flexMessageJsonDict))
 
 def printReceiverLog(event):
     eventType = str(event.source.type)

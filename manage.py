@@ -69,8 +69,8 @@ def receiveMessage(event):
                 KeyWordSetting.TITLE_MEMO_ADD,
                 REQUEST_TYPE_BYPASS,
                 None)
-            reqInfo.statusMsg = '[格式錯誤] 正確格式為 "新增 <內容文字>"'
-            reqInfo.resposeMsg = ' '
+            reqInfo.statusMsg = '[格式錯誤] 正確格式為 新增 <內容文字>'
+            reqInfo.resposeMsg = 'a'
         elif textParseResult.IsStructureElementAllValid(checkTextTypeStructure) == False:
             reqInfo = RequestInfo(
                 KeyWordSetting.TITLE_MEMO_ADD,

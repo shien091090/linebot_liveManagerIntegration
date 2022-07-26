@@ -70,14 +70,14 @@ def receiveMessage(event):
                 REQUEST_TYPE_BYPASS,
                 None)
             reqInfo.statusMsg = '[格式錯誤] 正確格式為 "新增 <內容文字>"'
-            reqInfo.resposeMsg = ''
+            reqInfo.resposeMsg = ' '
         elif textParseResult.IsStructureElementAllValid(checkTextTypeStructure) == False:
             reqInfo = RequestInfo(
                 KeyWordSetting.TITLE_MEMO_ADD,
                 REQUEST_TYPE_BYPASS,
                 None)
             reqInfo.statusMsg = '[輸入內容錯誤] 輸入內容不可為空或是無效文字'
-            reqInfo.resposeMsg = ''
+            reqInfo.resposeMsg = ' '
         else:
             sendParam["action"] = lineActionInfo.API_ACTION_MEMO_ADD
             sendParam["subContent"] = textParseResult.GetSpecificTextTypeValue(TextParserManager.TextType_SubContent)

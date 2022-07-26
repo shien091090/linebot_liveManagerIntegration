@@ -129,6 +129,17 @@ class TextParseResult:
             return False
         else:
             return self.combineTypes == structure_arr
+
+    def IsStructureElementAllValid(self, textTypes_arr):
+        if len(textTypes_arr) <= 0:
+            return False
+
+        isAllElementValid = True
+        for textType in textTypes_arr:
+            elementValue = self.GetSpecificTextTypeValue(textType)
+            isAllElementValid &= elementValue is not None and elementValue != ''
+        
+        return isAllElementValid
     
     def IsInvalid(self):
         if self.elements is None or self.combineTypes is None:
@@ -164,7 +175,7 @@ class TextParseResult:
 #     '指令 AA BB CC 2',
 #     '5 AA BB CC 2']
 
-# findArr = [TextType_SubContent, TextType_Number]
+# findArr = [TextType_KeyWord, TextType_Number]
 
 # for c in rawContentArr:
 #     print(f'input : "{c}"')
@@ -172,4 +183,5 @@ class TextParseResult:
 #     textParser = TextParser()
 #     result = textParser.GetParseTextResult(DEFAULT_SPLIT_CHAR, c)
 #     result.PrintLog()
-#     print(result.GetCombineContentByTypeArray(findArr))
+#     print(f'IsStructureMatch({findArr}) = {result.IsStructureMatch(findArr)}, IsStructureElementAllValid = {result.IsStructureElementAllValid(findArr)}')
+#     print(' ')

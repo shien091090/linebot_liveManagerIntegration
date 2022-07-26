@@ -62,12 +62,29 @@ def receiveMessage(event):
 
     #新增待辦事項
     if textParseResult.IsKeyWordMatch(KeyWordSetting.keyWordEnum['KEY_MEMO_ADD']):
-        sendParam["action"] = lineActionInfo.API_ACTION_MEMO_ADD
-        sendParam["subContent"] = textParseResult.GetSpecificTextTypeValue(TextParserManager.TextType_SubContent)
-        reqInfo = RequestInfo(
-            KeyWordSetting.TITLE_MEMO_ADD,
-            REQUEST_TYPE_GAS,
-            sendParam)
+        checkTextTypeStructure = [TextParserManager.TextType_KeyWord, TextParserManager.TextType_SubContent]
+
+        if textParseResult.IsStructureMatch(checkTextTypeStructure) == False:
+            reqInfo = RequestInfo(
+                KeyWordSetting.TITLE_MEMO_ADD,
+                REQUEST_TYPE_BYPASS,
+                None)
+            reqInfo.statusMsg = '[格式錯誤] 正確格式為 "新增 \{內容文字\}"'
+            reqInfo.resposeMsg = ''
+        elif textParseResult.IsStructureElementAllValid(checkTextTypeStructure) == False:
+            reqInfo = RequestInfo(
+                KeyWordSetting.TITLE_MEMO_ADD,
+                REQUEST_TYPE_BYPASS,
+                None)
+            reqInfo.statusMsg = '[輸入內容錯誤] 輸入內容不可為空或是無效文字'
+            reqInfo.resposeMsg = ''
+        else:
+            sendParam["action"] = lineActionInfo.API_ACTION_MEMO_ADD
+            sendParam["subContent"] = textParseResult.GetSpecificTextTypeValue(TextParserManager.TextType_SubContent)
+            reqInfo = RequestInfo(
+                KeyWordSetting.TITLE_MEMO_ADD,
+                REQUEST_TYPE_GAS,
+                sendParam)
     
     #刪除待辦事項
     elif textParseResult.IsKeyWordMatch(KeyWordSetting.keyWordEnum['KEY_MEMO_REMOVE']):

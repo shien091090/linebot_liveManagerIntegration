@@ -27,7 +27,7 @@ class TextParser:
             result = TextParseResult(splitContents, [TextType_KeyWord])
             return result
         
-        isDigitMatchArr = [index for index,value in enumerate(splitContents) if self.CanValueConvertNumberOrDate(value)]
+        isDigitMatchArr = [index for index,value in enumerate(splitContents) if TextParser.CanValueConvertNumberOrDate(value)]
         firstDigitIndex = -1
 
         if len(isDigitMatchArr) > 0:

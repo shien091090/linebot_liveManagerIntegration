@@ -1,3 +1,5 @@
+import dateManager
+
 DEFAULT_SPLIT_CHAR = ' '
 
 TextType_KeyWord = 'KeyWord'
@@ -25,7 +27,7 @@ class TextParser:
             result = TextParseResult(splitContents, [TextType_KeyWord])
             return result
         
-        isDigitMatchArr = [index for index,value in enumerate(splitContents) if isinstance(value, int) or (isinstance(value, str) and value.isdigit())]
+        isDigitMatchArr = [index for index,value in enumerate(splitContents) if self.CanValueConvertNumberOrDate(value)]
         firstDigitIndex = -1
 
         if len(isDigitMatchArr) > 0:
@@ -66,6 +68,16 @@ class TextParser:
             textTypes = [TextType_KeyWord, TextType_SubContent]
             result = TextParseResult(newContents, textTypes)
             return result
+    
+    def CanValueConvertNumberOrDate(value_var):
+        if isinstance(value_var, int):
+            return True
+        elif isinstance(value_var, str):
+            if value_var.isdigit():
+                return True
+            elif dateManager.dateManager.CheckTextIsDateFormat(value_var):
+                return True
+        return False
 
 class TextParseResult:
 

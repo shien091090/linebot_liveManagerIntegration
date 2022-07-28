@@ -1,4 +1,5 @@
 import datetime
+from dateutil import parser
 
 class dateManager:
 
@@ -35,3 +36,11 @@ class dateManager:
                 finalSucceedDate = subStr
                 parseSuccess = True
         return ''
+    
+    def CheckTextIsDateFormat(text_str):
+        try:
+            parseDate = parser.parse(text_str)
+        except ValueError:
+            parseDate = None
+        
+        return parseDate != None

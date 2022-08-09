@@ -6,7 +6,6 @@ import json
 class RequestInfo:
 
     def __init__(self, str_title, str_requestType, requestParam):
-        print("[SNTest] [LineActionInfo Init] str_title = {0}, str_requestType = {1}, requestParam = {2}".format(str_title, str_requestType, requestParam))
         self.title = str_title
         self.requestType = str_requestType
         self.requestParam = requestParam
@@ -20,14 +19,14 @@ class RequestInfo:
         self.resposeMsg = dct['responseMsg']
 
     def sendRequest(self):
+        print(f'[SNTest] [Request Info] title = {self.title}, requestType = {self.requestType}, requestParam = {self.requestParam}')
         if self.requestType == manage.REQUEST_TYPE_GAS:
             req = requests.get(settings.URL_GAS_API, params=self.requestParam)
-            print("[SNTest] req.text = {0}".format(req.text))
+            self.PrintResponseLog()
             jsonDct = json.loads(req.text, object_hook=self.parseResponseJsonDct)
 
-    def PrintLog(self):
-        print("[SNTest] [LineActionInfo PrintLog] title = {0}, requestType = {1}, requestParam = {2}, statusCode = {3}, statusMsg = {4}, resposeMsg = {5}"
-        .format(self.title, self.requestType, self.requestParam, self.statusCode, self.statusMsg, self.resposeMsg))
+    def PrintResponseLog(self):
+        print(f'[SNTest] [Response Info] statusCode = {self.statusCode}, statusMsg = {self.statusMsg}, resposeMsg = {self.resposeMsg}')
 
 API_ACTION_MEMO_ADD = 'action_memo_add'
 API_ACTION_MEMO_REMOVE = 'action_memo_remove'

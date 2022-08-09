@@ -111,7 +111,6 @@ class TextParser:
                     textTypeArr.append(TextType_Date)
                 dateTypeNum += 1
         
-        print(f'[SNTest] Parse Result combineArr = {tempContentArr}, textTypeArr = {textTypeArr}')
         result = TextParseResult(tempContentArr, textTypeArr)
         return result
     

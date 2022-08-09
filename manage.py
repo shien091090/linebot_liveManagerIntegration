@@ -76,7 +76,7 @@ def receiveMessage(event):
         print('[SNTest] Check Command Format')
         commandTextStructure = [TextStructureType_Content, TextStructureType_Content]
         textParseResult = textParser.ParseTextBySpecificStructure(commandTextStructure)
-        print('---------------------------------')
+        textParseResult.PrintLog()
 
         if textParseResult is None:
             reqInfo = RequestInfo(KeyWordSetting.TITLE_MEMO_ADD, REQUEST_TYPE_BYPASS, None)
@@ -223,7 +223,6 @@ def receiveMessage(event):
         quit()
 
     reqInfo.sendRequest()
-    reqInfo.PrintLog()
 
     replyFlexMessage = flexMessageManager.getFlexMessage(reqInfo.title, reqInfo.statusMsg, reqInfo.resposeMsg)
     flexMessageJsonDict = json.loads(replyFlexMessage)

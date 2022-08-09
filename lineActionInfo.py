@@ -22,8 +22,8 @@ class RequestInfo:
         print(f'[SNTest] [Request Info] title = {self.title}, requestType = {self.requestType}, requestParam = {self.requestParam}')
         if self.requestType == manage.REQUEST_TYPE_GAS:
             req = requests.get(settings.URL_GAS_API, params=self.requestParam)
-            self.PrintResponseLog()
             jsonDct = json.loads(req.text, object_hook=self.parseResponseJsonDct)
+            self.PrintResponseLog()
 
     def PrintResponseLog(self):
         print(f'[SNTest] [Response Info] statusCode = {self.statusCode}, statusMsg = {self.statusMsg}, resposeMsg = {self.resposeMsg}')

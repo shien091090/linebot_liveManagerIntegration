@@ -37,8 +37,6 @@ class TextParser:
         while self.splitContents.count(''):
             self.splitContents.remove('')
 
-        print(f"[SNTest] splitContents = {self.splitContents}")
-
         splitContentsCount = len(self.splitContents)
         self.splitContentsParseTypeData = ['']*splitContentsCount
         specificStructureCount = len(textStructureType_arr)
@@ -51,7 +49,7 @@ class TextParser:
             if isParseSuccess == False:
                 return None
         
-        print(f"[SNTest] origin splitContentsParseTypeData = {self.splitContentsParseTypeData}")
+        print(f"[SNTest] [Parse Structure] splitContents = {self.splitContents}, splitTypes = {self.splitContentsParseTypeData}")
         return self.RemoveRecordDataAndGetParseResult()
 
     def RemoveRecordDataAndGetParseResult(self):
@@ -295,3 +293,29 @@ class TextParseResult:
             return True
         else:
             return False
+
+# inputRawContent = '修改 123 a  11aawqw 1'
+# textParser = TextParser(' ', inputRawContent)
+# parseTypeArr = [TextStructureType_Content, TextStructureType_Number, TextStructureType_Content]
+
+# print(f'[SNTest] input rawContent = {inputRawContent}')
+# print(f'[SNTest] input ParseTypeArr = {parseTypeArr}')
+
+# result = textParser.ParseTextBySpecificStructure(parseTypeArr)
+
+# if result is None:
+#     print('result = None')
+# else:
+#     result.PrintLog()
+
+# parseTypeArr = [TextStructureType_Content, TextStructureType_Number, TextStructureType_Content, TextStructureType_Content]
+
+# print(f'[SNTest] input rawContent = {inputRawContent}')
+# print(f'[SNTest] input ParseTypeArr = {parseTypeArr}')
+
+# result = textParser.ParseTextBySpecificStructure(parseTypeArr)
+
+# if result is None:
+#     print('result = None')
+# else:
+#     result.PrintLog()

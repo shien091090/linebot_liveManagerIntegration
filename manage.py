@@ -50,13 +50,17 @@ def receiveMessage(event):
     commandTextStructure = []
 
     commandKeyParseResult = textParser.ParseTextBySpecificStructure([TextStructureType_Content, TextStructureType_Content])
+    commandKeyTypeLog = "'Key + Content'"
     if commandKeyParseResult is None:
         commandKeyParseResult = textParser.ParseTextBySpecificStructure([TextStructureType_Content])
+        commandKeyTypeLog = "'One Key'"
     if commandKeyParseResult is None:
         print('[SNTest] Invalid Command')
         quit()
     
     commandKey = commandKeyParseResult.GetSpecificTextTypeValue(TextType_KeyWord)
+    print(f'[SNTest] Command Key = {commandKey}, Command Key type is {commandKeyTypeLog}')
+    print('---------------------------------')
 
     #指令列表
     if commandKey == KeyWordSetting.keyWordEnum['KEY_COMMAND_LIST']:
@@ -69,8 +73,10 @@ def receiveMessage(event):
 
     #新增待辦事項
     if commandKey == KeyWordSetting.keyWordEnum['KEY_MEMO_ADD']:
+        print('[SNTest] Check Command Format')
         commandTextStructure = [TextStructureType_Content, TextStructureType_Content]
         textParseResult = textParser.ParseTextBySpecificStructure(commandTextStructure)
+        print('---------------------------------')
 
         if textParseResult is None:
             reqInfo = RequestInfo(KeyWordSetting.TITLE_MEMO_ADD, REQUEST_TYPE_BYPASS, None)

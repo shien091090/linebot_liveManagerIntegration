@@ -2,7 +2,7 @@ import imp
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextSendMessage, TextMessage, FlexSendMessage
-from TextParserManager import TextParser, TextType_AdditionalContent, TextType_KeyWord, TextType_Number, TextType_SubContent
+from TextParserManager import TextParser, TextType_AdditionalContent, TextType_KeyWord, TextType_Number, TextType_SubContent, TextStructureType_Content, TextStructureType_Number, TextStructureType_Date
 from dateManager import dateManager
 from flexMessageManager import flexMessageManager
 from lineActionInfo import RequestInfo
@@ -45,15 +45,21 @@ def receiveMessage(event):
     receiveTxt = event.message.text
     reqInfo = None
 
-    textParser = TextParser()
-    textParseResult = textParser.GetParseTextResult(TextParserManager.DEFAULT_SPLIT_CHAR, receiveTxt)
+    textParser = TextParser(TextParserManager.DEFAULT_SPLIT_CHAR, receiveTxt)
     sendParam = {}
-    checkTextTypeStructure = []
+    commandTextStructure = []
 
-    textParseResult.PrintLog()
+    commandKeyParseResult = textParser.ParseTextBySpecificStructure([TextStructureType_Content, TextStructureType_Content])
+    if commandKeyParseResult is None:
+        commandKeyParseResult = textParser.ParseTextBySpecificStructure([TextStructureType_Content])
+    if commandKeyParseResult is None:
+        print('[SNTest] Invalid Command')
+        quit()
+    
+    commandKey = commandKeyParseResult.GetSpecificTextTypeValue(TextType_KeyWord)
 
     #指令列表
-    if textParseResult.IsKeyWordMatch(KeyWordSetting.keyWordEnum['KEY_COMMAND_LIST']):
+    if commandKey == KeyWordSetting.keyWordEnum['KEY_COMMAND_LIST']:
         reqInfo = RequestInfo(
             KeyWordSetting.TITLE_COMMAND_LIST,
             REQUEST_TYPE_BYPASS,
@@ -62,16 +68,13 @@ def receiveMessage(event):
         reqInfo.resposeMsg = KeyWordSetting.getCommandKeyList()
 
     #新增待辦事項
-    if textParseResult.IsKeyWordMatch(KeyWordSetting.keyWordEnum['KEY_MEMO_ADD']):
-        checkTextTypeStructure = [TextType_KeyWord, TextType_SubContent]
+    if commandKey == KeyWordSetting.keyWordEnum['KEY_MEMO_ADD']:
+        commandTextStructure = [TextStructureType_Content, TextStructureType_Content]
+        textParseResult = textParser.ParseTextBySpecificStructure(commandTextStructure)
 
-        if textParseResult.IsStructureMatch(checkTextTypeStructure) == False:
+        if textParseResult is None:
             reqInfo = RequestInfo(KeyWordSetting.TITLE_MEMO_ADD, REQUEST_TYPE_BYPASS, None)
             reqInfo.statusMsg = f"[格式錯誤] 正確格式為 '{KeyWordSetting.keyWordEnum['KEY_MEMO_ADD']} <內容文字>'"
-            reqInfo.resposeMsg = ' '
-        elif textParseResult.IsStructureElementAllValid(checkTextTypeStructure) == False:
-            reqInfo = RequestInfo(KeyWordSetting.TITLE_MEMO_ADD, REQUEST_TYPE_BYPASS, None)
-            reqInfo.statusMsg = '[輸入內容錯誤] 輸入內容不可為空或是無效文字'
             reqInfo.resposeMsg = ' '
         else:
             sendParam["action"] = lineActionInfo.API_ACTION_MEMO_ADD

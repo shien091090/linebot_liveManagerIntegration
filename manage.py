@@ -76,13 +76,13 @@ def receiveMessage(event):
         print('[SNTest] Check Command Format')
         commandTextStructure = [TextStructureType_Content, TextStructureType_Content]
         textParseResult = textParser.ParseTextBySpecificStructure(commandTextStructure)
-        textParseResult.PrintLog()
 
         if textParseResult is None:
             reqInfo = RequestInfo(KeyWordSetting.TITLE_MEMO_ADD, REQUEST_TYPE_BYPASS, None)
             reqInfo.statusMsg = f"[格式錯誤] 正確格式為 '{KeyWordSetting.keyWordEnum['KEY_MEMO_ADD']} <內容文字>'"
             reqInfo.resposeMsg = ' '
         else:
+            textParseResult.PrintLog()
             sendParam["action"] = lineActionInfo.API_ACTION_MEMO_ADD
             sendParam["subContent"] = textParseResult.GetSpecificTextTypeValue(TextType_SubContent)
             reqInfo = RequestInfo(KeyWordSetting.TITLE_MEMO_ADD, REQUEST_TYPE_GAS, sendParam)

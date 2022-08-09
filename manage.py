@@ -82,7 +82,7 @@ def receiveMessage(event):
             reqInfo = RequestInfo(KeyWordSetting.TITLE_MEMO_ADD, REQUEST_TYPE_GAS, sendParam)
     
     #刪除待辦事項
-    elif textParseResult.IsKeyWordMatch(KeyWordSetting.keyWordEnum['KEY_MEMO_REMOVE']):
+    elif commandKey == KeyWordSetting.keyWordEnum['KEY_MEMO_REMOVE']:
         checkTextTypeStructure = [TextType_KeyWord, TextType_Number]
 
         if textParseResult.IsStructureMatch(checkTextTypeStructure) == False:
@@ -99,7 +99,7 @@ def receiveMessage(event):
             reqInfo = RequestInfo(KeyWordSetting.TITLE_MEMO_REMOVE, REQUEST_TYPE_GAS, sendParam)
 
     #修改待辦事項
-    elif textParseResult.IsKeyWordMatch(KeyWordSetting.keyWordEnum['KEY_MEMO_MODIFY']):
+    elif commandKey == KeyWordSetting.keyWordEnum['KEY_MEMO_MODIFY']:
         checkTextTypeStructure = [TextType_KeyWord, TextType_Number, TextType_SubContent]
 
         if textParseResult.IsStructureMatch(checkTextTypeStructure) == False:
@@ -117,7 +117,7 @@ def receiveMessage(event):
             reqInfo = RequestInfo(KeyWordSetting.TITLE_MEMO_MODIFY, REQUEST_TYPE_GAS, sendParam)
 
     #確認待辦事項
-    elif textParseResult.IsKeyWordMatch(KeyWordSetting.keyWordEnum['KEY_MEMO_GET']):
+    elif commandKey == KeyWordSetting.keyWordEnum['KEY_MEMO_GET']:
         checkTextTypeStructure = [TextType_KeyWord]
 
         if textParseResult.IsStructureMatch(checkTextTypeStructure) == False:
@@ -129,7 +129,7 @@ def receiveMessage(event):
             reqInfo = RequestInfo(KeyWordSetting.TITLE_MEMO_GET, REQUEST_TYPE_GAS, sendParam)
 
     #新增週期行程
-    elif textParseResult.IsKeyWordMatch(KeyWordSetting.keyWordEnum['KEY_SCHEDULE_ADD']):
+    elif commandKey == KeyWordSetting.keyWordEnum['KEY_SCHEDULE_ADD']:
         checkTextTypeStructure = [TextType_KeyWord, TextType_SubContent, TextType_Number, TextType_AdditionalContent]
 
         if textParseResult.IsStructureMatch(checkTextTypeStructure) == False:
@@ -148,7 +148,7 @@ def receiveMessage(event):
             reqInfo = RequestInfo(KeyWordSetting.TITLE_SCHEDULE_ADD, REQUEST_TYPE_GAS, sendParam)
 
     #刪除週期行程
-    elif textParseResult.IsKeyWordMatch(KeyWordSetting.keyWordEnum['KEY_SCHEDULE_REMOVE']):
+    elif commandKey == KeyWordSetting.keyWordEnum['KEY_SCHEDULE_REMOVE']:
         checkTextTypeStructure = [TextType_KeyWord, TextType_Number]
 
         if textParseResult.IsStructureMatch(checkTextTypeStructure) == False:
@@ -165,7 +165,7 @@ def receiveMessage(event):
             reqInfo = RequestInfo(KeyWordSetting.TITLE_SCHEDULE_REMOVE, REQUEST_TYPE_GAS, sendParam)
 
     #修改週期行程
-    elif textParseResult.IsKeyWordMatch(KeyWordSetting.keyWordEnum['KEY_SCHEDULE_MODIFY']):
+    elif commandKey == KeyWordSetting.keyWordEnum['KEY_SCHEDULE_MODIFY']:
         checkTextTypeStructure = [TextType_KeyWord, TextType_Number, TextType_SubContent]
 
         if textParseResult.IsStructureMatch(checkTextTypeStructure) == False:
@@ -183,7 +183,7 @@ def receiveMessage(event):
             reqInfo = RequestInfo(KeyWordSetting.TITLE_SCHEDULE_MODIFY, REQUEST_TYPE_GAS, sendParam)
 
     #確認週期行程
-    elif textParseResult.IsKeyWordMatch(KeyWordSetting.keyWordEnum['KEY_SCHEDULE_GET']):
+    elif commandKey == KeyWordSetting.keyWordEnum['KEY_SCHEDULE_GET']:
         checkTextTypeStructure = [TextType_KeyWord]
 
         if textParseResult.IsStructureMatch(checkTextTypeStructure) == False:
@@ -195,7 +195,7 @@ def receiveMessage(event):
             reqInfo = RequestInfo(KeyWordSetting.TITLE_SCHEDULE_GET, REQUEST_TYPE_GAS, sendParam)
 
     #記帳
-    elif textParseResult.IsKeyWordMatch(KeyWordSetting.keyWordEnum['KEY_BUY']):
+    elif commandKey == KeyWordSetting.keyWordEnum['KEY_BUY']:
         checkTextTypeStructure = [TextType_KeyWord, TextType_SubContent, TextType_Number]
 
         if textParseResult.IsStructureMatch(checkTextTypeStructure) == False:

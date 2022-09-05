@@ -138,65 +138,6 @@ class TextParser:
         self.parsedIndex += 1
         return isResultSuccess
     
-    def GetParseTextResult(self, splitChar_str, rawContent_str):
-        self.splitChar = splitChar_str
-        self.rawContent = rawContent_str
-
-        splitContents = self.rawContent.split(self.splitChar)
-        while splitContents.count(''):
-            splitContents.remove('')
-
-        contentLength = len(splitContents)
-        if contentLength <= 0 or all(splitContents) == False:
-            emptyResult = TextParseResult([], [])
-            return emptyResult
-
-        if contentLength == 1:
-            result = TextParseResult(splitContents, [TextType_KeyWord])
-            return result
-        
-        isDigitMatchArr = [index for index,value in enumerate(splitContents) if TextParser.CanValueConvertNumberOrDate(value)]
-        firstDigitIndex = -1
-
-        if len(isDigitMatchArr) > 0:
-            firstDigitIndex = isDigitMatchArr[0]
-        
-        isContainDigit = firstDigitIndex > 0
-        if isContainDigit:
-            if contentLength == 2:
-                result = TextParseResult(splitContents, [TextType_KeyWord, TextType_Number])
-                return result
-
-            isDigitInSecondIndex = firstDigitIndex == 1
-            if isDigitInSecondIndex:
-                subStr = ' '.join(splitContents[2:contentLength])
-                newContents = [splitContents[0], splitContents[1], subStr]
-                textTypes = [TextType_KeyWord, TextType_Number, TextType_SubContent]
-                result = TextParseResult(newContents, textTypes)
-                return result
-            else:
-                lastIndex = contentLength - 1
-                subStr = ' '.join(splitContents[1:firstDigitIndex])
-
-                if lastIndex == firstDigitIndex:
-                    newContents = [splitContents[0], subStr, splitContents[firstDigitIndex]]
-                    textTypes = [TextType_KeyWord, TextType_SubContent, TextType_Number]
-                    result = TextParseResult(newContents, textTypes)
-                    return result
-                else:
-                    additionStr = ' '.join(splitContents[firstDigitIndex + 1:lastIndex + 1])
-                    newContents = [splitContents[0], subStr, splitContents[firstDigitIndex], additionStr]
-                    textTypes = [TextType_KeyWord, TextType_SubContent, TextType_Number, TextType_AdditionalContent]
-                    result = TextParseResult(newContents, textTypes)
-                    return result
-
-        else:
-            subStr = ' '.join(splitContents[1:contentLength])
-            newContents = [splitContents[0], subStr]
-            textTypes = [TextType_KeyWord, TextType_SubContent]
-            result = TextParseResult(newContents, textTypes)
-            return result
-    
     def CanValueConvertNumber(value_var):
         if isinstance(value_var, int):
             return True
@@ -220,9 +161,6 @@ class TextParseResult:
     def PrintLog(self):
         print(f'[SNTest] TextParserResult Elements = {self.elements}, CombineTypes = {self.combineTypes}')
 
-    def GetElementLength(self):
-        return len(self.elements)
-
     def GetSpecificTextTypeValue(self, textType_TextCombineTypeEnum):
         if self.IsInvalid():
             return ''
@@ -239,25 +177,6 @@ class TextParseResult:
             return ''
         
         return self.elements[index]
-
-    def GetCombineContentByTypeArray(self, textTypes_arr):
-        if len(textTypes_arr) <= 0:
-            return ''
-        
-        contentElements = []
-
-        for t in textTypes_arr:
-            matchText = self.GetSpecificTextTypeValue(t)
-            contentElements.append(matchText)
-
-        while contentElements.count(''):
-            contentElements.remove('')
-
-        while contentElements.count(None):
-            contentElements.remove(None)
-
-        combineContent = ' '.join(contentElements)
-        return combineContent
 
     def IsKeyWordMatch(self, keyWord_str):
         ownKeyWord = self.GetSpecificTextTypeValue(TextType_KeyWord)
@@ -292,29 +211,3 @@ class TextParseResult:
             return True
         else:
             return False
-
-# inputRawContent = '修改 123 a  11aawqw 1'
-# textParser = TextParser(' ', inputRawContent)
-# parseTypeArr = [TextStructureType_Content, TextStructureType_Number, TextStructureType_Content]
-
-# print(f'[SNTest] input rawContent = {inputRawContent}')
-# print(f'[SNTest] input ParseTypeArr = {parseTypeArr}')
-
-# result = textParser.ParseTextBySpecificStructure(parseTypeArr)
-
-# if result is None:
-#     print('result = None')
-# else:
-#     result.PrintLog()
-
-# parseTypeArr = [TextStructureType_Content, TextStructureType_Number, TextStructureType_Content, TextStructureType_Content]
-
-# print(f'[SNTest] input rawContent = {inputRawContent}')
-# print(f'[SNTest] input ParseTypeArr = {parseTypeArr}')
-
-# result = textParser.ParseTextBySpecificStructure(parseTypeArr)
-
-# if result is None:
-#     print('result = None')
-# else:
-#     result.PrintLog()

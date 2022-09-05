@@ -93,13 +93,15 @@ def receiveMessage(event):
     #刪除待辦事項
     tempCommandKey = 'KEY_MEMO_REMOVE'
     if commandKey == KeyWordSetting.GetCommandKey(tempCommandKey):
-        checkTextTypeStructure = [TextType_KeyWord, TextType_Number]
+        commandTextStructure = [TextType_KeyWord, TextType_Number]
+        textParseResult = textParser.ParseTextBySpecificStructure(commandTextStructure)
 
-        if textParseResult.IsStructureMatch(checkTextTypeStructure) == False:
+        if textParseResult is None:
             reqInfo = RequestInfo(KeyWordSetting.GetCommandTitle(tempCommandKey), REQUEST_TYPE_BYPASS, None)
             reqInfo.statusMsg = f"[格式錯誤] 正確格式為 '{KeyWordSetting.GetCommandFormatHint(tempCommandKey)}'"
             reqInfo.resposeMsg = ' '
         else:
+            textParseResult.PrintLog()
             sendParam["action"] = lineActionInfo.API_ACTION_MEMO_REMOVE
             sendParam["number"] = textParseResult.GetSpecificTextTypeValue(TextType_Number)
             reqInfo = RequestInfo(KeyWordSetting.GetCommandTitle(tempCommandKey), REQUEST_TYPE_GAS, sendParam)

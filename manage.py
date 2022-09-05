@@ -93,7 +93,7 @@ def receiveMessage(event):
     #刪除待辦事項
     tempCommandKey = 'KEY_MEMO_REMOVE'
     if commandKey == KeyWordSetting.GetCommandKey(tempCommandKey):
-        commandTextStructure = [TextType_KeyWord, TextType_Number]
+        commandTextStructure = [TextStructureType_Content, TextStructureType_Number]
         textParseResult = textParser.ParseTextBySpecificStructure(commandTextStructure)
 
         if textParseResult is None:

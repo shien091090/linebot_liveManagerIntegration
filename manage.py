@@ -80,7 +80,7 @@ def receiveMessage(event):
         commandTextStructure = [TextStructureType_Content, TextStructureType_Content]
         textParseResult = textParser.ParseTextBySpecificStructure(commandTextStructure)
 
-        if textParseResult is None:
+        if textParseResult is None or textParseResult.IsKeyWordMatch(KeyWordSetting.GetCommandKey(tempCommandKey)) == False:
             reqInfo = RequestInfo(KeyWordSetting.GetCommandTitle(tempCommandKey), REQUEST_TYPE_BYPASS, None)
             reqInfo.statusMsg = f"[格式錯誤] 正確格式為 '{KeyWordSetting.GetCommandFormatHint(tempCommandKey)}'"
             reqInfo.resposeMsg = ' '
@@ -96,7 +96,7 @@ def receiveMessage(event):
         commandTextStructure = [TextStructureType_Content, TextStructureType_Number]
         textParseResult = textParser.ParseTextBySpecificStructure(commandTextStructure)
 
-        if textParseResult is None:
+        if textParseResult is None or textParseResult.IsKeyWordMatch(KeyWordSetting.GetCommandKey(tempCommandKey)) == False:
             reqInfo = RequestInfo(KeyWordSetting.GetCommandTitle(tempCommandKey), REQUEST_TYPE_BYPASS, None)
             reqInfo.statusMsg = f"[格式錯誤] 正確格式為 '{KeyWordSetting.GetCommandFormatHint(tempCommandKey)}'"
             reqInfo.resposeMsg = ' '

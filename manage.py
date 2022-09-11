@@ -109,9 +109,10 @@ def receiveMessage(event):
     #修改待辦事項
     tempCommandKey = 'KEY_MEMO_MODIFY'
     if commandKey == KeyWordSetting.GetCommandKey(tempCommandKey):
-        checkTextTypeStructure = [TextType_KeyWord, TextType_Number, TextType_SubContent]
+        commandTextStructure = [TextStructureType_Content, TextStructureType_Number, TextStructureType_Content]
+        textParseResult = textParser.ParseTextBySpecificStructure(commandTextStructure)
 
-        if textParseResult.IsStructureMatch(checkTextTypeStructure) == False:
+        if textParseResult is None:
             reqInfo = RequestInfo(KeyWordSetting.GetCommandTitle(tempCommandKey), REQUEST_TYPE_BYPASS, None)
             reqInfo.statusMsg = f"[格式錯誤] 正確格式為 '{KeyWordSetting.GetCommandFormatHint(tempCommandKey)}'"
             reqInfo.resposeMsg = ' '
@@ -124,9 +125,10 @@ def receiveMessage(event):
     #確認待辦事項
     tempCommandKey = 'KEY_MEMO_GET'
     if commandKey == KeyWordSetting.GetCommandKey(tempCommandKey):
-        checkTextTypeStructure = [TextType_KeyWord]
+        commandTextStructure = [TextStructureType_Content]
+        textParseResult = textParser.ParseTextBySpecificStructure(commandTextStructure)
 
-        if textParseResult.IsStructureMatch(checkTextTypeStructure) == False:
+        if textParseResult is None:
             reqInfo = RequestInfo(KeyWordSetting.GetCommandTitle(tempCommandKey), REQUEST_TYPE_BYPASS, None)
             reqInfo.statusMsg = f"[格式錯誤] 正確格式為 '{KeyWordSetting.GetCommandFormatHint(tempCommandKey)}'"
             reqInfo.resposeMsg = ' '

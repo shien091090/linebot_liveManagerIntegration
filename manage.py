@@ -112,7 +112,7 @@ def receiveMessage(event):
         commandTextStructure = [TextStructureType_Content, TextStructureType_Number, TextStructureType_Content]
         textParseResult = textParser.ParseTextBySpecificStructure(commandTextStructure)
 
-        if textParseResult is None:
+        if textParseResult is None or textParseResult.IsKeyWordMatch(KeyWordSetting.GetCommandKey(tempCommandKey)) == False:
             reqInfo = RequestInfo(KeyWordSetting.GetCommandTitle(tempCommandKey), REQUEST_TYPE_BYPASS, None)
             reqInfo.statusMsg = f"[格式錯誤] 正確格式為 '{KeyWordSetting.GetCommandFormatHint(tempCommandKey)}'"
             reqInfo.resposeMsg = ' '
@@ -125,16 +125,8 @@ def receiveMessage(event):
     #確認待辦事項
     tempCommandKey = 'KEY_MEMO_GET'
     if commandKey == KeyWordSetting.GetCommandKey(tempCommandKey):
-        commandTextStructure = [TextStructureType_Content]
-        textParseResult = textParser.ParseTextBySpecificStructure(commandTextStructure)
-
-        if textParseResult is None:
-            reqInfo = RequestInfo(KeyWordSetting.GetCommandTitle(tempCommandKey), REQUEST_TYPE_BYPASS, None)
-            reqInfo.statusMsg = f"[格式錯誤] 正確格式為 '{KeyWordSetting.GetCommandFormatHint(tempCommandKey)}'"
-            reqInfo.resposeMsg = ' '
-        else:
-            sendParam["action"] = lineActionInfo.API_ACTION_MEMO_GET
-            reqInfo = RequestInfo(KeyWordSetting.GetCommandTitle(tempCommandKey), REQUEST_TYPE_GAS, sendParam)
+        sendParam["action"] = lineActionInfo.API_ACTION_MEMO_GET
+        reqInfo = RequestInfo(KeyWordSetting.GetCommandTitle(tempCommandKey), REQUEST_TYPE_GAS, sendParam)
 
     #新增週期行程
     tempCommandKey = 'KEY_SCHEDULE_ADD'

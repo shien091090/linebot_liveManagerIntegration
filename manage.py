@@ -82,7 +82,7 @@ def receiveMessage(event):
 
         if textParseResult is None or textParseResult.IsKeyWordMatch(KeyWordSetting.GetCommandKey(tempCommandKey)) == False:
             reqInfo = RequestInfo(KeyWordSetting.GetCommandTitle(tempCommandKey), REQUEST_TYPE_BYPASS, None)
-            reqInfo.statusMsg = f"[格式錯誤] 正確格式為 '{KeyWordSetting.GetCommandFormatHint(tempCommandKey)}'"
+            reqInfo.statusMsg = f"[格式錯誤] 正確格式為:\n'{KeyWordSetting.GetCommandFormatHint(tempCommandKey)}'"
             reqInfo.resposeMsg = ' '
         else:
             textParseResult.PrintLog()
@@ -98,7 +98,7 @@ def receiveMessage(event):
 
         if textParseResult is None or textParseResult.IsKeyWordMatch(KeyWordSetting.GetCommandKey(tempCommandKey)) == False:
             reqInfo = RequestInfo(KeyWordSetting.GetCommandTitle(tempCommandKey), REQUEST_TYPE_BYPASS, None)
-            reqInfo.statusMsg = f"[格式錯誤] 正確格式為 '{KeyWordSetting.GetCommandFormatHint(tempCommandKey)}'"
+            reqInfo.statusMsg = f"[格式錯誤] 正確格式為:\n'{KeyWordSetting.GetCommandFormatHint(tempCommandKey)}'"
             reqInfo.resposeMsg = ' '
         else:
             textParseResult.PrintLog()
@@ -114,7 +114,7 @@ def receiveMessage(event):
 
         if textParseResult is None or textParseResult.IsKeyWordMatch(KeyWordSetting.GetCommandKey(tempCommandKey)) == False:
             reqInfo = RequestInfo(KeyWordSetting.GetCommandTitle(tempCommandKey), REQUEST_TYPE_BYPASS, None)
-            reqInfo.statusMsg = f"[格式錯誤] 正確格式為 '{KeyWordSetting.GetCommandFormatHint(tempCommandKey)}'"
+            reqInfo.statusMsg = f"[格式錯誤] 正確格式為:\n'{KeyWordSetting.GetCommandFormatHint(tempCommandKey)}'"
             reqInfo.resposeMsg = ' '
         else:
             sendParam["action"] = lineActionInfo.API_ACTION_MEMO_MODIFY
@@ -135,7 +135,7 @@ def receiveMessage(event):
 
         if textParseResult.IsStructureMatch(checkTextTypeStructure) == False:
             reqInfo = RequestInfo(KeyWordSetting.GetCommandTitle(tempCommandKey), REQUEST_TYPE_BYPASS, None)
-            reqInfo.statusMsg = f"[格式錯誤] 正確格式為 '{KeyWordSetting.GetCommandFormatHint(tempCommandKey)}'"
+            reqInfo.statusMsg = f"[格式錯誤] 正確格式為:\n'{KeyWordSetting.GetCommandFormatHint(tempCommandKey)}'"
             reqInfo.resposeMsg = ' '
         else:
             sendParam["action"] = lineActionInfo.API_ACTION_SCHEDULE_ADD
@@ -151,7 +151,7 @@ def receiveMessage(event):
 
         if textParseResult.IsStructureMatch(checkTextTypeStructure) == False:
             reqInfo = RequestInfo(KeyWordSetting.GetCommandTitle(tempCommandKey), REQUEST_TYPE_BYPASS, None)
-            reqInfo.statusMsg = f"[格式錯誤] 正確格式為 '{KeyWordSetting.GetCommandFormatHint(tempCommandKey)}'"
+            reqInfo.statusMsg = f"[格式錯誤] 正確格式為:\n'{KeyWordSetting.GetCommandFormatHint(tempCommandKey)}'"
             reqInfo.resposeMsg = ' '
         else:
             sendParam["action"] = lineActionInfo.API_ACTION_SCHEDULE_REMOVE
@@ -165,7 +165,7 @@ def receiveMessage(event):
 
         if textParseResult.IsStructureMatch(checkTextTypeStructure) == False:
             reqInfo = RequestInfo(KeyWordSetting.GetCommandTitle(tempCommandKey), REQUEST_TYPE_BYPASS, None)
-            reqInfo.statusMsg = f"[格式錯誤] 正確格式為 '{KeyWordSetting.GetCommandFormatHint(tempCommandKey)}'"
+            reqInfo.statusMsg = f"[格式錯誤] 正確格式為:\n'{KeyWordSetting.GetCommandFormatHint(tempCommandKey)}'"
             reqInfo.resposeMsg = ' '
         else:
             sendParam["action"] = lineActionInfo.API_ACTION_SCHEDULE_MODIFY
@@ -180,7 +180,7 @@ def receiveMessage(event):
 
         if textParseResult.IsStructureMatch(checkTextTypeStructure) == False:
             reqInfo = RequestInfo(KeyWordSetting.GetCommandTitle(tempCommandKey), REQUEST_TYPE_BYPASS, None)
-            reqInfo.statusMsg = f"[格式錯誤] 正確格式為 '{KeyWordSetting.GetCommandFormatHint(tempCommandKey)}'"
+            reqInfo.statusMsg = f"[格式錯誤] 正確格式為:\n'{KeyWordSetting.GetCommandFormatHint(tempCommandKey)}'"
             reqInfo.resposeMsg = ' '
         else:
             sendParam["action"] = lineActionInfo.API_ACTION_SCHEDULE_GET
@@ -193,7 +193,7 @@ def receiveMessage(event):
 
         if textParseResult.IsStructureMatch(checkTextTypeStructure) == False:
             reqInfo = RequestInfo(KeyWordSetting.GetCommandTitle(tempCommandKey), REQUEST_TYPE_BYPASS, None)
-            reqInfo.statusMsg = f"[格式錯誤] 正確格式為 '{KeyWordSetting.GetCommandFormatHint(tempCommandKey)}'"
+            reqInfo.statusMsg = f"[格式錯誤] 正確格式為:\n'{KeyWordSetting.GetCommandFormatHint(tempCommandKey)}'"
             reqInfo.resposeMsg = ' '
         else:
             sendParam["action"] = lineActionInfo.API_ACTION_BUY

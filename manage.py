@@ -131,9 +131,10 @@ def receiveMessage(event):
     #新增週期行程
     tempCommandKey = 'KEY_SCHEDULE_ADD'
     if commandKey == KeyWordSetting.GetCommandKey(tempCommandKey):
-        checkTextTypeStructure = [TextType_KeyWord, TextType_SubContent, TextType_Number, TextType_AdditionalContent]
+        commandTextStructure = [TextStructureType_Content, TextStructureType_Content, TextStructureType_Number, TextStructureType_Content]
+        textParseResult = textParser.ParseTextBySpecificStructure(commandTextStructure)
 
-        if textParseResult.IsStructureMatch(checkTextTypeStructure) == False:
+        if textParseResult is None or textParseResult.IsKeyWordMatch(KeyWordSetting.GetCommandKey(tempCommandKey)) == False:
             reqInfo = RequestInfo(KeyWordSetting.GetCommandTitle(tempCommandKey), REQUEST_TYPE_BYPASS, None)
             reqInfo.statusMsg = f"[格式錯誤] 正確格式為:\n'{KeyWordSetting.GetCommandFormatHint(tempCommandKey)}'"
             reqInfo.resposeMsg = ' '

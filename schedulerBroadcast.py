@@ -22,3 +22,5 @@ def DailyBroadCast():
 
     pushText = FlexSendMessage(alt_text=reqInfo.title, contents=flexMessageJsonDict)
     line_bot_api.push_message(LINE_MAIN_GROUP_ID, messages = pushText)
+
+DailyBroadCast()

@@ -8,7 +8,7 @@ import json
 import settings
 
 LINE_MAIN_GROUP_ID = 'Cd6af810de75bfc7bc6817373a1fd0562'
-TITLE_DAILY_REMIND = '¨C¤é´£¿ô'
+TITLE_DAILY_REMIND = 'æ¯æ—¥æé†’'
 line_bot_api = LineBotApi(settings.LINE_CHANNEL_ACCESS_TOKEN)
 
 sendParam = {}

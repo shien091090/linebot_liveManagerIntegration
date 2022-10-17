@@ -1,4 +1,3 @@
-from tkinter.tix import InputOnly
 from linebot import LineBotApi
 from linebot.models import FlexSendMessage
 from flexMessageManager import flexMessageManager
@@ -13,7 +12,7 @@ line_bot_api = LineBotApi(settings.LINE_CHANNEL_ACCESS_TOKEN)
 
 sendParam = {}
 sendParam["action"] = API_ACTION_DAILY_SCHEDULER
-reqInfo = RequestInfo(TITLE_DAILY_REMIND, REQUEST_TYPE_GAS, None)
+reqInfo = RequestInfo(TITLE_DAILY_REMIND, REQUEST_TYPE_GAS, sendParam)
 reqInfo.sendRequest()
 
 replyFlexMessage = flexMessageManager.getFlexMessage(reqInfo.title, reqInfo.statusMsg, reqInfo.resposeMsg)

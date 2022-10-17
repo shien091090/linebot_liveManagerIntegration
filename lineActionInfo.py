@@ -1,4 +1,4 @@
-import manage
+from manage import REQUEST_TYPE_GAS
 import requests
 import settings
 import json
@@ -20,7 +20,7 @@ class RequestInfo:
 
     def sendRequest(self):
         print(f'[SNTest] [Request Info] title = {self.title}, requestType = {self.requestType}, requestParam = {self.requestParam}')
-        if self.requestType == manage.REQUEST_TYPE_GAS:
+        if self.requestType == REQUEST_TYPE_GAS:
             req = requests.get(settings.URL_GAS_API, params=self.requestParam)
             jsonDct = json.loads(req.text, object_hook=self.parseResponseJsonDct)
             self.PrintResponseLog()

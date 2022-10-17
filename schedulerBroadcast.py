@@ -15,6 +15,8 @@ sendParam["action"] = API_ACTION_DAILY_SCHEDULER
 reqInfo = RequestInfo(TITLE_DAILY_REMIND, REQUEST_TYPE_GAS, sendParam)
 reqInfo.sendRequest()
 
+reqInfo.PrintResponseLog()
+
 replyFlexMessage = flexMessageManager.getFlexMessage(reqInfo.title, reqInfo.statusMsg, reqInfo.resposeMsg)
 flexMessageJsonDict = json.loads(replyFlexMessage)
 

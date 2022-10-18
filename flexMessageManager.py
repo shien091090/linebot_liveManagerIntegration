@@ -14,25 +14,37 @@ class flexMessageManager:
             {{ \
                 "type": "text", \
                 "text": "{str_title}", \
-                "size": "lg", \
+                "size": "xl", \
                 "weight": "bold", \
                 "color": "#587cbe" \
             }} \
-            ] \
+            ], \
+            "paddingTop": "15px", \
+            "paddingBottom": "13px" \
         }}, \
         "hero": {{ \
             "type": "box", \
             "layout": "vertical", \
             "contents": [ \
             {{ \
+                "type": "separator", \
+                "color": "#B3C2CD" \
+            }}, \
+            {{ \
                 "type": "text", \
                 "text": "{newStatusMessage}", \
                 "wrap": true, \
-                "offsetStart": "25px", \
-                "size": "xs", \
-                "color": "#5e637e" \
+                "offsetStart": "18px", \
+                "size": "xxs", \
+                "color": "#5e637e", \
+                "align": "start" \
+            }}, \
+            {{ \
+                "type": "separator", \
+                "color": "#B3C2CD" \
             }} \
-            ] \
+            ], \
+            "spacing": "10px" \
         }}, \
         "body": {{ \
             "type": "box", \
@@ -42,8 +54,8 @@ class flexMessageManager:
                 "type": "text", \
                 "text": "{newContent}", \
                 "wrap": true, \
-                "size": "sm", \
-                "color": "#666666", \
+                "size": "xs", \
+                "color": "#5e637e", \
                 "flex": 5 \
             }} \
             ] \

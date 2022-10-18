@@ -38,10 +38,6 @@ class flexMessageManager:
                 "size": "xxs", \
                 "color": "#5e637e", \
                 "align": "start" \
-            }}, \
-            {{ \
-                "type": "separator", \
-                "color": "#B3C2CD" \
             }} \
             ], \
             "spacing": "10px" \
@@ -58,6 +54,7 @@ class flexMessageManager:
                 "color": "#5e637e", \
                 "flex": 5 \
             }} \
-            ] \
+            ], \
+            "paddingStart": "18px" \
         }} \
         }}'

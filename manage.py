@@ -138,9 +138,9 @@ def receiveMessage(event):
             reqInfo.resposeMsg = ' '
         else:
             sendParam["action"] = lineActionInfo.API_ACTION_SCHEDULE_ADD
-            sendParam["subContent"] = textParseResult.GetSpecificTextTypeValue(TextParserManager.TextType_SubContent)
-            sendParam["number"] = textParseResult.GetSpecificTextTypeValue(TextParserManager.TextType_Number)
-            sendParam["additionalContent"] = textParseResult.GetSpecificTextTypeValue(TextParserManager.TextType_AdditionalContent)
+            sendParam["subContent"] = textParseResult.GetSpecificTextTypeValue(TextType_SubContent)
+            sendParam["number"] = textParseResult.GetSpecificTextTypeValue(TextType_Number)
+            sendParam["additionalContent"] = textParseResult.GetSpecificTextTypeValue(TextType_AdditionalContent)
             reqInfo = lineActionInfo.RequestInfo(KeyWordSetting.GetCommandTitle(tempCommandKey), REQUEST_TYPE_GAS, sendParam)
 
     #刪除週期行程

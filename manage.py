@@ -146,15 +146,16 @@ def receiveMessage(event):
     #刪除週期行程
     tempCommandKey = 'KEY_SCHEDULE_REMOVE'
     if commandKey == KeyWordSetting.GetCommandKey(tempCommandKey):
-        checkTextTypeStructure = [TextType_KeyWord, TextType_Number]
+        commandTextStructure = [TextStructureType_Content, TextStructureType_Number]
+        textParseResult = textParser.ParseTextBySpecificStructure(commandTextStructure)
 
-        if textParseResult.IsStructureMatch(checkTextTypeStructure) == False:
+        if textParseResult is None or textParseResult.IsKeyWordMatch(KeyWordSetting.GetCommandKey(tempCommandKey)) == False:
             reqInfo = lineActionInfo.RequestInfo(KeyWordSetting.GetCommandTitle(tempCommandKey), REQUEST_TYPE_BYPASS, None)
             reqInfo.statusMsg = f"[格式錯誤] 正確格式為:\n'{KeyWordSetting.GetCommandFormatHint(tempCommandKey)}'"
             reqInfo.resposeMsg = ' '
         else:
             sendParam["action"] = lineActionInfo.API_ACTION_SCHEDULE_REMOVE
-            sendParam["number"] = textParseResult.GetSpecificTextTypeValue(TextParserManager.TextType_Number)
+            sendParam["number"] = textParseResult.GetSpecificTextTypeValue(TextType_Number)
             reqInfo = lineActionInfo.RequestInfo(KeyWordSetting.GetCommandTitle(tempCommandKey), REQUEST_TYPE_GAS, sendParam)
 
     #修改週期行程

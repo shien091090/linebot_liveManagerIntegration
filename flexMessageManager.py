@@ -122,7 +122,6 @@ class flexMessageManager:
                      {{ \
                         "type": "text", \
                         "text": "格式", \
-                        "align": "center", \
                         "size": "sm" \
                     }} \
                     ], \
@@ -155,7 +154,8 @@ class flexMessageManager:
                     "type": "text", \
                     "align": "center", \
                     "text": "{str_commandKey}", \
-                    "size": "xs" \
+                    "size": "xs", \
+                    "color": "#D41B1B" \
                 }} \
                 ], \
                 "paddingAll": "5px", \

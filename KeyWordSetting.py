@@ -11,17 +11,6 @@ commandDataEnum = {
     'KEY_BUY':              ['買', '買 <記帳項目> <價格>', '新增記帳項目']
 }
 
-# TITLE_COMMAND_LIST = '指令列表'
-# TITLE_MEMO_ADD = '新增待辦事項'
-# TITLE_MEMO_REMOVE = '刪除待辦事項'
-# TITLE_MEMO_MODIFY = '修改待辦事項'
-# TITLE_MEMO_GET = '確認待辦事項'
-# TITLE_SCHEDULE_ADD = '新增週期行程'
-# TITLE_SCHEDULE_REMOVE = '刪除週期行程'
-# TITLE_SCHEDULE_MODIFY = '修改週期行程'
-# TITLE_SCHEDULE_GET = '確認週期行程'
-# TITLE_BUY = '新增記帳項目'
-
 def GetCommandExplantion():
     commandDataArr = commandDataEnum.values()
     resultTxt = ''

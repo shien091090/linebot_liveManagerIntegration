@@ -169,7 +169,6 @@ class flexMessageManager:
                 {{ \
                     "type": "text", \
                     "text": "{strArray_format}", \
-                    "align": "center", \
                     "size": "xxs", \
                     "wrap": true \
                 }} \

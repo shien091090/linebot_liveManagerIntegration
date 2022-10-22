@@ -185,16 +185,17 @@ def receiveMessage(event):
     #記帳
     tempCommandKey = 'KEY_BUY'
     if commandKey == KeyWordSetting.GetCommandKey(tempCommandKey):
-        checkTextTypeStructure = [TextType_KeyWord, TextType_SubContent, TextType_Number]
+        commandTextStructure = [TextStructureType_Content, TextStructureType_Content, TextStructureType_Number]
+        textParseResult = textParser.ParseTextBySpecificStructure(commandTextStructure)
 
-        if textParseResult.IsStructureMatch(checkTextTypeStructure) == False:
+        if textParseResult is None or textParseResult.IsKeyWordMatch(KeyWordSetting.GetCommandKey(tempCommandKey)) == False:
             reqInfo = lineActionInfo.RequestInfo(KeyWordSetting.GetCommandTitle(tempCommandKey), REQUEST_TYPE_BYPASS, None)
             reqInfo.statusMsg = f"[格式錯誤] 正確格式為:\n'{KeyWordSetting.GetCommandFormatHint(tempCommandKey)}'"
             reqInfo.resposeMsg = ' '
         else:
             sendParam["action"] = lineActionInfo.API_ACTION_BUY
-            sendParam["subContent"] = textParseResult.GetSpecificTextTypeValue(TextParserManager.TextType_SubContent)
-            sendParam["number"] = textParseResult.GetSpecificTextTypeValue(TextParserManager.TextType_Number)
+            sendParam["subContent"] = textParseResult.GetSpecificTextTypeValue(TextType_SubContent)
+            sendParam["number"] = textParseResult.GetSpecificTextTypeValue(TextType_Number)
             reqInfo = lineActionInfo.RequestInfo(KeyWordSetting.GetCommandTitle(tempCommandKey), REQUEST_TYPE_GAS, sendParam)
 
     if reqInfo is None:

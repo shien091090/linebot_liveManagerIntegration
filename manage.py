@@ -1,7 +1,7 @@
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextSendMessage, TextMessage, FlexSendMessage
-from TextParserManager import TextParser, TextType_AdditionalContent, TextType_KeyWord, TextType_Number, TextType_SubContent, TextStructureType_Content, TextStructureType_Number, TextStructureType_Date
+from TextParserManager import TextParser, TextType_AdditionalContent, TextType_KeyWord, TextType_Number, TextType_SubContent, TextStructureType_Content, TextStructureType_Number, TextStructureType_Date, TextType_SubNumber
 from dateManager import dateManager
 from flexMessageManager import flexMessageManager
 from flask import Flask, request, abort
@@ -161,16 +161,19 @@ def receiveMessage(event):
     #修改週期行程
     tempCommandKey = 'KEY_SCHEDULE_MODIFY'
     if commandKey == KeyWordSetting.GetCommandKey(tempCommandKey):
-        checkTextTypeStructure = [TextType_KeyWord, TextType_Number, TextType_SubContent]
+        commandTextStructure = [TextStructureType_Content, TextStructureType_Number, TextStructureType_Content, TextStructureType_Number, TextStructureType_Content]
+        textParseResult = textParser.ParseTextBySpecificStructure(commandTextStructure)
 
-        if textParseResult.IsStructureMatch(checkTextTypeStructure) == False:
+        if textParseResult is None or textParseResult.IsStructureMatch(KeyWordSetting.GetCommandKey(tempCommandKey)) == False:
             reqInfo = lineActionInfo.RequestInfo(KeyWordSetting.GetCommandTitle(tempCommandKey), REQUEST_TYPE_BYPASS, None)
             reqInfo.statusMsg = f"[格式錯誤] 正確格式為:\n'{KeyWordSetting.GetCommandFormatHint(tempCommandKey)}'"
             reqInfo.resposeMsg = ' '
         else:
             sendParam["action"] = lineActionInfo.API_ACTION_SCHEDULE_MODIFY
-            sendParam["number"] = textParseResult.GetSpecificTextTypeValue(TextParserManager.TextType_Number)
-            sendParam["subContent"] = textParseResult.GetSpecificTextTypeValue(TextParserManager.TextType_SubContent)
+            sendParam["number"] = textParseResult.GetSpecificTextTypeValue(TextType_Number)
+            sendParam["subContent"] = textParseResult.GetSpecificTextTypeValue(TextType_SubContent)
+            sendParam["subNumber"] = textParseResult.GetSpecificTextTypeValue(TextType_SubNumber)
+            sendParam["additionalContent"] = textParseResult.GetSpecificTextTypeValue(TextType_AdditionalContent)
             reqInfo = lineActionInfo.RequestInfo(KeyWordSetting.GetCommandTitle(tempCommandKey), REQUEST_TYPE_GAS, sendParam)
 
     #確認週期行程

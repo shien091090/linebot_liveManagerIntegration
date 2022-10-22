@@ -143,11 +143,6 @@ class flexMessageManager:
 
     def GetCommandExplanationFlexMessageElement(str_commandKey, strArray_format):
         return f'{{ \
-            "type": "separator", \
-            "color": "#B3C2CD", \
-            "margin": "none" \
-        }}, \
-        {{ \
             "type": "box", \
             "layout": "horizontal", \
             "contents": [ \

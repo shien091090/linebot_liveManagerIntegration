@@ -179,15 +179,8 @@ def receiveMessage(event):
     #確認週期行程
     tempCommandKey = 'KEY_SCHEDULE_GET'
     if commandKey == KeyWordSetting.GetCommandKey(tempCommandKey):
-        checkTextTypeStructure = [TextType_KeyWord]
-
-        if textParseResult.IsStructureMatch(checkTextTypeStructure) == False:
-            reqInfo = lineActionInfo.RequestInfo(KeyWordSetting.GetCommandTitle(tempCommandKey), REQUEST_TYPE_BYPASS, None)
-            reqInfo.statusMsg = f"[格式錯誤] 正確格式為:\n'{KeyWordSetting.GetCommandFormatHint(tempCommandKey)}'"
-            reqInfo.resposeMsg = ' '
-        else:
-            sendParam["action"] = lineActionInfo.API_ACTION_SCHEDULE_GET
-            reqInfo = lineActionInfo.RequestInfo(KeyWordSetting.GetCommandTitle(tempCommandKey), REQUEST_TYPE_GAS, sendParam)
+        sendParam["action"] = lineActionInfo.API_ACTION_SCHEDULE_GET
+        reqInfo = lineActionInfo.RequestInfo(KeyWordSetting.GetCommandTitle(tempCommandKey), REQUEST_TYPE_GAS, sendParam)
 
     #記帳
     tempCommandKey = 'KEY_BUY'

@@ -164,7 +164,7 @@ def receiveMessage(event):
         commandTextStructure = [TextStructureType_Content, TextStructureType_Number, TextStructureType_Content, TextStructureType_Number, TextStructureType_Content]
         textParseResult = textParser.ParseTextBySpecificStructure(commandTextStructure)
 
-        if textParseResult is None or textParseResult.IsStructureMatch(KeyWordSetting.GetCommandKey(tempCommandKey)) == False:
+        if textParseResult is None or textParseResult.IsKeyWordMatch(KeyWordSetting.GetCommandKey(tempCommandKey)) == False:
             reqInfo = lineActionInfo.RequestInfo(KeyWordSetting.GetCommandTitle(tempCommandKey), REQUEST_TYPE_BYPASS, None)
             reqInfo.statusMsg = f"[格式錯誤] 正確格式為:\n'{KeyWordSetting.GetCommandFormatHint(tempCommandKey)}'"
             reqInfo.resposeMsg = ' '

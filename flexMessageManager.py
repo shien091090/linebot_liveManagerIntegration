@@ -112,8 +112,8 @@ class flexMessageManager:
                         "size": "sm" \
                     }} \
                     ], \
-                    "maxWidth": "80px", \
-                    "paddingAll": "5px" \
+                    "paddingAll": "5px", \
+                    "flex": 1 \
                 }}, \
                 {{ \
                     "type": "separator", \
@@ -130,7 +130,8 @@ class flexMessageManager:
                         "size": "sm" \
                     }} \
                     ], \
-                    "paddingAll": "5px" \
+                    "paddingAll": "5px", \
+                    "flex": 3 \
                 }} \
                 ] \
             }}, \
@@ -161,8 +162,8 @@ class flexMessageManager:
                     "size": "xs" \
                 }} \
                 ], \
-                "maxWidth": "80px", \
                 "paddingAll": "5px", \
+                "flex": 1, \
                 "justifyContent": "center" \
             }}, \
             {{ \
@@ -182,6 +183,7 @@ class flexMessageManager:
                 }} \
                 ], \
                 "paddingAll": "5px", \
+                "flex": 3, \
                 "justifyContent": "center" \
             }} \
             ] \

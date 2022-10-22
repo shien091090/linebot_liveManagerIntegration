@@ -116,10 +116,6 @@ class flexMessageManager:
                     "flex": 1 \
                 }}, \
                 {{ \
-                    "type": "separator", \
-                    "color": "#B3C2CD" \
-                }}, \
-                {{ \
                     "type": "box", \
                     "layout": "vertical", \
                     "contents": [ \
@@ -134,6 +130,11 @@ class flexMessageManager:
                     "flex": 3 \
                 }} \
                 ] \
+            }}, \
+            {{ \
+                "type": "separator", \
+                "color": "#B3C2CD", \
+                "margin": "none" \
             }}, \
             {commandJoinExplanation} \
             ], \
@@ -160,10 +161,6 @@ class flexMessageManager:
                 "paddingAll": "5px", \
                 "flex": 1, \
                 "justifyContent": "center" \
-            }}, \
-            {{ \
-                "type": "separator", \
-                "color": "#B3C2CD" \
             }}, \
             {{ \
                 "type": "box", \

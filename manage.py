@@ -46,6 +46,7 @@ def receiveMessage(event):
     textParser = TextParser(TextParserManager.DEFAULT_SPLIT_CHAR, receiveTxt)
     sendParam = {}
     commandTextStructure = []
+    replyFlexMessage = ''
 
     commandKeyParseResult = textParser.ParseTextBySpecificStructure([TextStructureType_Content, TextStructureType_Content])
     commandKeyTypeLog = "'Key + Content'"
@@ -69,8 +70,13 @@ def receiveMessage(event):
             KeyWordSetting.GetCommandTitle(tempCommandKey),
             REQUEST_TYPE_BYPASS,
             None)
-        reqInfo.statusMsg = '可使用的指令如下:'
-        reqInfo.resposeMsg = KeyWordSetting.GetCommandExplantion()
+
+        replyFlexMessage = flexMessageManager.GetCommandExplanationFlexMessage(
+            reqInfo.title,
+            KeyWordSetting.GetCommandKeyArray(),
+            KeyWordSetting.GetCommandFormatArray())
+            
+        print(f'[SNTest] replyFlexMessage = {replyFlexMessage}')
 
     #新增待辦事項
     tempCommandKey = 'KEY_MEMO_ADD'
@@ -204,7 +210,9 @@ def receiveMessage(event):
 
     reqInfo.sendRequest()
 
-    replyFlexMessage = flexMessageManager.getFlexMessage(reqInfo.title, reqInfo.statusMsg, reqInfo.resposeMsg)
+    if replyFlexMessage == '':
+        replyFlexMessage = flexMessageManager.getFlexMessage(reqInfo.title, reqInfo.statusMsg, reqInfo.resposeMsg)
+    
     flexMessageJsonDict = json.loads(replyFlexMessage)
 
     line_bot_api.reply_message(

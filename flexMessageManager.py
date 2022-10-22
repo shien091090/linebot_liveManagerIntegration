@@ -58,3 +58,131 @@ class flexMessageManager:
             "paddingStart": "18px" \
         }} \
         }}'
+
+    def GetCommandExplanationFlexMessage(str_title, strArray_commandKeys, strArray_formats):
+        commandCount = len(strArray_commandKeys)
+
+        if commandCount <= 0:
+            return ''
+
+        commandElements = []
+        for index in range(0, commandCount):
+            commandElements.append(flexMessageManager.GetCommandExplanationFlexMessageElement(strArray_commandKeys[index], strArray_formats[index]))
+
+        commandJoinExplanation = ",".join(commandElements)
+
+        return f'{{ \
+        "type": "bubble", \
+        "header": {{ \
+            "type": "box", \
+            "layout": "vertical", \
+            "contents": [ \
+            {{ \
+                "type": "text", \
+                "text": "{str_title}", \
+                "size": "xl", \
+                "weight": "bold", \
+                "color": "#587cbe" \
+            }} \
+            ], \
+            "paddingTop": "15px", \
+            "paddingBottom": "13px" \
+        }}, \
+        "hero": {{ \
+            "type": "box", \
+            "layout": "vertical", \
+            "contents": [ \
+            {{ \
+                "type": "separator", \
+                "color": "#B3C2CD", \
+                "margin": "none" \
+            }}, \
+            {{ \
+                "type": "box", \
+                "layout": "horizontal", \
+                "contents": [ \
+                {{ \
+                    "type": "box", \
+                    "layout": "vertical", \
+                    "contents": [ \
+                    {{ \
+                        "type": "text", \
+                        "text": "指令名稱", \
+                        "align": "center", \
+                        "size": "sm" \
+                    }} \
+                    ], \
+                    "maxWidth": "80px", \
+                    "paddingAll": "5px" \
+                }}, \
+                {{ \
+                    "type": "separator", \
+                    "color": "#B3C2CD" \
+                }}, \
+                {{ \
+                    "type": "box", \
+                    "layout": "vertical", \
+                    "contents": [ \
+                     {{ \
+                        "type": "text", \
+                        "text": "格式", \
+                        "align": "center", \
+                        "size": "sm" \
+                    }} \
+                    ], \
+                    "paddingAll": "5px" \
+                }} \
+                ] \
+            }}, \
+            {commandJoinExplanation} \
+            ], \
+            "spacing": "10px" \
+        }} \
+        }}'
+
+    def GetCommandExplanationFlexMessageElement(str_commandKey, strArray_format):
+        return f'{{ \
+            "type": "separator", \
+            "color": "#B3C2CD", \
+            "margin": "none" \
+        }}, \
+        {{ \
+            "type": "box", \
+            "layout": "horizontal", \
+            "contents": [ \
+            {{ \
+                "type": "box", \
+                "layout": "vertical", \
+                "contents": [ \
+                {{ \
+                    "type": "text", \
+                    "align": "center", \
+                    "text": "{str_commandKey}", \
+                    "size": "xs" \
+                }} \
+                ], \
+                "maxWidth": "80px", \
+                "paddingAll": "5px", \
+                "justifyContent": "center" \
+            }}, \
+            {{ \
+                "type": "separator", \
+                "color": "#B3C2CD" \
+            }}, \
+            {{ \
+                "type": "box", \
+                "layout": "vertical", \
+                "contents": [ \
+                {{ \
+                    "type": "text", \
+                    "text": "{strArray_format}", \
+                    "align": "center", \
+                    "size": "xxs", \
+                    "wrap": true \
+                }} \
+                ], \
+                "paddingAll": "5px", \
+                "justifyContent": "center" \
+            }} \
+            ] \
+        }}'

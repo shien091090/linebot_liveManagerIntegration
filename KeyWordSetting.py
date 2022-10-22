@@ -51,3 +51,19 @@ def GetCommandTitle(enumKey_str):
     else:
         commandDataArr = commandDataEnum[enumKey_str]
         return commandDataArr[2]
+
+def GetCommandKeyArray():
+    commandDataArr = commandDataEnum.values()
+    resultKeyArr = []
+    for commandData in commandDataArr:
+        resultKeyArr.append(commandData[0])
+
+    return resultKeyArr
+
+def GetCommandFormatArray():
+    commandDataArr = commandDataEnum.values()
+    resultKeyArr = []
+    for commandData in commandDataArr:
+        resultKeyArr.append(commandData[1])
+
+    return resultKeyArr

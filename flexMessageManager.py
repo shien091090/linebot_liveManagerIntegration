@@ -34,13 +34,14 @@ class flexMessageManager:
                 "type": "text", \
                 "text": "{newStatusMessage}", \
                 "wrap": true, \
-                "offsetStart": "18px", \
                 "size": "xxs", \
                 "color": "#5e637e", \
                 "align": "start" \
             }} \
             ], \
-            "spacing": "10px" \
+            "spacing": "10px", \
+            "paddingStart" : "18px", \
+            "paddingEnd" : "18px" \
         }}, \
         "body": {{ \
             "type": "box", \

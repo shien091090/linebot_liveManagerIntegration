@@ -1,15 +1,17 @@
+import json
+
+from flask import Flask, request, abort
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
-from linebot.models import MessageEvent, TextSendMessage, TextMessage, FlexSendMessage
-from TextParserManager import TextParser, TextType_AdditionalContent, TextType_KeyWord, TextType_Number, TextType_SubContent, TextStructureType_Content, TextStructureType_Number, TextStructureType_Date, TextType_SubNumber
-from dateManager import dateManager
-from flexMessageManager import flexMessageManager
-from flask import Flask, request, abort
-import KeyWordSetting
+from linebot.models import MessageEvent, TextMessage, FlexSendMessage
+
+import keyWordSetting
+import textParserManager
 import lineActionInfo
 import settings
-import json
-import TextParserManager
+from textParserManager import TextParser, TextType_AdditionalContent, TextType_KeyWord, TextType_Number, \
+    TextType_SubContent, TextStructureType_Content, TextStructureType_Number, TextType_SubNumber
+from flexMessageManager import GetCommandExplanationFlexMessage, getFlexMessage
 
 REQUEST_TYPE_BYPASS = 'request_type_bypass'
 REQUEST_TYPE_GAS = 'request_type_gas'
@@ -23,9 +25,9 @@ app = Flask(__name__)
 line_bot_api = LineBotApi(settings.LINE_CHANNEL_ACCESS_TOKEN)
 handler = WebhookHandler(settings.LINE_CHANNEL_SECRET)
 
+
 @app.route("/callback", methods=['POST'])
 def callback():
-
     signature = request.headers['X-Line-Signature']
     body = request.get_data(as_text=True)
 
@@ -36,196 +38,215 @@ def callback():
 
     return 'OK'
 
+
 @handler.add(MessageEvent, message=TextMessage)
 def receiveMessage(event):
-
     printReceiverLog(event)
-    receiveTxt = event.message.text
-    reqInfo = None
+    receive_txt = event.message.text
+    reply_flex_message, req_info = ParseRequestInfo(receive_txt)
 
-    textParser = TextParser(TextParserManager.DEFAULT_SPLIT_CHAR, receiveTxt)
-    sendParam = {}
-    commandTextStructure = []
-    replyFlexMessage = ''
-
-    commandKeyParseResult = textParser.ParseTextBySpecificStructure([TextStructureType_Content, TextStructureType_Content])
-    commandKeyTypeLog = "'Key + Content'"
-    if commandKeyParseResult is None:
-        commandKeyParseResult = textParser.ParseTextBySpecificStructure([TextStructureType_Content])
-        commandKeyTypeLog = "'One Key'"
-    if commandKeyParseResult is None:
-        print('[SNTest] Invalid Command')
-        quit()
-    
-    commandKey = commandKeyParseResult.GetSpecificTextTypeValue(TextType_KeyWord)
-    print(f'[SNTest] Command Key = {commandKey}, Command Key type is {commandKeyTypeLog}')
-    print('---------------------------------')
-
-    tempCommandKey = ""
-
-    #指令列表
-    tempCommandKey = 'KEY_COMMAND_LIST'
-    if commandKey == KeyWordSetting.GetCommandKey(tempCommandKey):
-        reqInfo = lineActionInfo.RequestInfo(
-            KeyWordSetting.GetCommandTitle(tempCommandKey),
-            REQUEST_TYPE_BYPASS,
-            None)
-
-        replyFlexMessage = flexMessageManager.GetCommandExplanationFlexMessage(
-            reqInfo.title,
-            KeyWordSetting.GetCommandKeyArray(),
-            KeyWordSetting.GetCommandFormatArray())
-
-        print(f'[SNTest] replyFlexMessage = {replyFlexMessage}')
-
-    #新增待辦事項
-    tempCommandKey = 'KEY_MEMO_ADD'
-    if commandKey == KeyWordSetting.GetCommandKey(tempCommandKey):
-        commandTextStructure = [TextStructureType_Content, TextStructureType_Content]
-        textParseResult = textParser.ParseTextBySpecificStructure(commandTextStructure)
-
-        if textParseResult is None or textParseResult.IsKeyWordMatch(KeyWordSetting.GetCommandKey(tempCommandKey)) == False:
-            reqInfo = lineActionInfo.RequestInfo(KeyWordSetting.GetCommandTitle(tempCommandKey), REQUEST_TYPE_BYPASS, None)
-            reqInfo.statusMsg = f"【格式錯誤】\n正確格式為 『{KeyWordSetting.GetCommandFormatHint(tempCommandKey)}』"
-            reqInfo.resposeMsg = ' '
-        else:
-            textParseResult.PrintLog()
-            sendParam["action"] = lineActionInfo.API_ACTION_MEMO_ADD
-            sendParam["subContent"] = textParseResult.GetSpecificTextTypeValue(TextType_SubContent)
-            reqInfo = lineActionInfo.RequestInfo(KeyWordSetting.GetCommandTitle(tempCommandKey), REQUEST_TYPE_GAS, sendParam)
-    
-    #刪除待辦事項
-    tempCommandKey = 'KEY_MEMO_REMOVE'
-    if commandKey == KeyWordSetting.GetCommandKey(tempCommandKey):
-        commandTextStructure = [TextStructureType_Content, TextStructureType_Number]
-        textParseResult = textParser.ParseTextBySpecificStructure(commandTextStructure)
-
-        if textParseResult is None or textParseResult.IsKeyWordMatch(KeyWordSetting.GetCommandKey(tempCommandKey)) == False:
-            reqInfo = lineActionInfo.RequestInfo(KeyWordSetting.GetCommandTitle(tempCommandKey), REQUEST_TYPE_BYPASS, None)
-            reqInfo.statusMsg = f"【格式錯誤】\n正確格式為 『{KeyWordSetting.GetCommandFormatHint(tempCommandKey)}』"
-            reqInfo.resposeMsg = ' '
-        else:
-            textParseResult.PrintLog()
-            sendParam["action"] = lineActionInfo.API_ACTION_MEMO_REMOVE
-            sendParam["number"] = textParseResult.GetSpecificTextTypeValue(TextType_Number)
-            reqInfo = lineActionInfo.RequestInfo(KeyWordSetting.GetCommandTitle(tempCommandKey), REQUEST_TYPE_GAS, sendParam)
-
-    #修改待辦事項
-    tempCommandKey = 'KEY_MEMO_MODIFY'
-    if commandKey == KeyWordSetting.GetCommandKey(tempCommandKey):
-        commandTextStructure = [TextStructureType_Content, TextStructureType_Number, TextStructureType_Content]
-        textParseResult = textParser.ParseTextBySpecificStructure(commandTextStructure)
-
-        if textParseResult is None or textParseResult.IsKeyWordMatch(KeyWordSetting.GetCommandKey(tempCommandKey)) == False:
-            reqInfo = lineActionInfo.RequestInfo(KeyWordSetting.GetCommandTitle(tempCommandKey), REQUEST_TYPE_BYPASS, None)
-            reqInfo.statusMsg = f"【格式錯誤】\n正確格式為 『{KeyWordSetting.GetCommandFormatHint(tempCommandKey)}』"
-            reqInfo.resposeMsg = ' '
-        else:
-            sendParam["action"] = lineActionInfo.API_ACTION_MEMO_MODIFY
-            sendParam["number"] = textParseResult.GetSpecificTextTypeValue(TextType_Number)
-            sendParam["subContent"] = textParseResult.GetSpecificTextTypeValue(TextType_SubContent)
-            reqInfo = lineActionInfo.RequestInfo(KeyWordSetting.GetCommandTitle(tempCommandKey), REQUEST_TYPE_GAS, sendParam)
-
-    #確認待辦事項
-    tempCommandKey = 'KEY_MEMO_GET'
-    if commandKey == KeyWordSetting.GetCommandKey(tempCommandKey):
-        sendParam["action"] = lineActionInfo.API_ACTION_MEMO_GET
-        reqInfo = lineActionInfo.RequestInfo(KeyWordSetting.GetCommandTitle(tempCommandKey), REQUEST_TYPE_GAS, sendParam)
-
-    #新增週期行程
-    tempCommandKey = 'KEY_SCHEDULE_ADD'
-    if commandKey == KeyWordSetting.GetCommandKey(tempCommandKey):
-        commandTextStructure = [TextStructureType_Content, TextStructureType_Content, TextStructureType_Number, TextStructureType_Content]
-        textParseResult = textParser.ParseTextBySpecificStructure(commandTextStructure)
-
-        if textParseResult is None or textParseResult.IsKeyWordMatch(KeyWordSetting.GetCommandKey(tempCommandKey)) == False:
-            reqInfo = lineActionInfo.RequestInfo(KeyWordSetting.GetCommandTitle(tempCommandKey), REQUEST_TYPE_BYPASS, None)
-            reqInfo.statusMsg = f"【格式錯誤】\n正確格式為\n『{KeyWordSetting.GetCommandFormatHint(tempCommandKey)}』"
-            reqInfo.resposeMsg = ' '
-        else:
-            sendParam["action"] = lineActionInfo.API_ACTION_SCHEDULE_ADD
-            sendParam["subContent"] = textParseResult.GetSpecificTextTypeValue(TextType_SubContent)
-            sendParam["number"] = textParseResult.GetSpecificTextTypeValue(TextType_Number)
-            sendParam["additionalContent"] = textParseResult.GetSpecificTextTypeValue(TextType_AdditionalContent)
-            reqInfo = lineActionInfo.RequestInfo(KeyWordSetting.GetCommandTitle(tempCommandKey), REQUEST_TYPE_GAS, sendParam)
-
-    #刪除週期行程
-    tempCommandKey = 'KEY_SCHEDULE_REMOVE'
-    if commandKey == KeyWordSetting.GetCommandKey(tempCommandKey):
-        commandTextStructure = [TextStructureType_Content, TextStructureType_Number]
-        textParseResult = textParser.ParseTextBySpecificStructure(commandTextStructure)
-
-        if textParseResult is None or textParseResult.IsKeyWordMatch(KeyWordSetting.GetCommandKey(tempCommandKey)) == False:
-            reqInfo = lineActionInfo.RequestInfo(KeyWordSetting.GetCommandTitle(tempCommandKey), REQUEST_TYPE_BYPASS, None)
-            reqInfo.statusMsg = f"【格式錯誤】\n正確格式為 『{KeyWordSetting.GetCommandFormatHint(tempCommandKey)}』"
-            reqInfo.resposeMsg = ' '
-        else:
-            sendParam["action"] = lineActionInfo.API_ACTION_SCHEDULE_REMOVE
-            sendParam["number"] = textParseResult.GetSpecificTextTypeValue(TextType_Number)
-            reqInfo = lineActionInfo.RequestInfo(KeyWordSetting.GetCommandTitle(tempCommandKey), REQUEST_TYPE_GAS, sendParam)
-
-    #修改週期行程
-    tempCommandKey = 'KEY_SCHEDULE_MODIFY'
-    if commandKey == KeyWordSetting.GetCommandKey(tempCommandKey):
-        commandTextStructure = [TextStructureType_Content, TextStructureType_Number, TextStructureType_Content, TextStructureType_Number, TextStructureType_Content]
-        textParseResult = textParser.ParseTextBySpecificStructure(commandTextStructure)
-
-        if textParseResult is None or textParseResult.IsKeyWordMatch(KeyWordSetting.GetCommandKey(tempCommandKey)) == False:
-            reqInfo = lineActionInfo.RequestInfo(KeyWordSetting.GetCommandTitle(tempCommandKey), REQUEST_TYPE_BYPASS, None)
-            reqInfo.statusMsg = f"【格式錯誤】\n正確格式為\n『{KeyWordSetting.GetCommandFormatHint(tempCommandKey)}』"
-            reqInfo.resposeMsg = ' '
-        else:
-            sendParam["action"] = lineActionInfo.API_ACTION_SCHEDULE_MODIFY
-            sendParam["number"] = textParseResult.GetSpecificTextTypeValue(TextType_Number)
-            sendParam["subContent"] = textParseResult.GetSpecificTextTypeValue(TextType_SubContent)
-            sendParam["subNumber"] = textParseResult.GetSpecificTextTypeValue(TextType_SubNumber)
-            sendParam["additionalContent"] = textParseResult.GetSpecificTextTypeValue(TextType_AdditionalContent)
-            reqInfo = lineActionInfo.RequestInfo(KeyWordSetting.GetCommandTitle(tempCommandKey), REQUEST_TYPE_GAS, sendParam)
-
-    #確認週期行程
-    tempCommandKey = 'KEY_SCHEDULE_GET'
-    if commandKey == KeyWordSetting.GetCommandKey(tempCommandKey):
-        sendParam["action"] = lineActionInfo.API_ACTION_SCHEDULE_GET
-        reqInfo = lineActionInfo.RequestInfo(KeyWordSetting.GetCommandTitle(tempCommandKey), REQUEST_TYPE_GAS, sendParam)
-
-    #記帳
-    tempCommandKey = 'KEY_BUY'
-    if commandKey == KeyWordSetting.GetCommandKey(tempCommandKey):
-        commandTextStructure = [TextStructureType_Content, TextStructureType_Content, TextStructureType_Number]
-        textParseResult = textParser.ParseTextBySpecificStructure(commandTextStructure)
-
-        if textParseResult is None or textParseResult.IsKeyWordMatch(KeyWordSetting.GetCommandKey(tempCommandKey)) == False:
-            reqInfo = lineActionInfo.RequestInfo(KeyWordSetting.GetCommandTitle(tempCommandKey), REQUEST_TYPE_BYPASS, None)
-            reqInfo.statusMsg = f"【格式錯誤】\n正確格式為 『{KeyWordSetting.GetCommandFormatHint(tempCommandKey)}』"
-            reqInfo.resposeMsg = ' '
-        else:
-            sendParam["action"] = lineActionInfo.API_ACTION_BUY
-            sendParam["subContent"] = textParseResult.GetSpecificTextTypeValue(TextType_SubContent)
-            sendParam["number"] = textParseResult.GetSpecificTextTypeValue(TextType_Number)
-            reqInfo = lineActionInfo.RequestInfo(KeyWordSetting.GetCommandTitle(tempCommandKey), REQUEST_TYPE_GAS, sendParam)
-
-    if reqInfo is None:
+    if req_info is None:
         print('[SNTest] Invalid Command')
         quit()
 
-    reqInfo.sendRequest()
+    req_info.sendRequest()
 
-    if replyFlexMessage == '':
-        replyFlexMessage = flexMessageManager.getFlexMessage(reqInfo.title, reqInfo.statusMsg, reqInfo.resposeMsg)
-    
-    flexMessageJsonDict = json.loads(replyFlexMessage)
+    if reply_flex_message == '':
+        reply_flex_message = getFlexMessage(req_info.title, req_info.statusMsg, req_info.responseMsg)
+
+    flex_message_json_dict = json.loads(reply_flex_message)
 
     line_bot_api.reply_message(
         event.reply_token,
-        FlexSendMessage(alt_text=reqInfo.title, contents=flexMessageJsonDict))
+        FlexSendMessage(alt_text=req_info.title, contents=flex_message_json_dict))
+
+
+def ParseRequestInfo(receive_txt):
+    req_info = None
+    text_parser = TextParser(textParserManager.DEFAULT_SPLIT_CHAR, receive_txt)
+    send_param = {}
+    reply_flex_message = ''
+    command_key_parse_result = text_parser.ParseTextBySpecificStructure(
+        [TextStructureType_Content, TextStructureType_Content])
+    command_key_type_log = "'Key + Content'"
+
+    if command_key_parse_result is None:
+        command_key_parse_result = text_parser.ParseTextBySpecificStructure([TextStructureType_Content])
+        command_key_type_log = "'One Key'"
+    if command_key_parse_result is None:
+        print('[SNTest] Invalid Command')
+        return reply_flex_message, req_info
+
+    command_key = command_key_parse_result.GetSpecificTextTypeValue(TextType_KeyWord)
+    print(f'[SNTest] Command Key = {command_key}, Command Key type is {command_key_type_log}')
+    print('---------------------------------')
+    # 指令列表
+    temp_command_key = 'KEY_COMMAND_LIST'
+    if command_key == keyWordSetting.GetCommandKey(temp_command_key):
+        req_info = lineActionInfo.RequestInfo(
+            keyWordSetting.GetCommandTitle(temp_command_key),
+            REQUEST_TYPE_BYPASS,
+            None)
+
+        reply_flex_message = GetCommandExplanationFlexMessage(
+            req_info.title,
+            keyWordSetting.GetCommandKeyArray(),
+            keyWordSetting.GetCommandFormatArray())
+
+    # 新增待辦事項
+    temp_command_key = 'KEY_MEMO_ADD'
+    if command_key == keyWordSetting.GetCommandKey(temp_command_key):
+        command_text_structure = [TextStructureType_Content, TextStructureType_Content]
+        text_parse_result = text_parser.ParseTextBySpecificStructure(command_text_structure)
+
+        if text_parse_result is None or text_parse_result.IsKeyWordMatch(
+                keyWordSetting.GetCommandKey(temp_command_key)) is False:
+            req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key), REQUEST_TYPE_BYPASS,
+                                                  None)
+            req_info.statusMsg = f"【格式錯誤】\n正確格式為 『{keyWordSetting.GetCommandFormatHint(temp_command_key)}』"
+            req_info.responseMsg = ' '
+        else:
+            text_parse_result.PrintLog()
+            send_param["action"] = lineActionInfo.API_ACTION_MEMO_ADD
+            send_param["subContent"] = text_parse_result.GetSpecificTextTypeValue(TextType_SubContent)
+            req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key), REQUEST_TYPE_GAS,
+                                                  send_param)
+    # 刪除待辦事項
+    temp_command_key = 'KEY_MEMO_REMOVE'
+    if command_key == keyWordSetting.GetCommandKey(temp_command_key):
+        command_text_structure = [TextStructureType_Content, TextStructureType_Number]
+        text_parse_result = text_parser.ParseTextBySpecificStructure(command_text_structure)
+
+        if text_parse_result is None or text_parse_result.IsKeyWordMatch(
+                keyWordSetting.GetCommandKey(temp_command_key)) is False:
+            req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key), REQUEST_TYPE_BYPASS,
+                                                  None)
+            req_info.statusMsg = f"【格式錯誤】\n正確格式為 『{keyWordSetting.GetCommandFormatHint(temp_command_key)}』"
+            req_info.responseMsg = ' '
+        else:
+            text_parse_result.PrintLog()
+            send_param["action"] = lineActionInfo.API_ACTION_MEMO_REMOVE
+            send_param["number"] = text_parse_result.GetSpecificTextTypeValue(TextType_Number)
+            req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key), REQUEST_TYPE_GAS,
+                                                  send_param)
+    # 修改待辦事項
+    temp_command_key = 'KEY_MEMO_MODIFY'
+    if command_key == keyWordSetting.GetCommandKey(temp_command_key):
+        command_text_structure = [TextStructureType_Content, TextStructureType_Number, TextStructureType_Content]
+        text_parse_result = text_parser.ParseTextBySpecificStructure(command_text_structure)
+
+        if text_parse_result is None or text_parse_result.IsKeyWordMatch(
+                keyWordSetting.GetCommandKey(temp_command_key)) is False:
+            req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key), REQUEST_TYPE_BYPASS,
+                                                  None)
+            req_info.statusMsg = f"【格式錯誤】\n正確格式為 『{keyWordSetting.GetCommandFormatHint(temp_command_key)}』"
+            req_info.responseMsg = ' '
+        else:
+            send_param["action"] = lineActionInfo.API_ACTION_MEMO_MODIFY
+            send_param["number"] = text_parse_result.GetSpecificTextTypeValue(TextType_Number)
+            send_param["subContent"] = text_parse_result.GetSpecificTextTypeValue(TextType_SubContent)
+            req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key), REQUEST_TYPE_GAS,
+                                                  send_param)
+    # 確認待辦事項
+    temp_command_key = 'KEY_MEMO_GET'
+    if command_key == keyWordSetting.GetCommandKey(temp_command_key):
+        send_param["action"] = lineActionInfo.API_ACTION_MEMO_GET
+        req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key), REQUEST_TYPE_GAS,
+                                              send_param)
+    # 新增週期行程
+    temp_command_key = 'KEY_SCHEDULE_ADD'
+    if command_key == keyWordSetting.GetCommandKey(temp_command_key):
+        command_text_structure = [TextStructureType_Content, TextStructureType_Content, TextStructureType_Number,
+                                  TextStructureType_Content]
+        text_parse_result = text_parser.ParseTextBySpecificStructure(command_text_structure)
+
+        if text_parse_result is None or text_parse_result.IsKeyWordMatch(
+                keyWordSetting.GetCommandKey(temp_command_key)) is False:
+            req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key), REQUEST_TYPE_BYPASS,
+                                                  None)
+            req_info.statusMsg = f"【格式錯誤】\n正確格式為\n『{keyWordSetting.GetCommandFormatHint(temp_command_key)}』"
+            req_info.responseMsg = ' '
+        else:
+            send_param["action"] = lineActionInfo.API_ACTION_SCHEDULE_ADD
+            send_param["subContent"] = text_parse_result.GetSpecificTextTypeValue(TextType_SubContent)
+            send_param["number"] = text_parse_result.GetSpecificTextTypeValue(TextType_Number)
+            send_param["additionalContent"] = text_parse_result.GetSpecificTextTypeValue(TextType_AdditionalContent)
+            req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key), REQUEST_TYPE_GAS,
+                                                  send_param)
+    # 刪除週期行程
+    temp_command_key = 'KEY_SCHEDULE_REMOVE'
+    if command_key == keyWordSetting.GetCommandKey(temp_command_key):
+        command_text_structure = [TextStructureType_Content, TextStructureType_Number]
+        text_parse_result = text_parser.ParseTextBySpecificStructure(command_text_structure)
+
+        if text_parse_result is None or text_parse_result.IsKeyWordMatch(
+                keyWordSetting.GetCommandKey(temp_command_key)) is False:
+            req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key), REQUEST_TYPE_BYPASS,
+                                                  None)
+            req_info.statusMsg = f"【格式錯誤】\n正確格式為 『{keyWordSetting.GetCommandFormatHint(temp_command_key)}』"
+            req_info.responseMsg = ' '
+        else:
+            send_param["action"] = lineActionInfo.API_ACTION_SCHEDULE_REMOVE
+            send_param["number"] = text_parse_result.GetSpecificTextTypeValue(TextType_Number)
+            req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key), REQUEST_TYPE_GAS,
+                                                  send_param)
+    # 修改週期行程
+    temp_command_key = 'KEY_SCHEDULE_MODIFY'
+    if command_key == keyWordSetting.GetCommandKey(temp_command_key):
+        command_text_structure = [TextStructureType_Content, TextStructureType_Number, TextStructureType_Content,
+                                  TextStructureType_Number, TextStructureType_Content]
+        text_parse_result = text_parser.ParseTextBySpecificStructure(command_text_structure)
+
+        if text_parse_result is None or text_parse_result.IsKeyWordMatch(
+                keyWordSetting.GetCommandKey(temp_command_key)) is False:
+            req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key), REQUEST_TYPE_BYPASS,
+                                                  None)
+            req_info.statusMsg = f"【格式錯誤】\n正確格式為\n『{keyWordSetting.GetCommandFormatHint(temp_command_key)}』"
+            req_info.responseMsg = ' '
+        else:
+            send_param["action"] = lineActionInfo.API_ACTION_SCHEDULE_MODIFY
+            send_param["number"] = text_parse_result.GetSpecificTextTypeValue(TextType_Number)
+            send_param["subContent"] = text_parse_result.GetSpecificTextTypeValue(TextType_SubContent)
+            send_param["subNumber"] = text_parse_result.GetSpecificTextTypeValue(TextType_SubNumber)
+            send_param["additionalContent"] = text_parse_result.GetSpecificTextTypeValue(TextType_AdditionalContent)
+            req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key), REQUEST_TYPE_GAS,
+                                                  send_param)
+    # 確認週期行程
+    temp_command_key = 'KEY_SCHEDULE_GET'
+    if command_key == keyWordSetting.GetCommandKey(temp_command_key):
+        send_param["action"] = lineActionInfo.API_ACTION_SCHEDULE_GET
+        req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key), REQUEST_TYPE_GAS,
+                                              send_param)
+    # 記帳
+    temp_command_key = 'KEY_BUY'
+    if command_key == keyWordSetting.GetCommandKey(temp_command_key):
+        command_text_structure = [TextStructureType_Content, TextStructureType_Content, TextStructureType_Number]
+        text_parse_result = text_parser.ParseTextBySpecificStructure(command_text_structure)
+
+        if text_parse_result is None or text_parse_result.IsKeyWordMatch(
+                keyWordSetting.GetCommandKey(temp_command_key)) is False:
+            req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key), REQUEST_TYPE_BYPASS,
+                                                  None)
+            req_info.statusMsg = f"【格式錯誤】\n正確格式為 『{keyWordSetting.GetCommandFormatHint(temp_command_key)}』"
+            req_info.responseMsg = ' '
+        else:
+            send_param["action"] = lineActionInfo.API_ACTION_BUY
+            send_param["subContent"] = text_parse_result.GetSpecificTextTypeValue(TextType_SubContent)
+            send_param["number"] = text_parse_result.GetSpecificTextTypeValue(TextType_Number)
+            req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key), REQUEST_TYPE_GAS,
+                                                  send_param)
+    return reply_flex_message, req_info
+
 
 def printReceiverLog(event):
-    eventType = str(event.source.type)
-    if eventType == 'user':
-        eventTypeLog = "[userId : {0}]".format(str(event.source.user_id))
-    elif eventType == 'group':
-        eventTypeLog = "[groupId : {0}]".format(str(event.source.group_id))
-    print("[SNTest] [source.type = {0}] {1}".format(eventType, eventTypeLog))
+    event_type = str(event.source.type)
+    event_type_log = ''
+    if event_type == 'user':
+        event_type_log = "[userId : {0}]".format(str(event.source.user_id))
+    elif event_type == 'group':
+        event_type_log = "[groupId : {0}]".format(str(event.source.group_id))
+    print("[SNTest] [source.type = {0}] {1}".format(event_type, event_type_log))
+
 
 if __name__ == "__main__":
     app.run()

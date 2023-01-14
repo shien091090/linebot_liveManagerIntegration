@@ -3,30 +3,34 @@ import requests
 import settings
 import json
 
+
 class RequestInfo:
 
-    def __init__(self, str_title, str_requestType, requestParam):
+    def __init__(self, str_title, str_request_type, request_param):
         self.title = str_title
-        self.requestType = str_requestType
-        self.requestParam = requestParam
+        self.requestType = str_request_type
+        self.requestParam = request_param
         self.statusCode = 0
         self.statusMsg = ''
-        self.resposeMsg = ''
+        self.responseMsg = ''
 
     def parseResponseJsonDct(self, dct):
         self.statusCode = dct['statusCode']
         self.statusMsg = dct['statusMsg']
-        self.resposeMsg = dct['responseMsg']
+        self.responseMsg = dct['responseMsg']
 
     def sendRequest(self):
-        print(f'[SNTest] [Request Info] title = {self.title}, requestType = {self.requestType}, requestParam = {self.requestParam}')
+        print(
+            f'[SNTest] [Request Info] title = {self.title}, requestType = {self.requestType}, requestParam = {self.requestParam}')
         if self.requestType == manage.REQUEST_TYPE_GAS:
             req = requests.get(settings.URL_GAS_API, params=self.requestParam)
-            jsonDct = json.loads(req.text, object_hook=self.parseResponseJsonDct)
+            json.loads(req.text, object_hook=self.parseResponseJsonDct)
             self.PrintResponseLog()
 
     def PrintResponseLog(self):
-        print(f'[SNTest] [Response Info] statusCode = {self.statusCode}, statusMsg = {self.statusMsg}, resposeMsg = {self.resposeMsg}')
+        print(
+            f'[SNTest] [Response Info] statusCode = {self.statusCode}, statusMsg = {self.statusMsg}, responseMsg = {self.responseMsg}')
+
 
 API_ACTION_MEMO_ADD = 'action_memo_add'
 API_ACTION_MEMO_REMOVE = 'action_memo_remove'

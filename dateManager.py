@@ -1,46 +1,48 @@
 import datetime
 from dateutil import parser
 
-class dateManager:
 
-    def getCurrentTimeText():
-        tz_taiwan = datetime.timezone(datetime.timedelta(hours=+8))
-        localDate = datetime.datetime.today().astimezone(tz_taiwan)
-        dateStr = localDate.strftime("%Y/%m/%d_%H:%M:%S")
-        return dateStr
+def getCurrentTimeText():
+    tz_taiwan = datetime.timezone(datetime.timedelta(hours=+8))
+    local_date = datetime.datetime.today().astimezone(tz_taiwan)
+    date_str = local_date.strftime("%Y/%m/%d_%H:%M:%S")
+    return date_str
 
-    def getTodayDayNumber():
-        tz_taiwan = datetime.timezone(datetime.timedelta(hours=+8))
-        localDate = datetime.datetime.today().astimezone(tz_taiwan)
-        dayNum = localDate.day
-        return dayNum
 
-    def parseHeaderDateString(content_str):
-        contentLength = len(content_str)
-        if(contentLength <= 0 or content_str == ''):
-            return ''
+def getTodayDayNumber():
+    tz_taiwan = datetime.timezone(datetime.timedelta(hours=+8))
+    local_date = datetime.datetime.today().astimezone(tz_taiwan)
+    day_num = local_date.day
+    return day_num
 
-        parseSuccess = False
-        finalSucceedDate = '' 
-        for i in range(0,contentLength+1):
-            subStr = content_str[0:i]
-            try:
-                d = datetime.datetime.strptime(subStr, "%m/%d")
-            except ValueError:
-                d = None
-            
-            if(parseSuccess and d == None):
-                return finalSucceedDate
-            
-            if(d != None):
-                finalSucceedDate = subStr
-                parseSuccess = True
+
+def parseHeaderDateString(content_str):
+    content_length = len(content_str)
+    if content_length <= 0 or content_str == '':
         return ''
-    
-    def CheckTextIsDateFormat(text_str):
+
+    parse_success = False
+    final_succeed_date = ''
+    for i in range(0, content_length + 1):
+        sub_str = content_str[0:i]
         try:
-            parseDate = parser.parse(text_str)
+            d = datetime.datetime.strptime(sub_str, "%m/%d")
         except ValueError:
-            parseDate = None
-        
-        return parseDate != None
+            d = None
+
+        if parse_success and d is None:
+            return final_succeed_date
+
+        if d is not None:
+            final_succeed_date = sub_str
+            parse_success = True
+    return ''
+
+
+def CheckTextIsDateFormat(text_str):
+    try:
+        parse_date = parser.parse(text_str)
+    except ValueError:
+        parse_date = None
+
+    return parse_date is not None

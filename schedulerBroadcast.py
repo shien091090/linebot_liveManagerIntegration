@@ -1,6 +1,6 @@
 from linebot import LineBotApi
 from linebot.models import FlexSendMessage
-from flexMessageManager import flexMessageManager
+from flexMessageManager import getFlexMessage
 from lineActionInfo import RequestInfo, API_ACTION_DAILY_SCHEDULER
 from manage import REQUEST_TYPE_GAS
 import json
@@ -9,18 +9,19 @@ import settings
 LINE_MAIN_GROUP_ID = 'Cd6af810de75bfc7bc6817373a1fd0562'
 TITLE_DAILY_REMIND = '每日提醒'
 
+
 def DailyBroadCast():
     line_bot_api = LineBotApi(settings.LINE_CHANNEL_ACCESS_TOKEN)
 
-    sendParam = {}
-    sendParam["action"] = API_ACTION_DAILY_SCHEDULER
-    reqInfo = RequestInfo(TITLE_DAILY_REMIND, REQUEST_TYPE_GAS, sendParam)
-    reqInfo.sendRequest()
+    send_param = {"action": API_ACTION_DAILY_SCHEDULER}
+    req_info = RequestInfo(TITLE_DAILY_REMIND, REQUEST_TYPE_GAS, send_param)
+    req_info.sendRequest()
 
-    replyFlexMessage = flexMessageManager.getFlexMessage(reqInfo.title, reqInfo.statusMsg, reqInfo.resposeMsg)
-    flexMessageJsonDict = json.loads(replyFlexMessage)
+    reply_flex_message = getFlexMessage(req_info.title, req_info.statusMsg, req_info.responseMsg)
+    flex_message_json_dict = json.loads(reply_flex_message)
 
-    pushText = FlexSendMessage(alt_text=reqInfo.title, contents=flexMessageJsonDict)
-    line_bot_api.push_message(LINE_MAIN_GROUP_ID, messages = pushText)
+    push_text = FlexSendMessage(alt_text=req_info.title, contents=flex_message_json_dict)
+    line_bot_api.push_message(LINE_MAIN_GROUP_ID, messages=push_text)
+
 
 DailyBroadCast()

@@ -203,9 +203,24 @@ class MyTestCase(unittest.TestCase):
         INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
         INPUT_FLAW_TYPE_MULTI_BLANK_BETWEEN
     ])
-    def test_request_modify_memo_command_and_input_upside_down_param(self, input_flaw_type):
+    def test_request_modify_memo_command_and_input_zero_index(self, input_flaw_type):
         self.GivenCommandWithFlawType(input_flaw_type, '修改 0 LearnEnglish')
         self.RequestResultShouldBeFormatError('修改待辦事項')
+
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
+        INPUT_FLAW_TYPE_MULTI_BLANK_BETWEEN
+    ])
+    def test_request_modify_memo_command(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '修改 3 LearnEnglish')
+        self.RequestTitleShouldBe('修改待辦事項')
+        self.RequestTypeShouldBe(manage.REQUEST_TYPE_GAS)
+        self.RequestActionShouldBe(lineActionInfo.API_ACTION_MEMO_MODIFY)
+        self.RequestNumberShouldBe('3')
+        self.RequestSubContentShouldBe('LearnEnglish')
 
     def RequestSubContentShouldBe(self, expected_sub_content):
         self.assertEqual(expected_sub_content, self.req_info.requestParam['subContent'])

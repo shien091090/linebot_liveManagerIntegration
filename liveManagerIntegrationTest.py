@@ -117,11 +117,28 @@ class MyTestCase(unittest.TestCase):
         self.GivenCommandWithFlawType(input_flaw_type, '刪除 A')
         self.RequestResultShouldBeFormatError('刪除待辦事項')
 
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
+        INPUT_FLAW_TYPE_MULTI_BLANK_BETWEEN
+    ])
+    def test_request_remove_memo_command(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '刪除 9')
+        self.RequestTitleShouldBe('刪除待辦事項')
+        self.RequestTypeShouldBe(manage.REQUEST_TYPE_GAS)
+        self.RequestActionShouldBe(lineActionInfo.API_ACTION_MEMO_REMOVE)
+        self.RequestNumberShouldBe('9')
+
     def RequestSubContentShouldBe(self, expected_sub_content):
-        self.assertEqual(self.req_info.requestParam['subContent'], expected_sub_content)
+        self.assertEqual(expected_sub_content, self.req_info.requestParam['subContent'])
 
     def RequestActionShouldBe(self, expected_action):
-        self.assertEqual(self.req_info.requestParam['action'], expected_action)
+        self.assertEqual(expected_action, self.req_info.requestParam['action'])
+
+    def RequestNumberShouldBe(self, expected_number):
+        self.assertEqual(expected_number, self.req_info.requestParam['number'])
 
     def RequestResultShouldBeFormatError(self, expected_request_title):
         self.RequestTitleShouldBe(expected_request_title)

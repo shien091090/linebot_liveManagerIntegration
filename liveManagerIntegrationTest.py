@@ -131,6 +131,28 @@ class MyTestCase(unittest.TestCase):
         self.RequestActionShouldBe(lineActionInfo.API_ACTION_MEMO_REMOVE)
         self.RequestNumberShouldBe('9')
 
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
+        INPUT_FLAW_TYPE_MULTI_BLANK_BETWEEN
+    ])
+    def test_request_remove_memo_command_and_input_extra_number(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '刪除 3 4')
+        self.RequestResultShouldBeFormatError('刪除待辦事項')
+
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
+        INPUT_FLAW_TYPE_MULTI_BLANK_BETWEEN
+    ])
+    def test_request_remove_memo_command_and_input_extra_sub_content(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '刪除 5 abc')
+        self.RequestResultShouldBeFormatError('刪除待辦事項')
+
     def RequestSubContentShouldBe(self, expected_sub_content):
         self.assertEqual(expected_sub_content, self.req_info.requestParam['subContent'])
 

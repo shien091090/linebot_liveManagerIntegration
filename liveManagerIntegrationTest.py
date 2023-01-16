@@ -96,18 +96,26 @@ class MyTestCase(unittest.TestCase):
         self.RequestActionShouldBe(lineActionInfo.API_ACTION_MEMO_ADD)
         self.RequestSubContentShouldBe('5/1 1500 看電影')
 
-    # @parameterized.expand([
-    #     '',
-    #     INPUT_FLAW_TYPE_PREFIX_BLANK,
-    #     INPUT_FLAW_TYPE_SUFFIX_BLANK,
-    #     INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK
-    # ])
-    # def test_request_add_memo_command_and_input_extra_param(self, input_flaw_type):
-    #     self.GivenCommandWithFlawType(input_flaw_type, '新增 5/1 1500 看電影')
-    #     self.RequestTitleShouldBe('新增待辦事項')
-    #     self.RequestTypeShouldBe(manage.REQUEST_TYPE_GAS)
-    #     self.RequestActionShouldBe(lineActionInfo.API_ACTION_MEMO_ADD)
-    #     self.RequestSubContentShouldBe('5/1 1500 看電影')
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
+    ])
+    def test_request_remove_memo_command_and_no_item(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '刪除')
+        self.RequestResultShouldBeFormatError('刪除待辦事項')
+
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
+        INPUT_FLAW_TYPE_MULTI_BLANK_BETWEEN
+    ])
+    def test_request_remove_memo_command_and_no_item(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '刪除 A')
+        self.RequestResultShouldBeFormatError('刪除待辦事項')
 
     def RequestSubContentShouldBe(self, expected_sub_content):
         self.assertEqual(self.req_info.requestParam['subContent'], expected_sub_content)

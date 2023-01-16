@@ -64,7 +64,7 @@ class MyTestCase(unittest.TestCase):
         INPUT_FLAW_TYPE_SUFFIX_BLANK,
         INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK
     ])
-    def test_request_add_memo_command_and_no_item(self, input_flaw_type):
+    def test_request_add_memo_command_and_no_any_param(self, input_flaw_type):
         self.GivenCommandWithFlawType(input_flaw_type, '新增')
         self.RequestResultShouldBeFormatError('新增待辦事項')
 
@@ -102,7 +102,7 @@ class MyTestCase(unittest.TestCase):
         INPUT_FLAW_TYPE_SUFFIX_BLANK,
         INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
     ])
-    def test_request_remove_memo_command_and_no_item(self, input_flaw_type):
+    def test_request_remove_memo_command_and_no_any_param(self, input_flaw_type):
         self.GivenCommandWithFlawType(input_flaw_type, '刪除')
         self.RequestResultShouldBeFormatError('刪除待辦事項')
 
@@ -113,7 +113,7 @@ class MyTestCase(unittest.TestCase):
         INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
         INPUT_FLAW_TYPE_MULTI_BLANK_BETWEEN
     ])
-    def test_request_remove_memo_command_and_no_item(self, input_flaw_type):
+    def test_request_remove_memo_command_and_input_sub_content(self, input_flaw_type):
         self.GivenCommandWithFlawType(input_flaw_type, '刪除 A')
         self.RequestResultShouldBeFormatError('刪除待辦事項')
 
@@ -152,6 +152,60 @@ class MyTestCase(unittest.TestCase):
     def test_request_remove_memo_command_and_input_extra_sub_content(self, input_flaw_type):
         self.GivenCommandWithFlawType(input_flaw_type, '刪除 5 abc')
         self.RequestResultShouldBeFormatError('刪除待辦事項')
+
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK
+    ])
+    def test_request_modify_memo_command_and_no_any_param(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '修改')
+        self.RequestResultShouldBeFormatError('修改待辦事項')
+
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
+        INPUT_FLAW_TYPE_MULTI_BLANK_BETWEEN
+    ])
+    def test_request_modify_memo_command_and_input_deficient_param(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '修改 2')
+        self.RequestResultShouldBeFormatError('修改待辦事項')
+
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
+        INPUT_FLAW_TYPE_MULTI_BLANK_BETWEEN
+    ])
+    def test_request_modify_memo_command_and_input_wrong_param(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '修改 abc')
+        self.RequestResultShouldBeFormatError('修改待辦事項')
+
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
+        INPUT_FLAW_TYPE_MULTI_BLANK_BETWEEN
+    ])
+    def test_request_modify_memo_command_and_input_upside_down_param(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '修改 LearnEnglish 3')
+        self.RequestResultShouldBeFormatError('修改待辦事項')
+
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
+        INPUT_FLAW_TYPE_MULTI_BLANK_BETWEEN
+    ])
+    def test_request_modify_memo_command_and_input_upside_down_param(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '修改 0 LearnEnglish')
+        self.RequestResultShouldBeFormatError('修改待辦事項')
 
     def RequestSubContentShouldBe(self, expected_sub_content):
         self.assertEqual(expected_sub_content, self.req_info.requestParam['subContent'])

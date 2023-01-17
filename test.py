@@ -252,6 +252,31 @@ class MyTestCase(unittest.TestCase):
         self.RequestNumberShouldBe('1')
         self.RequestSubContentShouldBe('176235')
 
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK
+    ])
+    def test_request_get_memo_command(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '確認待辦')
+        self.RequestTitleShouldBe('確認待辦事項')
+        self.RequestTypeShouldBe(manage.REQUEST_TYPE_GAS)
+        self.RequestActionShouldBe(lineActionInfo.API_ACTION_MEMO_GET)
+
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
+        INPUT_FLAW_TYPE_MULTI_BLANK_BETWEEN
+    ])
+    def test_request_get_memo_command_and_input_unnecessary_param(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '確認待辦 A')
+        self.RequestTitleShouldBe('確認待辦事項')
+        self.RequestTypeShouldBe(manage.REQUEST_TYPE_GAS)
+        self.RequestActionShouldBe(lineActionInfo.API_ACTION_MEMO_GET)
+
     def RequestSubContentShouldBe(self, expected_sub_content):
         self.assertEqual(expected_sub_content, self.req_info.requestParam['subContent'])
 

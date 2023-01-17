@@ -11,6 +11,8 @@ commandDataEnum = {
     'KEY_BUY': ['買', '買 <記帳項目> <價格>', '新增記帳項目']
 }
 
+period_key_word_arr = ['每月', '每週', '每天']
+
 
 def GetCommandExplanation():
     command_data_arr = commandDataEnum.values()
@@ -62,3 +64,7 @@ def GetCommandFormatArray():
         result_key_arr.append(commandData[1])
 
     return result_key_arr
+
+
+def VerifyPeriodKeyWord(period_key_word):
+    return period_key_word in period_key_word_arr

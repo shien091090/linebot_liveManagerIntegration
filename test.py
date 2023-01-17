@@ -1,6 +1,7 @@
 import unittest
 from parameterized import parameterized
 
+import keyWordSetting
 import lineActionInfo
 import manage
 
@@ -277,6 +278,87 @@ class MyTestCase(unittest.TestCase):
         self.RequestTypeShouldBe(manage.REQUEST_TYPE_GAS)
         self.RequestActionShouldBe(lineActionInfo.API_ACTION_MEMO_GET)
 
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK
+    ])
+    def test_request_add_schedule_command_and_no_any_param(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '新增行程')
+        self.RequestResultShouldBeFormatError('新增週期行程')
+
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
+        INPUT_FLAW_TYPE_MULTI_BLANK_BETWEEN
+    ])
+    def test_request_add_schedule_command_and_only_input_period(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '新增行程 每月')
+        self.RequestResultShouldBeFormatError('新增週期行程')
+
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
+        INPUT_FLAW_TYPE_MULTI_BLANK_BETWEEN
+    ])
+    def test_request_add_schedule_command_and_only_input_period_and_number(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '新增行程 每週 1')
+        self.RequestResultShouldBeFormatError('新增週期行程')
+
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
+        INPUT_FLAW_TYPE_MULTI_BLANK_BETWEEN
+    ])
+    def test_request_add_schedule_command(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '新增行程 每月 15 打掃家裡')
+        self.RequestTitleShouldBe('新增週期行程')
+        self.RequestTypeShouldBe(manage.REQUEST_TYPE_GAS)
+        self.RequestActionShouldBe(lineActionInfo.API_ACTION_SCHEDULE_ADD)
+        self.RequestSubContentShouldBe('每月')
+        self.RequestNumberShouldBe('15')
+        self.RequestAdditionalContentShouldBe('打掃家裡')
+
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
+        INPUT_FLAW_TYPE_MULTI_BLANK_BETWEEN
+    ])
+    def test_request_add_schedule_command_and_input_number_is_zero(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '新增行程 每月 0 打掃家裡')
+        self.RequestResultShouldBeFormatError('新增週期行程')
+
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
+        INPUT_FLAW_TYPE_MULTI_BLANK_BETWEEN
+    ])
+    def test_request_add_schedule_command_and_no_input_number(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '新增行程 每月 利卡驅蟲藥')
+        self.RequestResultShouldBeFormatError('新增週期行程')
+
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
+        INPUT_FLAW_TYPE_MULTI_BLANK_BETWEEN
+    ])
+    def test_request_add_schedule_command_and_no_input_wrong_period(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '新增行程 每年 5 清理濾網')
+        self.RequestResultShouldBeFormatError('新增週期行程')
+
     def RequestSubContentShouldBe(self, expected_sub_content):
         self.assertEqual(expected_sub_content, self.req_info.requestParam['subContent'])
 
@@ -285,6 +367,9 @@ class MyTestCase(unittest.TestCase):
 
     def RequestNumberShouldBe(self, expected_number):
         self.assertEqual(expected_number, self.req_info.requestParam['number'])
+
+    def RequestAdditionalContentShouldBe(self, expected_additional_content):
+        self.assertEqual(expected_additional_content, self.req_info.requestParam['additionalContent'])
 
     def RequestResultShouldBeFormatError(self, expected_request_title):
         self.RequestTitleShouldBe(expected_request_title)

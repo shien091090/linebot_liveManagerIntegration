@@ -222,6 +222,36 @@ class MyTestCase(unittest.TestCase):
         self.RequestNumberShouldBe('3')
         self.RequestSubContentShouldBe('LearnEnglish')
 
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
+        INPUT_FLAW_TYPE_MULTI_BLANK_BETWEEN
+    ])
+    def test_request_modify_memo_command_and_sub_content_with_blank(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '修改 5 LearnEnglish In Library')
+        self.RequestTitleShouldBe('修改待辦事項')
+        self.RequestTypeShouldBe(manage.REQUEST_TYPE_GAS)
+        self.RequestActionShouldBe(lineActionInfo.API_ACTION_MEMO_MODIFY)
+        self.RequestNumberShouldBe('5')
+        self.RequestSubContentShouldBe('LearnEnglish In Library')
+
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
+        INPUT_FLAW_TYPE_MULTI_BLANK_BETWEEN
+    ])
+    def test_request_modify_memo_command_and_sub_content_is_digit(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '修改 1 176235')
+        self.RequestTitleShouldBe('修改待辦事項')
+        self.RequestTypeShouldBe(manage.REQUEST_TYPE_GAS)
+        self.RequestActionShouldBe(lineActionInfo.API_ACTION_MEMO_MODIFY)
+        self.RequestNumberShouldBe('1')
+        self.RequestSubContentShouldBe('176235')
+
     def RequestSubContentShouldBe(self, expected_sub_content):
         self.assertEqual(expected_sub_content, self.req_info.requestParam['subContent'])
 

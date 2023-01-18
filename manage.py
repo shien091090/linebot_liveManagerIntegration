@@ -167,20 +167,35 @@ def ParseRequestInfo(receive_txt):
         command_text_structure = [TextStructureType_Content, TextStructureType_Content, TextStructureType_Number,
                                   TextStructureType_Content]
         text_parse_result = text_parser.ParseTextBySpecificStructure(command_text_structure)
+        is_daily_type = False
+
+        if text_parse_result is None or \
+                (text_parse_result is not None and text_parse_result.GetSpecificTextTypeValue(
+                    TextType_SubContent) == '每天'):
+            command_text_structure = [TextStructureType_Content, TextStructureType_Content, TextStructureType_Content]
+            text_parse_result = text_parser.ParseTextBySpecificStructure(command_text_structure)
+            is_daily_type = text_parse_result is not None and \
+                            text_parse_result.GetSpecificTextTypeValue(TextType_SubContent) == '每天'
 
         if text_parse_result is None or \
                 text_parse_result.IsKeyWordMatch(keyWordSetting.GetCommandKey(temp_command_key)) is False or \
-                int(text_parse_result.GetSpecificTextTypeValue(TextType_Number)) <= 0 or \
-                keyWordSetting.VerifyPeriodKeyWord(text_parse_result.GetSpecificTextTypeValue(TextType_SubContent)) is False:
+                (not is_daily_type and text_parse_result.GetSpecificTextTypeValue(TextType_Number) == '') or \
+                (not is_daily_type and int(text_parse_result.GetSpecificTextTypeValue(TextType_Number)) <= 0) or \
+                keyWordSetting.VerifyPeriodKeyWord(
+                    text_parse_result.GetSpecificTextTypeValue(TextType_SubContent)) is False:
             req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key),
                                                   REQUEST_TYPE_BYPASS,
                                                   None)
             req_info.statusMsg = f"【格式錯誤】\n正確格式為\n『{keyWordSetting.GetCommandFormatHint(temp_command_key)}』"
             req_info.responseMsg = ' '
         else:
+
             send_param["action"] = lineActionInfo.API_ACTION_SCHEDULE_ADD
             send_param["subContent"] = text_parse_result.GetSpecificTextTypeValue(TextType_SubContent)
-            send_param["number"] = text_parse_result.GetSpecificTextTypeValue(TextType_Number)
+            if is_daily_type:
+                send_param["number"] = '0'
+            else:
+                send_param["number"] = text_parse_result.GetSpecificTextTypeValue(TextType_Number)
             send_param["additionalContent"] = text_parse_result.GetSpecificTextTypeValue(TextType_AdditionalContent)
             req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key),
                                                   REQUEST_TYPE_GAS,

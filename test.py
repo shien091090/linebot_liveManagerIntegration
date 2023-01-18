@@ -359,6 +359,49 @@ class MyTestCase(unittest.TestCase):
         self.GivenCommandWithFlawType(input_flaw_type, '新增行程 每年 5 清理濾網')
         self.RequestResultShouldBeFormatError('新增週期行程')
 
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
+        INPUT_FLAW_TYPE_MULTI_BLANK_BETWEEN
+    ])
+    def test_request_add_schedule_command_and_no_input_wrong_period_and_deficient_number(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '新增行程 每年 清理濾網')
+        self.RequestResultShouldBeFormatError('新增週期行程')
+
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
+        INPUT_FLAW_TYPE_MULTI_BLANK_BETWEEN
+    ])
+    def test_request_add_schedule_command_and_period_is_daily_with_unnecessary_number(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '新增行程 每天 1 吃藥')
+        self.RequestTitleShouldBe('新增週期行程')
+        self.RequestTypeShouldBe(manage.REQUEST_TYPE_GAS)
+        self.RequestActionShouldBe(lineActionInfo.API_ACTION_SCHEDULE_ADD)
+        self.RequestSubContentShouldBe('每天')
+        self.RequestNumberShouldBe('0')
+        self.RequestAdditionalContentShouldBe('1 吃藥')
+
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
+        INPUT_FLAW_TYPE_MULTI_BLANK_BETWEEN
+    ])
+    def test_request_add_schedule_command_and_period_is_daily(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '新增行程 每天 吃藥')
+        self.RequestTitleShouldBe('新增週期行程')
+        self.RequestTypeShouldBe(manage.REQUEST_TYPE_GAS)
+        self.RequestActionShouldBe(lineActionInfo.API_ACTION_SCHEDULE_ADD)
+        self.RequestSubContentShouldBe('每天')
+        self.RequestNumberShouldBe('0')
+        self.RequestAdditionalContentShouldBe('吃藥')
+
     def RequestSubContentShouldBe(self, expected_sub_content):
         self.assertEqual(expected_sub_content, self.req_info.requestParam['subContent'])
 

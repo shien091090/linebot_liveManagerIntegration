@@ -12,7 +12,7 @@ INPUT_FLAW_TYPE_SUFFIX_BLANK = 'suffix_blank'
 
 
 # [How To Use]
-# Terminal : python -m unittest LiveManagerIntegrationTest
+# Terminal : python -m unittest test
 def GetDecoratedCommand(input_flaw_type, origin_input_command):
     input_command = origin_input_command
     if input_flaw_type == INPUT_FLAW_TYPE_PREFIX_BLANK:
@@ -401,6 +401,65 @@ class MyTestCase(unittest.TestCase):
         self.RequestSubContentShouldBe('每天')
         self.RequestNumberShouldBe('0')
         self.RequestAdditionalContentShouldBe('吃藥')
+
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
+        INPUT_FLAW_TYPE_MULTI_BLANK_BETWEEN
+    ])
+    def test_request_add_schedule_command_and_additional_content_with_blank(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '新增行程 每月 3 1300 打掃家裡')
+        self.RequestTitleShouldBe('新增週期行程')
+        self.RequestTypeShouldBe(manage.REQUEST_TYPE_GAS)
+        self.RequestActionShouldBe(lineActionInfo.API_ACTION_SCHEDULE_ADD)
+        self.RequestSubContentShouldBe('每月')
+        self.RequestNumberShouldBe('3')
+        self.RequestAdditionalContentShouldBe('1300 打掃家裡')
+
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
+        INPUT_FLAW_TYPE_MULTI_BLANK_BETWEEN
+    ])
+    def test_request_add_schedule_command_and_input_multiple_period_key(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '新增行程 每月 每週 5 拖地')
+        self.RequestResultShouldBeFormatError('新增週期行程')
+
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
+        INPUT_FLAW_TYPE_MULTI_BLANK_BETWEEN
+    ])
+    def test_request_add_schedule_command_and_period_is_daily_and_additional_content_with_blank(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '新增行程 每天 0030 波比工作 睡覺')
+        self.RequestTitleShouldBe('新增週期行程')
+        self.RequestTypeShouldBe(manage.REQUEST_TYPE_GAS)
+        self.RequestActionShouldBe(lineActionInfo.API_ACTION_SCHEDULE_ADD)
+        self.RequestSubContentShouldBe('每天')
+        self.RequestNumberShouldBe('0')
+        self.RequestAdditionalContentShouldBe('0030 波比工作 睡覺')
+
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
+        INPUT_FLAW_TYPE_MULTI_BLANK_BETWEEN
+    ])
+    def test_request_add_schedule_command_and_additional_content_is_digits_with_blank(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '新增行程 每週 3 10001 404')
+        self.RequestTitleShouldBe('新增週期行程')
+        self.RequestTypeShouldBe(manage.REQUEST_TYPE_GAS)
+        self.RequestActionShouldBe(lineActionInfo.API_ACTION_SCHEDULE_ADD)
+        self.RequestSubContentShouldBe('每週')
+        self.RequestNumberShouldBe('3')
+        self.RequestAdditionalContentShouldBe('10001 404')
 
     def RequestSubContentShouldBe(self, expected_sub_content):
         self.assertEqual(expected_sub_content, self.req_info.requestParam['subContent'])

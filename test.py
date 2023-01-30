@@ -461,6 +461,88 @@ class MyTestCase(unittest.TestCase):
         self.RequestNumberShouldBe('3')
         self.RequestAdditionalContentShouldBe('10001 404')
 
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK
+    ])
+    def test_request_remove_schedule_command_and_no_any_param(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '刪除行程')
+        self.RequestResultShouldBeFormatError('刪除週期行程')
+
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
+        INPUT_FLAW_TYPE_MULTI_BLANK_BETWEEN
+    ])
+    def test_request_remove_schedule_command_and_input_number_is_zero(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '刪除行程 0')
+        self.RequestResultShouldBeFormatError('刪除週期行程')
+
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
+        INPUT_FLAW_TYPE_MULTI_BLANK_BETWEEN
+    ])
+    def test_request_remove_schedule_command_and_input_number_is_smaller_than_zero(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '刪除行程 -1')
+        self.RequestResultShouldBeFormatError('刪除週期行程')
+
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
+        INPUT_FLAW_TYPE_MULTI_BLANK_BETWEEN
+    ])
+    def test_request_remove_schedule_command_and_input_number_is_smaller_than_zero(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '刪除行程 3')
+        self.RequestTitleShouldBe('刪除週期行程')
+        self.RequestTypeShouldBe(manage.REQUEST_TYPE_GAS)
+        self.RequestActionShouldBe(lineActionInfo.API_ACTION_SCHEDULE_REMOVE)
+        self.RequestNumberShouldBe('3')
+
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
+        INPUT_FLAW_TYPE_MULTI_BLANK_BETWEEN
+    ])
+    def test_request_remove_schedule_command_and_input_is_not_number(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '刪除行程 a')
+        self.RequestResultShouldBeFormatError('刪除週期行程')
+
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
+        INPUT_FLAW_TYPE_MULTI_BLANK_BETWEEN
+    ])
+    def test_request_remove_schedule_command_and_input_multiple_param(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '刪除行程 1 a')
+        self.RequestResultShouldBeFormatError('刪除週期行程')
+
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
+        INPUT_FLAW_TYPE_MULTI_BLANK_BETWEEN
+    ])
+    def test_request_remove_schedule_command_and_input_formatted_number(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '刪除行程 05')
+        self.RequestTitleShouldBe('刪除週期行程')
+        self.RequestTypeShouldBe(manage.REQUEST_TYPE_GAS)
+        self.RequestActionShouldBe(lineActionInfo.API_ACTION_SCHEDULE_REMOVE)
+        self.RequestNumberShouldBe('5')
+
     def RequestSubContentShouldBe(self, expected_sub_content):
         self.assertEqual(expected_sub_content, self.req_info.requestParam['subContent'])
 

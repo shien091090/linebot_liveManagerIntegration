@@ -179,7 +179,11 @@ class TextParseResult:
         if index >= len(self.elements):
             return ''
 
-        return self.elements[index]
+        if text_type_text_combine_type_enum == TextType_Number:
+            convert_digit = int(self.elements[index])
+            return str(convert_digit)
+        else:
+            return self.elements[index]
 
     def IsKeyWordMatch(self, key_word_str):
         own_key_word = self.GetSpecificTextTypeValue(TextType_KeyWord)

@@ -140,8 +140,7 @@ def ParseRequestInfo(receive_txt):
         text_parse_result = text_parser.ParseTextBySpecificStructure(command_text_structure)
 
         if text_parse_result is None or \
-                text_parse_result.IsKeyWordMatch(keyWordSetting.GetCommandKey(temp_command_key)) is False or \
-                int(text_parse_result.GetSpecificTextTypeValue(TextType_Number)) <= 0:
+                text_parse_result.IsKeyWordMatch(keyWordSetting.GetCommandKey(temp_command_key)) is False:
             req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key),
                                                   REQUEST_TYPE_BYPASS,
                                                   None)

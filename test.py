@@ -549,7 +549,10 @@ class MyTestCase(unittest.TestCase):
     ])
     def test_request_remove_schedule_command_and_input_number_is_zero(self, input_flaw_type):
         self.GivenCommandWithFlawType(input_flaw_type, '刪除行程 0')
-        self.RequestResultShouldBeFormatError('刪除週期行程')
+        self.RequestTitleShouldBe('刪除週期行程')
+        self.RequestTypeShouldBe(manage.REQUEST_TYPE_GAS)
+        self.RequestActionShouldBe(lineActionInfo.API_ACTION_SCHEDULE_REMOVE)
+        self.RequestNumberShouldBe('0')
 
     @parameterized.expand([
         '',

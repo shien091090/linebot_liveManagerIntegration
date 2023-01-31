@@ -139,6 +139,45 @@ class MyTestCase(unittest.TestCase):
         INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
         INPUT_FLAW_TYPE_MULTI_BLANK_BETWEEN
     ])
+    def test_request_remove_memo_command_and_input_number_is_zero(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '刪除 0')
+        self.RequestTitleShouldBe('刪除待辦事項')
+        self.RequestTypeShouldBe(manage.REQUEST_TYPE_GAS)
+        self.RequestActionShouldBe(lineActionInfo.API_ACTION_MEMO_REMOVE)
+        self.RequestNumberShouldBe('0')
+
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
+        INPUT_FLAW_TYPE_MULTI_BLANK_BETWEEN
+    ])
+    def test_request_remove_memo_command_and_input_number_is_smaller_then_zero(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '刪除 -6')
+        self.RequestResultShouldBeFormatError('刪除待辦事項')
+
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
+        INPUT_FLAW_TYPE_MULTI_BLANK_BETWEEN
+    ])
+    def test_request_remove_memo_command_and_input_formatted_number(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '刪除 07')
+        self.RequestTitleShouldBe('刪除待辦事項')
+        self.RequestTypeShouldBe(manage.REQUEST_TYPE_GAS)
+        self.RequestActionShouldBe(lineActionInfo.API_ACTION_MEMO_REMOVE)
+        self.RequestNumberShouldBe('7')
+
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
+        INPUT_FLAW_TYPE_MULTI_BLANK_BETWEEN
+    ])
     def test_request_remove_memo_command_and_input_extra_number(self, input_flaw_type):
         self.GivenCommandWithFlawType(input_flaw_type, '刪除 3 4')
         self.RequestResultShouldBeFormatError('刪除待辦事項')

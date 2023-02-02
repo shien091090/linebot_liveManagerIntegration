@@ -615,6 +615,262 @@ class MyTestCase(unittest.TestCase):
         self.RequestActionShouldBe(lineActionInfo.API_ACTION_SCHEDULE_REMOVE)
         self.RequestNumberShouldBe('5')
 
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK
+    ])
+    def test_request_modify_schedule_command_and_no_any_param(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '修改行程')
+        self.RequestResultShouldBeFormatError('修改週期行程')
+
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
+        INPUT_FLAW_TYPE_MULTI_BLANK_BETWEEN
+    ])
+    def test_request_modify_schedule_command_and_input_number_only(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '修改行程 0')
+        self.RequestResultShouldBeFormatError('修改週期行程')
+
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
+        INPUT_FLAW_TYPE_MULTI_BLANK_BETWEEN
+    ])
+    def test_request_modify_schedule_command_and_input_number_and_additional_content_only(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '修改行程 1 繳網路費')
+        self.RequestResultShouldBeFormatError('修改週期行程')
+
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
+        INPUT_FLAW_TYPE_MULTI_BLANK_BETWEEN
+    ])
+    def test_request_modify_schedule_command_and_not_input_additional_content(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '修改行程 1 每月 1')
+        self.RequestResultShouldBeFormatError('修改週期行程')
+
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
+        INPUT_FLAW_TYPE_MULTI_BLANK_BETWEEN
+    ])
+    def test_request_modify_schedule_command_and_period_key_is_monthly(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '修改行程 1 每月 1 打醬油')
+        self.RequestTitleShouldBe('修改週期行程')
+        self.RequestTypeShouldBe(manage.REQUEST_TYPE_GAS)
+        self.RequestActionShouldBe(lineActionInfo.API_ACTION_SCHEDULE_MODIFY)
+        self.RequestNumberShouldBe('1')
+        self.RequestSubContentShouldBe("每月")
+        self.RequestSubNumberShouldBe("1")
+        self.RequestAdditionalContentShouldBe("打醬油")
+
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
+        INPUT_FLAW_TYPE_MULTI_BLANK_BETWEEN
+    ])
+    def test_request_modify_schedule_command_and_period_key_is_monthly_and_input_number_is_zero(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '修改行程 0 每月 2 打醬油')
+        self.RequestTitleShouldBe('修改週期行程')
+        self.RequestTypeShouldBe(manage.REQUEST_TYPE_GAS)
+        self.RequestActionShouldBe(lineActionInfo.API_ACTION_SCHEDULE_MODIFY)
+        self.RequestNumberShouldBe('0')
+        self.RequestSubContentShouldBe("每月")
+        self.RequestSubNumberShouldBe("2")
+        self.RequestAdditionalContentShouldBe("打醬油")
+
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
+        INPUT_FLAW_TYPE_MULTI_BLANK_BETWEEN
+    ])
+    def test_request_modify_schedule_command_and_period_key_is_monthly_and_input_formatted_number(self,
+                                                                                                  input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '修改行程 03 每月 3 打醬油')
+        self.RequestTitleShouldBe('修改週期行程')
+        self.RequestTypeShouldBe(manage.REQUEST_TYPE_GAS)
+        self.RequestActionShouldBe(lineActionInfo.API_ACTION_SCHEDULE_MODIFY)
+        self.RequestNumberShouldBe('3')
+        self.RequestSubContentShouldBe("每月")
+        self.RequestSubNumberShouldBe("3")
+        self.RequestAdditionalContentShouldBe("打醬油")
+
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
+        INPUT_FLAW_TYPE_MULTI_BLANK_BETWEEN
+    ])
+    def test_request_modify_schedule_command_and_not_input_sub_number(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '修改行程 1 每月 打醬油')
+        self.RequestResultShouldBeFormatError('修改週期行程')
+
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
+        INPUT_FLAW_TYPE_MULTI_BLANK_BETWEEN
+    ])
+    def test_request_modify_schedule_command_and_period_key_is_monthly_and_input_sub_number_is_zero(self,
+                                                                                                    input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '修改行程 7 每月 0 打醬油')
+        self.RequestTitleShouldBe('修改週期行程')
+        self.RequestTypeShouldBe(manage.REQUEST_TYPE_GAS)
+        self.RequestActionShouldBe(lineActionInfo.API_ACTION_SCHEDULE_MODIFY)
+        self.RequestNumberShouldBe('7')
+        self.RequestSubContentShouldBe("每月")
+        self.RequestSubNumberShouldBe("0")
+        self.RequestAdditionalContentShouldBe("打醬油")
+
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
+        INPUT_FLAW_TYPE_MULTI_BLANK_BETWEEN
+    ])
+    def test_request_modify_schedule_command_and_input_multiple_additional_content(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '修改行程 2 每月 1 買生鮮 買點心')
+        self.RequestTitleShouldBe('修改週期行程')
+        self.RequestTypeShouldBe(manage.REQUEST_TYPE_GAS)
+        self.RequestActionShouldBe(lineActionInfo.API_ACTION_SCHEDULE_MODIFY)
+        self.RequestNumberShouldBe('2')
+        self.RequestSubContentShouldBe("每月")
+        self.RequestSubNumberShouldBe("1")
+        self.RequestAdditionalContentShouldBe("買生鮮 買點心")
+
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
+        INPUT_FLAW_TYPE_MULTI_BLANK_BETWEEN
+    ])
+    def test_request_modify_schedule_command_and_input_additional_content_with_number(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '修改行程 5 每月 1 1100 洗廁所')
+        self.RequestTitleShouldBe('修改週期行程')
+        self.RequestTypeShouldBe(manage.REQUEST_TYPE_GAS)
+        self.RequestActionShouldBe(lineActionInfo.API_ACTION_SCHEDULE_MODIFY)
+        self.RequestNumberShouldBe('5')
+        self.RequestSubContentShouldBe("每月")
+        self.RequestSubNumberShouldBe("1")
+        self.RequestAdditionalContentShouldBe("1100 洗廁所")
+
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
+        INPUT_FLAW_TYPE_MULTI_BLANK_BETWEEN
+    ])
+    def test_request_modify_schedule_command_and_period_key_is_weekly(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '修改行程 3 每週 7 洗小狗')
+        self.RequestTitleShouldBe('修改週期行程')
+        self.RequestTypeShouldBe(manage.REQUEST_TYPE_GAS)
+        self.RequestActionShouldBe(lineActionInfo.API_ACTION_SCHEDULE_MODIFY)
+        self.RequestNumberShouldBe('3')
+        self.RequestSubContentShouldBe("每週")
+        self.RequestSubNumberShouldBe("7")
+        self.RequestAdditionalContentShouldBe("洗小狗")
+
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
+        INPUT_FLAW_TYPE_MULTI_BLANK_BETWEEN
+    ])
+    def test_request_modify_schedule_command_and_period_key_is_weekly_and_input_formatted_number_and_multiple_additional_content(
+            self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '修改行程 010 每週 5 洗小狗 洗車 打蠟')
+        self.RequestTitleShouldBe('修改週期行程')
+        self.RequestTypeShouldBe(manage.REQUEST_TYPE_GAS)
+        self.RequestActionShouldBe(lineActionInfo.API_ACTION_SCHEDULE_MODIFY)
+        self.RequestNumberShouldBe('10')
+        self.RequestSubContentShouldBe("每週")
+        self.RequestSubNumberShouldBe("5")
+        self.RequestAdditionalContentShouldBe("洗小狗 洗車 打蠟")
+
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
+        INPUT_FLAW_TYPE_MULTI_BLANK_BETWEEN
+    ])
+    def test_request_modify_schedule_command_and_period_key_is_daily_and_input_sub_number(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '修改行程 8 每天 2 擦藥')
+        self.RequestTitleShouldBe('修改週期行程')
+        self.RequestTypeShouldBe(manage.REQUEST_TYPE_GAS)
+        self.RequestActionShouldBe(lineActionInfo.API_ACTION_SCHEDULE_MODIFY)
+        self.RequestNumberShouldBe('8')
+        self.RequestSubContentShouldBe("每天")
+        self.RequestSubNumberShouldBe("0")
+        self.RequestAdditionalContentShouldBe("2 擦藥")
+
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
+        INPUT_FLAW_TYPE_MULTI_BLANK_BETWEEN
+    ])
+    def test_request_modify_schedule_command_and_period_key_is_daily(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '修改行程 6 每天 擦藥')
+        self.RequestTitleShouldBe('修改週期行程')
+        self.RequestTypeShouldBe(manage.REQUEST_TYPE_GAS)
+        self.RequestActionShouldBe(lineActionInfo.API_ACTION_SCHEDULE_MODIFY)
+        self.RequestNumberShouldBe('6')
+        self.RequestSubContentShouldBe("每天")
+        self.RequestSubNumberShouldBe("0")
+        self.RequestAdditionalContentShouldBe("擦藥")
+
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
+        INPUT_FLAW_TYPE_MULTI_BLANK_BETWEEN
+    ])
+    def test_request_modify_schedule_command_and_period_key_is_daily_and_input_multiple_additional_content(self,
+                                                                                                           input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '修改行程 12 每天 跑步 舉重')
+        self.RequestTitleShouldBe('修改週期行程')
+        self.RequestTypeShouldBe(manage.REQUEST_TYPE_GAS)
+        self.RequestActionShouldBe(lineActionInfo.API_ACTION_SCHEDULE_MODIFY)
+        self.RequestNumberShouldBe('12')
+        self.RequestSubContentShouldBe("每天")
+        self.RequestSubNumberShouldBe("0")
+        self.RequestAdditionalContentShouldBe("跑步 舉重")
+
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
+        INPUT_FLAW_TYPE_MULTI_BLANK_BETWEEN
+    ])
+    def test_request_modify_schedule_command_and_input_invalid_period_key(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '修改行程 1 每年 6 繳燃料稅')
+        self.RequestResultShouldBeFormatError('修改週期行程')
+
     def RequestSubContentShouldBe(self, expected_sub_content):
         self.assertEqual(expected_sub_content, self.req_info.requestParam['subContent'])
 
@@ -626,6 +882,9 @@ class MyTestCase(unittest.TestCase):
 
     def RequestAdditionalContentShouldBe(self, expected_additional_content):
         self.assertEqual(expected_additional_content, self.req_info.requestParam['additionalContent'])
+
+    def RequestSubNumberShouldBe(self, expected_sub_number):
+        self.assertEqual(expected_sub_number, self.req_info.requestParam['subNumber'])
 
     def RequestResultShouldBeFormatError(self, expected_request_title):
         self.RequestTitleShouldBe(expected_request_title)

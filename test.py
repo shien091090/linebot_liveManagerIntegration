@@ -887,13 +887,91 @@ class MyTestCase(unittest.TestCase):
         '',
         INPUT_FLAW_TYPE_PREFIX_BLANK,
         INPUT_FLAW_TYPE_SUFFIX_BLANK,
-        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
+        INPUT_FLAW_TYPE_MULTI_BLANK_BETWEEN
     ])
     def test_request_get_schedule_command_with_unnecessary_param(self, input_flaw_type):
         self.GivenCommandWithFlawType(input_flaw_type, '確認行程 A')
         self.RequestTitleShouldBe('確認週期行程')
         self.RequestTypeShouldBe(manage.REQUEST_TYPE_GAS)
         self.RequestActionShouldBe(lineActionInfo.API_ACTION_SCHEDULE_GET)
+
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK
+    ])
+    def test_request_buy_command_and_no_any_param(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '買')
+        self.RequestResultShouldBeFormatError('新增記帳項目')
+
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
+        INPUT_FLAW_TYPE_MULTI_BLANK_BETWEEN
+    ])
+    def test_request_buy_command_and_no_input_prize(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '買 鍋子')
+        self.RequestResultShouldBeFormatError('新增記帳項目')
+
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
+        INPUT_FLAW_TYPE_MULTI_BLANK_BETWEEN
+    ])
+    def test_request_buy_command(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '買 鍋子 150')
+        self.RequestTitleShouldBe('新增記帳項目')
+        self.RequestTypeShouldBe(manage.REQUEST_TYPE_GAS)
+        self.RequestActionShouldBe(lineActionInfo.API_ACTION_BUY)
+        self.RequestSubContentShouldBe("鍋子")
+        self.RequestNumberShouldBe('150')
+
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
+        INPUT_FLAW_TYPE_MULTI_BLANK_BETWEEN
+    ])
+    def test_request_buy_command_and_input_multiple_sub_content(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '買 鍋 碗 瓢 盆 1000')
+        self.RequestTitleShouldBe('新增記帳項目')
+        self.RequestTypeShouldBe(manage.REQUEST_TYPE_GAS)
+        self.RequestActionShouldBe(lineActionInfo.API_ACTION_BUY)
+        self.RequestSubContentShouldBe("鍋 碗 瓢 盆")
+        self.RequestNumberShouldBe('1000')
+
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
+        INPUT_FLAW_TYPE_MULTI_BLANK_BETWEEN
+    ])
+    def test_request_buy_command_and_input_multiple_sub_content(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '買 鉛筆 1 5')
+        self.RequestResultShouldBeFormatError('新增記帳項目')
+
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
+        INPUT_FLAW_TYPE_MULTI_BLANK_BETWEEN
+    ])
+    def test_request_buy_command_and_input_formatted_prize(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '買 滑鼠 01500')
+        self.RequestTitleShouldBe('新增記帳項目')
+        self.RequestTypeShouldBe(manage.REQUEST_TYPE_GAS)
+        self.RequestActionShouldBe(lineActionInfo.API_ACTION_BUY)
+        self.RequestSubContentShouldBe("滑鼠")
+        self.RequestNumberShouldBe('1500')
 
     def RequestSubContentShouldBe(self, expected_sub_content):
         self.assertEqual(expected_sub_content, self.req_info.requestParam['subContent'])

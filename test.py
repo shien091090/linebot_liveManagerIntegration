@@ -871,6 +871,30 @@ class MyTestCase(unittest.TestCase):
         self.GivenCommandWithFlawType(input_flaw_type, '修改行程 1 每年 6 繳燃料稅')
         self.RequestResultShouldBeFormatError('修改週期行程')
 
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK
+    ])
+    def test_request_get_schedule_command(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '確認行程')
+        self.RequestTitleShouldBe('確認週期行程')
+        self.RequestTypeShouldBe(manage.REQUEST_TYPE_GAS)
+        self.RequestActionShouldBe(lineActionInfo.API_ACTION_SCHEDULE_GET)
+
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK
+    ])
+    def test_request_get_schedule_command_with_unnecessary_param(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '確認行程 A')
+        self.RequestTitleShouldBe('確認週期行程')
+        self.RequestTypeShouldBe(manage.REQUEST_TYPE_GAS)
+        self.RequestActionShouldBe(lineActionInfo.API_ACTION_SCHEDULE_GET)
+
     def RequestSubContentShouldBe(self, expected_sub_content):
         self.assertEqual(expected_sub_content, self.req_info.requestParam['subContent'])
 

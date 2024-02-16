@@ -1015,6 +1015,17 @@ class MyTestCase(unittest.TestCase):
         print(f'[SNTest] input_command = {input_command}')
         self.reply_flex_message, self.req_info = manage.ParseRequestInfo(input_command)
 
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK
+    ])
+    def test_request_record_baby_diaper_changing_time_command(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '紀錄寶寶換尿布時間')
+        self.RequestTitleShouldBe('紀錄寶寶換尿布時間')
+        self.RequestTypeShouldBe(manage.REQUEST_TYPE_GAS)
+        self.RequestActionShouldBe(lineActionInfo.API_ACTION_RECORD_BABY_DIAPER_CHANGING_TIME)
 
 if __name__ == '__main__':
     unittest.main()

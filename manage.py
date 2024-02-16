@@ -283,6 +283,14 @@ def ParseRequestInfo(receive_txt):
             req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key),
                                                   REQUEST_TYPE_GAS,
                                                   send_param)
+
+    # 紀錄寶寶換尿布時間
+    temp_command_key = 'KEY_BABY_DIAPER'
+    if command_key == keyWordSetting.GetCommandKey(temp_command_key):
+        send_param["action"] = lineActionInfo.API_ACTION_RECORD_BABY_DIAPER_CHANGING_TIME
+        req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key),
+                                              REQUEST_TYPE_GAS,
+                                              send_param)
     return reply_flex_message, req_info
 
 

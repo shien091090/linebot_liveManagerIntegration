@@ -284,6 +284,28 @@ def ParseRequestInfo(receive_txt):
                                                   REQUEST_TYPE_GAS,
                                                   send_param)
 
+    # 記帳(預算種類)
+    temp_command_key = 'KEY_BUY_WITH_BUDGET_TYPE'
+    if command_key == keyWordSetting.GetCommandKey(temp_command_key):
+        command_text_structure = [TextStructureType_Content, TextStructureType_Content, TextStructureType_Number, TextStructureType_Content]
+        text_parse_result = text_parser.ParseTextBySpecificStructure(command_text_structure)
+
+        if text_parse_result is None or \
+                text_parse_result.IsKeyWordMatch(keyWordSetting.GetCommandKey(temp_command_key)) is False:
+            req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key),
+                                                  REQUEST_TYPE_BYPASS,
+                                                  None)
+            req_info.statusMsg = f"【格式錯誤】\n正確格式為 『{keyWordSetting.GetCommandFormatHint(temp_command_key)}』"
+            req_info.responseMsg = ' '
+        else:
+            send_param["action"] = lineActionInfo.API_ACTION_BUY_WITH_BUDGET_TYPE
+            send_param["subContent"] = text_parse_result.GetSpecificTextTypeValue(TextType_SubContent)
+            send_param["number"] = text_parse_result.GetSpecificTextTypeValue(TextType_Number)
+            send_param["additionalContent"] = text_parse_result.GetSpecificTextTypeValue(TextType_AdditionalContent)
+            req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key),
+                                                  REQUEST_TYPE_GAS,
+                                                  send_param)
+
     # 紀錄寶寶換尿布時間
     temp_command_key = 'KEY_BABY_DIAPER'
     if command_key == keyWordSetting.GetCommandKey(temp_command_key):

@@ -287,7 +287,8 @@ def ParseRequestInfo(receive_txt):
     # 記帳(預算種類)
     temp_command_key = 'KEY_BUY_WITH_BUDGET_TYPE'
     if command_key == keyWordSetting.GetCommandKey(temp_command_key):
-        command_text_structure = [TextStructureType_Content, TextStructureType_Content, TextStructureType_Number, TextStructureType_Content]
+        command_text_structure = [TextStructureType_Content, TextStructureType_Content, TextStructureType_Number,
+                                  TextStructureType_Content]
         text_parse_result = text_parser.ParseTextBySpecificStructure(command_text_structure)
 
         if text_parse_result is None or \
@@ -313,8 +314,40 @@ def ParseRequestInfo(receive_txt):
         req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key),
                                               REQUEST_TYPE_GAS,
                                               send_param)
-    return reply_flex_message, req_info
 
+    # 紀錄寶寶吃飯時間
+    temp_command_key = 'KEY_BABY_EAT'
+    if command_key == keyWordSetting.GetCommandKey(temp_command_key):
+        command_text_structure = [TextStructureType_Content, TextStructureType_Number]
+        text_parse_result = text_parser.ParseTextBySpecificStructure(command_text_structure)
+
+        if text_parse_result is None or \
+                text_parse_result.IsKeyWordMatch(keyWordSetting.GetCommandKey(temp_command_key)) is False:
+
+            command_text_structure = [TextStructureType_Content]
+            text_parse_result = text_parser.ParseTextBySpecificStructure(command_text_structure)
+
+            if text_parse_result is None or \
+                    text_parse_result.IsKeyWordMatch(keyWordSetting.GetCommandKey(temp_command_key)) is False:
+                req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key),
+                                                      REQUEST_TYPE_BYPASS,
+                                                      None)
+                req_info.statusMsg = f"【格式錯誤】\n正確格式為 『{keyWordSetting.GetCommandFormatHint(temp_command_key)}』"
+                req_info.responseMsg = ' '
+
+            else:
+                send_param["action"] = lineActionInfo.API_ACTION_RECORD_BABY_EAT_TIME
+                req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key),
+                                                      REQUEST_TYPE_GAS,
+                                                      send_param)
+        else:
+            send_param["action"] = lineActionInfo.API_ACTION_RECORD_BABY_EAT_TIME
+            send_param["number"] = text_parse_result.GetSpecificTextTypeValue(TextType_Number)
+            req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key),
+                                                  REQUEST_TYPE_GAS,
+                                                  send_param)
+
+    return reply_flex_message, req_info
 
 def printReceiverLog(event):
     event_type = str(event.source.type)

@@ -346,6 +346,13 @@ def ParseRequestInfo(receive_txt):
             req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key),
                                                   REQUEST_TYPE_GAS,
                                                   send_param)
+    #圖表測試
+    temp_command_key = 'KEY_GET_CHART'
+    if command_key == keyWordSetting.GetCommandKey(temp_command_key):
+        send_param["action"] = lineActionInfo.API_ACTION_GET_CHART
+        req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key),
+                                              REQUEST_TYPE_GAS,
+                                              send_param)
 
     return reply_flex_message, req_info
 

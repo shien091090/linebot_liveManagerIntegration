@@ -973,6 +973,43 @@ class MyTestCase(unittest.TestCase):
         self.RequestSubContentShouldBe("滑鼠")
         self.RequestNumberShouldBe('1500')
 
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK
+    ])
+    def test_request_record_baby_diaper_changing_time_command(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '紀錄寶寶換尿布時間')
+        self.RequestTitleShouldBe('紀錄寶寶換尿布時間')
+        self.RequestTypeShouldBe(manage.REQUEST_TYPE_GAS)
+        self.RequestActionShouldBe(lineActionInfo.API_ACTION_RECORD_BABY_DIAPER_CHANGING_TIME)
+
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK
+    ])
+    def test_request_record_baby_eat_time_command_and_no_any_param(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '紀錄寶寶吃飯時間')
+        self.RequestTitleShouldBe('紀錄寶寶吃飯時間')
+        self.RequestTypeShouldBe(manage.REQUEST_TYPE_GAS)
+        self.RequestActionShouldBe(lineActionInfo.API_ACTION_RECORD_BABY_EAT_TIME)
+
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK
+    ])
+    def test_request_record_baby_eat_time_command_and_input_feeding_amount(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '紀錄寶寶吃飯時間 125')
+        self.RequestTitleShouldBe('紀錄寶寶吃飯時間')
+        self.RequestNumberShouldBe(125)
+        self.RequestTypeShouldBe(manage.REQUEST_TYPE_GAS)
+        self.RequestActionShouldBe(lineActionInfo.API_ACTION_RECORD_BABY_EAT_TIME)
+
     def RequestSubContentShouldBe(self, expected_sub_content):
         self.assertEqual(expected_sub_content, self.req_info.requestParam['subContent'])
 
@@ -1014,18 +1051,6 @@ class MyTestCase(unittest.TestCase):
         input_command = GetDecoratedCommand(input_flaw_type, input_command)
         print(f'[SNTest] input_command = {input_command}')
         self.reply_flex_message, self.req_info = manage.ParseRequestInfo(input_command)
-
-    @parameterized.expand([
-        '',
-        INPUT_FLAW_TYPE_PREFIX_BLANK,
-        INPUT_FLAW_TYPE_SUFFIX_BLANK,
-        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK
-    ])
-    def test_request_record_baby_diaper_changing_time_command(self, input_flaw_type):
-        self.GivenCommandWithFlawType(input_flaw_type, '紀錄寶寶換尿布時間')
-        self.RequestTitleShouldBe('紀錄寶寶換尿布時間')
-        self.RequestTypeShouldBe(manage.REQUEST_TYPE_GAS)
-        self.RequestActionShouldBe(lineActionInfo.API_ACTION_RECORD_BABY_DIAPER_CHANGING_TIME)
 
 if __name__ == '__main__':
     unittest.main()

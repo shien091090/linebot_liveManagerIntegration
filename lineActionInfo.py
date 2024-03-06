@@ -6,13 +6,14 @@ import json
 
 class RequestInfo:
 
-    def __init__(self, str_title, str_request_type, request_param):
+    def __init__(self, str_title, str_request_type, request_param, str_message_type):
         self.title = str_title
         self.requestType = str_request_type
         self.requestParam = request_param
         self.statusCode = 0
         self.statusMsg = ''
         self.responseMsg = ''
+        self.messageType = ''
 
     def parseResponseJsonDct(self, dct):
         self.statusCode = dct['statusCode']

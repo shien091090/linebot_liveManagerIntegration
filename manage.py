@@ -3,7 +3,7 @@ import json
 from flask import Flask, request, abort
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
-from linebot.models import MessageEvent, TextMessage, FlexSendMessage
+from linebot.models import MessageEvent, TextMessage, FlexSendMessage, ImageSendMessage
 
 import keyWordSetting
 import textParserManager
@@ -51,14 +51,23 @@ def receiveMessage(event):
 
     req_info.sendRequest()
 
-    if reply_flex_message == '':
-        reply_flex_message = getFlexMessage(req_info.title, req_info.statusMsg, req_info.responseMsg)
+    if req_info.messageType == 'image':
+        img_message = ImageSendMessage(
+            original_content_url = "https://i.imgur.com/4QfKuz1.png",
+            preview_image_url = "https://i.imgur.com/4QfKuz1.png")
+        line_bot_api.reply_message(
+            event.reply_token,
+            img_message)
+        
+    elif req_info.messageType == 'text':
+        if reply_flex_message == '':
+            reply_flex_message = getFlexMessage(req_info.title, req_info.statusMsg, req_info.responseMsg)
 
-    flex_message_json_dict = json.loads(reply_flex_message)
+        flex_message_json_dict = json.loads(reply_flex_message)
 
-    line_bot_api.reply_message(
-        event.reply_token,
-        FlexSendMessage(alt_text=req_info.title, contents=flex_message_json_dict))
+        line_bot_api.reply_message(
+            event.reply_token,
+            FlexSendMessage(alt_text=req_info.title, contents=flex_message_json_dict))
 
 
 def ParseRequestInfo(receive_txt):
@@ -86,7 +95,8 @@ def ParseRequestInfo(receive_txt):
         req_info = lineActionInfo.RequestInfo(
             keyWordSetting.GetCommandTitle(temp_command_key),
             REQUEST_TYPE_BYPASS,
-            None)
+            None,
+            'text')
 
         reply_flex_message = GetCommandExplanationFlexMessage(
             req_info.title,
@@ -103,7 +113,8 @@ def ParseRequestInfo(receive_txt):
                 text_parse_result.IsKeyWordMatch(keyWordSetting.GetCommandKey(temp_command_key)) is False:
             req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key),
                                                   REQUEST_TYPE_BYPASS,
-                                                  None)
+                                                  None,
+                                                  'text')
             req_info.statusMsg = f"【格式錯誤】\n正確格式為 『{keyWordSetting.GetCommandFormatHint(temp_command_key)}』"
             req_info.responseMsg = ' '
         else:
@@ -112,7 +123,8 @@ def ParseRequestInfo(receive_txt):
             send_param["subContent"] = text_parse_result.GetSpecificTextTypeValue(TextType_SubContent)
             req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key),
                                                   REQUEST_TYPE_GAS,
-                                                  send_param)
+                                                  send_param,
+                                                  'text')
     # 刪除待辦事項
     temp_command_key = 'KEY_MEMO_REMOVE'
     if command_key == keyWordSetting.GetCommandKey(temp_command_key):
@@ -123,7 +135,8 @@ def ParseRequestInfo(receive_txt):
                 text_parse_result.IsKeyWordMatch(keyWordSetting.GetCommandKey(temp_command_key)) is False:
             req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key),
                                                   REQUEST_TYPE_BYPASS,
-                                                  None)
+                                                  None,
+                                                  'text')
             req_info.statusMsg = f"【格式錯誤】\n正確格式為 『{keyWordSetting.GetCommandFormatHint(temp_command_key)}』"
             req_info.responseMsg = ' '
         else:
@@ -132,7 +145,8 @@ def ParseRequestInfo(receive_txt):
             send_param["number"] = text_parse_result.GetSpecificTextTypeValue(TextType_Number)
             req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key),
                                                   REQUEST_TYPE_GAS,
-                                                  send_param)
+                                                  send_param,
+                                                  'text')
     # 修改待辦事項
     temp_command_key = 'KEY_MEMO_MODIFY'
     if command_key == keyWordSetting.GetCommandKey(temp_command_key):
@@ -143,7 +157,8 @@ def ParseRequestInfo(receive_txt):
                 text_parse_result.IsKeyWordMatch(keyWordSetting.GetCommandKey(temp_command_key)) is False:
             req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key),
                                                   REQUEST_TYPE_BYPASS,
-                                                  None)
+                                                  None,
+                                                  'text')
             req_info.statusMsg = f"【格式錯誤】\n正確格式為 『{keyWordSetting.GetCommandFormatHint(temp_command_key)}』"
             req_info.responseMsg = ' '
         else:
@@ -152,14 +167,16 @@ def ParseRequestInfo(receive_txt):
             send_param["subContent"] = text_parse_result.GetSpecificTextTypeValue(TextType_SubContent)
             req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key),
                                                   REQUEST_TYPE_GAS,
-                                                  send_param)
+                                                  send_param,
+                                                  'text')
     # 確認待辦事項
     temp_command_key = 'KEY_MEMO_GET'
     if command_key == keyWordSetting.GetCommandKey(temp_command_key):
         send_param["action"] = lineActionInfo.API_ACTION_MEMO_GET
         req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key),
                                               REQUEST_TYPE_GAS,
-                                              send_param)
+                                              send_param,
+                                              'text')
     # 新增週期行程
     temp_command_key = 'KEY_SCHEDULE_ADD'
     if command_key == keyWordSetting.GetCommandKey(temp_command_key):
@@ -184,7 +201,8 @@ def ParseRequestInfo(receive_txt):
                     text_parse_result.GetSpecificTextTypeValue(TextType_SubContent)) is False:
             req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key),
                                                   REQUEST_TYPE_BYPASS,
-                                                  None)
+                                                  None,
+                                                  'text')
             req_info.statusMsg = f"【格式錯誤】\n正確格式為\n『{keyWordSetting.GetCommandFormatHint(temp_command_key)}』"
             req_info.responseMsg = ' '
         else:
@@ -197,7 +215,8 @@ def ParseRequestInfo(receive_txt):
             send_param["additionalContent"] = text_parse_result.GetSpecificTextTypeValue(TextType_AdditionalContent)
             req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key),
                                                   REQUEST_TYPE_GAS,
-                                                  send_param)
+                                                  send_param,
+                                                  'text')
     # 刪除週期行程
     temp_command_key = 'KEY_SCHEDULE_REMOVE'
     if command_key == keyWordSetting.GetCommandKey(temp_command_key):
@@ -208,7 +227,8 @@ def ParseRequestInfo(receive_txt):
                 text_parse_result.IsKeyWordMatch(keyWordSetting.GetCommandKey(temp_command_key)) is False:
             req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key),
                                                   REQUEST_TYPE_BYPASS,
-                                                  None)
+                                                  None,
+                                                  'text')
             req_info.statusMsg = f"【格式錯誤】\n正確格式為 『{keyWordSetting.GetCommandFormatHint(temp_command_key)}』"
             req_info.responseMsg = ' '
         else:
@@ -216,7 +236,8 @@ def ParseRequestInfo(receive_txt):
             send_param["number"] = text_parse_result.GetSpecificTextTypeValue(TextType_Number)
             req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key),
                                                   REQUEST_TYPE_GAS,
-                                                  send_param)
+                                                  send_param,
+                                                  'text')
     # 修改週期行程
     temp_command_key = 'KEY_SCHEDULE_MODIFY'
     if command_key == keyWordSetting.GetCommandKey(temp_command_key):
@@ -241,7 +262,8 @@ def ParseRequestInfo(receive_txt):
                     text_parse_result.GetSpecificTextTypeValue(TextType_SubContent)) is False:
             req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key),
                                                   REQUEST_TYPE_BYPASS,
-                                                  None)
+                                                  None,
+                                                  'text')
             req_info.statusMsg = f"【格式錯誤】\n正確格式為\n『{keyWordSetting.GetCommandFormatHint(temp_command_key)}』"
             req_info.responseMsg = ' '
         else:
@@ -255,14 +277,16 @@ def ParseRequestInfo(receive_txt):
             send_param["additionalContent"] = text_parse_result.GetSpecificTextTypeValue(TextType_AdditionalContent)
             req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key),
                                                   REQUEST_TYPE_GAS,
-                                                  send_param)
+                                                  send_param,
+                                                  'text')
     # 確認週期行程
     temp_command_key = 'KEY_SCHEDULE_GET'
     if command_key == keyWordSetting.GetCommandKey(temp_command_key):
         send_param["action"] = lineActionInfo.API_ACTION_SCHEDULE_GET
         req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key),
                                               REQUEST_TYPE_GAS,
-                                              send_param)
+                                              send_param,
+                                              'text')
     # 記帳
     temp_command_key = 'KEY_BUY'
     if command_key == keyWordSetting.GetCommandKey(temp_command_key):
@@ -273,7 +297,8 @@ def ParseRequestInfo(receive_txt):
                 text_parse_result.IsKeyWordMatch(keyWordSetting.GetCommandKey(temp_command_key)) is False:
             req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key),
                                                   REQUEST_TYPE_BYPASS,
-                                                  None)
+                                                  None,
+                                                  'text')
             req_info.statusMsg = f"【格式錯誤】\n正確格式為 『{keyWordSetting.GetCommandFormatHint(temp_command_key)}』"
             req_info.responseMsg = ' '
         else:
@@ -282,7 +307,8 @@ def ParseRequestInfo(receive_txt):
             send_param["number"] = text_parse_result.GetSpecificTextTypeValue(TextType_Number)
             req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key),
                                                   REQUEST_TYPE_GAS,
-                                                  send_param)
+                                                  send_param,
+                                                  'text')
 
     # 記帳(預算種類)
     temp_command_key = 'KEY_BUY_WITH_BUDGET_TYPE'
@@ -295,7 +321,8 @@ def ParseRequestInfo(receive_txt):
                 text_parse_result.IsKeyWordMatch(keyWordSetting.GetCommandKey(temp_command_key)) is False:
             req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key),
                                                   REQUEST_TYPE_BYPASS,
-                                                  None)
+                                                  None,
+                                                  'text')
             req_info.statusMsg = f"【格式錯誤】\n正確格式為 『{keyWordSetting.GetCommandFormatHint(temp_command_key)}』"
             req_info.responseMsg = ' '
         else:
@@ -305,7 +332,8 @@ def ParseRequestInfo(receive_txt):
             send_param["additionalContent"] = text_parse_result.GetSpecificTextTypeValue(TextType_AdditionalContent)
             req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key),
                                                   REQUEST_TYPE_GAS,
-                                                  send_param)
+                                                  send_param,
+                                                  'text')
 
     # 紀錄寶寶換尿布時間
     temp_command_key = 'KEY_BABY_DIAPER'
@@ -313,7 +341,8 @@ def ParseRequestInfo(receive_txt):
         send_param["action"] = lineActionInfo.API_ACTION_RECORD_BABY_DIAPER_CHANGING_TIME
         req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key),
                                               REQUEST_TYPE_GAS,
-                                              send_param)
+                                              send_param,
+                                              'text')
 
     # 紀錄寶寶吃飯時間
     temp_command_key = 'KEY_BABY_EAT'
@@ -331,7 +360,8 @@ def ParseRequestInfo(receive_txt):
                     text_parse_result.IsKeyWordMatch(keyWordSetting.GetCommandKey(temp_command_key)) is False:
                 req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key),
                                                       REQUEST_TYPE_BYPASS,
-                                                      None)
+                                                      None,
+                                                      'text')
                 req_info.statusMsg = f"【格式錯誤】\n正確格式為 『{keyWordSetting.GetCommandFormatHint(temp_command_key)}』"
                 req_info.responseMsg = ' '
 
@@ -339,20 +369,23 @@ def ParseRequestInfo(receive_txt):
                 send_param["action"] = lineActionInfo.API_ACTION_RECORD_BABY_EAT_TIME
                 req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key),
                                                       REQUEST_TYPE_GAS,
-                                                      send_param)
+                                                      send_param,
+                                                      'text')
         else:
             send_param["action"] = lineActionInfo.API_ACTION_RECORD_BABY_EAT_TIME
             send_param["number"] = text_parse_result.GetSpecificTextTypeValue(TextType_Number)
             req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key),
                                                   REQUEST_TYPE_GAS,
-                                                  send_param)
+                                                  send_param,
+                                                  'text')
     #圖表測試
     temp_command_key = 'KEY_GET_CHART'
     if command_key == keyWordSetting.GetCommandKey(temp_command_key):
         send_param["action"] = lineActionInfo.API_ACTION_GET_CHART
         req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key),
                                               REQUEST_TYPE_GAS,
-                                              send_param)
+                                              send_param,
+                                              'image')
 
     return reply_flex_message, req_info
 

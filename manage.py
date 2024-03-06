@@ -53,8 +53,8 @@ def receiveMessage(event):
 
     if req_info.messageType == 'image':
         img_message = ImageSendMessage(
-            original_content_url = "https://i.imgur.com/4QfKuz1.png",
-            preview_image_url = "https://i.imgur.com/4QfKuz1.png")
+            original_content_url = req_info.responseMsg,
+            preview_image_url = req_info.responseMsg)
         line_bot_api.reply_message(
             event.reply_token,
             img_message)

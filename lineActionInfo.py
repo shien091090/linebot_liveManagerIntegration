@@ -13,7 +13,7 @@ class RequestInfo:
         self.statusCode = 0
         self.statusMsg = ''
         self.responseMsg = ''
-        self.messageType = ''
+        self.messageType = str_message_type
 
     def parseResponseJsonDct(self, dct):
         self.statusCode = dct['statusCode']

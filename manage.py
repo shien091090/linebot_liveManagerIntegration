@@ -51,15 +51,14 @@ def receiveMessage(event):
 
     req_info.sendRequest()
 
-    # if req_info.messageType == 'image':
-    #     img_message = ImageSendMessage(
-    #         original_content_url = "https://i.imgur.com/4QfKuz1.png",
-    #         preview_image_url = "https://i.imgur.com/4QfKuz1.png")
-    #     line_bot_api.reply_message(
-    #         event.reply_token,
-    #         img_message)
-        
-    if req_info.messageType == 'text':
+    if req_info.messageType == 'image':
+        img_message = ImageSendMessage(
+            original_content_url = "https://i.imgur.com/4QfKuz1.png",
+            preview_image_url = "https://i.imgur.com/4QfKuz1.png")
+        line_bot_api.reply_message(
+            event.reply_token,
+            img_message)
+    elif req_info.messageType == 'text':
         if reply_flex_message == '':
             reply_flex_message = getFlexMessage(req_info.title, req_info.statusMsg, req_info.responseMsg)
 

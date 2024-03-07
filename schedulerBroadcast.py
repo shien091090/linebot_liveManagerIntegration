@@ -14,7 +14,7 @@ def DailyBroadCast():
     line_bot_api = LineBotApi(settings.LINE_CHANNEL_ACCESS_TOKEN)
 
     send_param = {"action": API_ACTION_DAILY_SCHEDULER}
-    req_info = RequestInfo(TITLE_DAILY_REMIND, REQUEST_TYPE_GAS, send_param)
+    req_info = RequestInfo(TITLE_DAILY_REMIND, REQUEST_TYPE_GAS, send_param, 'text')
     req_info.sendRequest()
 
     reply_flex_message = getFlexMessage(req_info.title, req_info.statusMsg, req_info.responseMsg)

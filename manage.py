@@ -398,7 +398,7 @@ def ParseRequestInfo(receive_txt):
         req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key),
                                               REQUEST_TYPE_GAS,
                                               send_param,
-                                              'image')
+                                              'text')
 
     return reply_flex_message, req_info
 

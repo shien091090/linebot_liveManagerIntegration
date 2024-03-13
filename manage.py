@@ -63,6 +63,8 @@ def receiveMessage(event):
             'title': "testTitle"
         }
         uploaded_image = im.upload_image(PATH, config=config)
+        print(uploaded_image.title)
+        print(uploaded_image.link)
         img_message = ImageSendMessage(
             original_content_url = uploaded_image.link,
             preview_image_url = uploaded_image.link)

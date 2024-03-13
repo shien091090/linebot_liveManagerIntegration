@@ -1006,7 +1006,7 @@ class MyTestCase(unittest.TestCase):
     def test_request_record_baby_eat_time_command_and_input_feeding_amount(self, input_flaw_type):
         self.GivenCommandWithFlawType(input_flaw_type, '紀錄寶寶吃飯時間 125')
         self.RequestTitleShouldBe('紀錄寶寶吃飯時間')
-        self.RequestNumberShouldBe('125')
+        self.RequestNumberShouldBe(125)
         self.RequestTypeShouldBe(manage.REQUEST_TYPE_GAS)
         self.RequestActionShouldBe(lineActionInfo.API_ACTION_RECORD_BABY_EAT_TIME)
 

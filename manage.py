@@ -9,7 +9,6 @@ import keyWordSetting
 import textParserManager
 import lineActionInfo
 import settings
-#import pyimgur
 from textParserManager import TextParser, TextType_AdditionalContent, TextType_KeyWord, TextType_Number, \
     TextType_SubContent, TextStructureType_Content, TextStructureType_Number, TextType_SubNumber
 from flexMessageManager import GetCommandExplanationFlexMessage, getFlexMessage
@@ -52,27 +51,14 @@ def receiveMessage(event):
 
     req_info.sendRequest()
 
-    #if req_info.messageType == 'image':
-
-        #CLIENT_ID = "cd9dac4885101cf"
-        #PATH = req_info.responseMsg
-        #im = pyimgur.Imgur(CLIENT_ID)
-        #config = {
-        #    'album': 'ZsqZgO8',
-        #    'name': 'testName',
-        #    'title': "testTitle"
-        #}
-        #uploaded_image = im.upload_image(PATH, config=config)
-        #print(uploaded_image.title)
-        #print(uploaded_image.link)
-        #img_message = ImageSendMessage(
-        #    original_content_url = uploaded_image.link,
-        #    preview_image_url = uploaded_image.link)
-        #line_bot_api.reply_message(
-        #    event.reply_token,
-        #    img_message)
-        
-    if req_info.messageType == 'text':
+    if req_info.messageType == 'image':
+        img_message = ImageSendMessage(
+            original_content_url = "https://i.imgur.com/4QfKuz1.png",
+            preview_image_url = "https://i.imgur.com/4QfKuz1.png")
+        line_bot_api.reply_message(
+            event.reply_token,
+            img_message)
+    elif req_info.messageType == 'text':
         if reply_flex_message == '':
             reply_flex_message = getFlexMessage(req_info.title, req_info.statusMsg, req_info.responseMsg)
 
@@ -398,7 +384,7 @@ def ParseRequestInfo(receive_txt):
         req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key),
                                               REQUEST_TYPE_GAS,
                                               send_param,
-                                              'text')
+                                              'image')
 
     return reply_flex_message, req_info
 

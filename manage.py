@@ -25,7 +25,6 @@ app = Flask(__name__)
 line_bot_api = LineBotApi(settings.LINE_CHANNEL_ACCESS_TOKEN)
 handler = WebhookHandler(settings.LINE_CHANNEL_SECRET)
 
-
 @app.route("/callback", methods=['POST'])
 def callback():
     signature = request.headers['X-Line-Signature']
@@ -377,7 +376,7 @@ def ParseRequestInfo(receive_txt):
         req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key),
                                               REQUEST_TYPE_GAS,
                                               send_param,
-                                              'image')
+                                              'text')
 
     return reply_flex_message, req_info
 

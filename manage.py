@@ -9,10 +9,16 @@ import keyWordSetting
 import textParserManager
 import lineActionInfo
 import settings
-import pyimgur
 from textParserManager import TextParser, TextType_AdditionalContent, TextType_KeyWord, TextType_Number, \
     TextType_SubContent, TextStructureType_Content, TextStructureType_Number, TextType_SubNumber
 from flexMessageManager import GetCommandExplanationFlexMessage, getFlexMessage
+
+from matplotlib import pyplot as plt
+import pandas as pd
+from datetime import datetime
+import numpy as np
+import os
+import pyimgur
 
 REQUEST_TYPE_BYPASS = 'request_type_bypass'
 REQUEST_TYPE_GAS = 'request_type_gas'
@@ -54,24 +60,48 @@ def receiveMessage(event):
 
     if req_info.messageType == 'image':
 
-        print("send image msg")
-        CLIENT_ID = "cd9dac4885101cf"
-        PATH = req_info.responseMsg
-        im = pyimgur.Imgur(CLIENT_ID)
-        config = {
-            'album': 'ZsqZgO8',
-            'name': 'testName',
-            'title': "testTitle"
+        data = {
+            "日期": ["2024-03-01", "2024-03-02", "2024-03-03", "2024-03-04", "2024-03-05",
+                    "2024-03-01", "2024-03-02", "2024-03-03", "2024-03-04", "2024-03-05"],
+            "款項": ["午餐", "公交", "晚餐", "書籍", "電影",
+                    "午餐", "咖啡", "晚餐", "電影", "衣服"],
+            "金額": [120, 25, 150, 200, 90,
+                    130, 45, 160, 85, 300],
+            "類別": ["餐飲", "交通", "餐飲", "學習", "娛樂",
+                    "餐飲", "飲品", "餐飲", "娛樂", "服裝"]
         }
-        print(PATH)
-        uploaded_image = im.upload_image(PATH, config=config)
+
+        df = pd.DataFrame(data)
+
+        df["日期"] = pd.to_datetime(df["日期"])
+
+        this_month = df[(df["日期"] >= "2024-03-01") & (df["日期"] <= "2024-03-31")]
+
+        category_sums = this_month.groupby("類別")["金額"].sum()
+
+        plt.figure(figsize=(10, 7))
+        plt.pie(category_sums, labels=category_sums.index, autopct='%1.1f%%', startangle=140)
+        plt.title('2024年3月各類別消費總金額')
+        plt.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+
+        file_name = 'expense_pie_chart.jpg'
+        plt.savefig(file_name)
+        plt.close()
+
+        CLIENT_ID = "cd9dac4885101cf"
+        im = pyimgur.Imgur(CLIENT_ID)
+
+        uploaded_image = im.upload_image(file_name, title='testChart')
         print(uploaded_image.link)
+
         img_message = ImageSendMessage(
             original_content_url = uploaded_image.link,
             preview_image_url = uploaded_image.link)
+        
         line_bot_api.reply_message(
             event.reply_token,
             img_message)
+        
     elif req_info.messageType == 'text':
         if reply_flex_message == '':
             reply_flex_message = getFlexMessage(req_info.title, req_info.statusMsg, req_info.responseMsg)

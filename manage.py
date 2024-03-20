@@ -82,7 +82,7 @@ def receiveMessage(event):
         font_prop = FontProperties(fname=font_path, size=14)
 
         plt.figure(figsize=(10, 7))
-        plt.pie(category_sums, labels=category_sums.index, autopct='%1.1f%%', startangle=140, fontproperties=font_prop)
+        plt.pie(category_sums, labels=category_sums.index, autopct='%1.1f%%', startangle=140, textprops={'fontproperties': font_prop})
         plt.title('2024年3月各類別消費總金額', fontproperties=font_prop)
         plt.axis('equal')
 

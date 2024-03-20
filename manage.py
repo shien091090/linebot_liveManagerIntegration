@@ -14,6 +14,7 @@ from textParserManager import TextParser, TextType_AdditionalContent, TextType_K
 from flexMessageManager import GetCommandExplanationFlexMessage, getFlexMessage
 
 from matplotlib import pyplot as plt
+from matplotlib.font_manager import FontProperties
 import pandas as pd
 from datetime import datetime
 import numpy as np
@@ -72,17 +73,18 @@ def receiveMessage(event):
         }
 
         df = pd.DataFrame(data)
-
         df["日期"] = pd.to_datetime(df["日期"])
 
         this_month = df[(df["日期"] >= "2024-03-01") & (df["日期"] <= "2024-03-31")]
-
         category_sums = this_month.groupby("類別")["金額"].sum()
+
+        font_path = "fonts/meiryo.ttc"
+        font_prop = FontProperties(fname=font_path, size=14)
 
         plt.figure(figsize=(10, 7))
         plt.pie(category_sums, labels=category_sums.index, autopct='%1.1f%%', startangle=140)
-        plt.title('2024年3月各類別消費總金額')
-        plt.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+        plt.title('2024年3月各類別消費總金額', fontproperties=font_prop)
+        plt.axis('equal')
 
         file_name = 'expense_pie_chart.jpg'
         plt.savefig(file_name)

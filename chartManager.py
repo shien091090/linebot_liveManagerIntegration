@@ -9,7 +9,7 @@ def createPieChartAndGetFileName(data_dict):
     for i in range(0, len(data_dict)):
         e.append(0.02)
 
-    font_path = "Cubic_11_1.010_R.ttf"
+    font_path = "fonts/Cubic_11_1.010_R.ttf"
     font_prop = FontProperties(fname=font_path, size=14)
 
     def func(s,d):

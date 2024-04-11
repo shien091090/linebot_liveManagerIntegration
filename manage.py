@@ -1,25 +1,18 @@
-import json
-
 from flask import Flask, request, abort
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextMessage, FlexSendMessage, ImageSendMessage
+from textParserManager import TextParser, TextType_AdditionalContent, TextType_KeyWord, TextType_Number, \
+    TextType_SubContent, TextStructureType_Content, TextStructureType_Number, TextType_SubNumber
+from flexMessageManager import GetCommandExplanationFlexMessage, getFlexMessage
+from chartManager import createPieChartAndGetFileName
 
 import keyWordSetting
 import textParserManager
 import lineActionInfo
 import settings
-from textParserManager import TextParser, TextType_AdditionalContent, TextType_KeyWord, TextType_Number, \
-    TextType_SubContent, TextStructureType_Content, TextStructureType_Number, TextType_SubNumber
-from flexMessageManager import GetCommandExplanationFlexMessage, getFlexMessage
-
-from matplotlib import pyplot as plt
-from matplotlib.font_manager import FontProperties
-import pandas as pd
-from datetime import datetime
-import numpy as np
-import os
 import pyimgur
+import json
 
 REQUEST_TYPE_BYPASS = 'request_type_bypass'
 REQUEST_TYPE_GAS = 'request_type_gas'
@@ -27,6 +20,8 @@ REQUEST_TYPE_GAS = 'request_type_gas'
 STATUS_CODE_SUCCESS = 200
 STATUS_CODE_EMPTY_INPUT = 300
 STATUS_CODE_INVALID = 301
+
+IMGUR_CLIENT_ID = "cd9dac4885101cf"
 
 app = Flask(__name__)
 
@@ -61,40 +56,12 @@ def receiveMessage(event):
 
     if req_info.messageType == 'image':
 
-        data = {
-            "日期": ["2024-03-01", "2024-03-02", "2024-03-03", "2024-03-04", "2024-03-05",
-                    "2024-03-01", "2024-03-02", "2024-03-03", "2024-03-04", "2024-03-05"],
-            "款項": ["午餐", "公交", "晚餐", "書籍", "電影",
-                    "午餐", "咖啡", "晚餐", "電影", "衣服"],
-            "金額": [120, 25, 150, 200, 90,
-                    130, 45, 160, 85, 300],
-            "類別": ["餐飲", "交通", "餐飲", "學習", "娛樂",
-                    "餐飲", "飲品", "餐飲", "娛樂", "服裝"]
-        }
-
-        df = pd.DataFrame(data)
-        df["日期"] = pd.to_datetime(df["日期"])
-
-        this_month = df[(df["日期"] >= "2024-03-01") & (df["日期"] <= "2024-03-31")]
-        category_sums = this_month.groupby("類別")["金額"].sum()
-
-        font_path = "fonts/meiryo.ttc"
-        font_prop = FontProperties(fname=font_path, size=14)
-
-        plt.figure(figsize=(10, 7))
-        plt.pie(category_sums, labels=category_sums.index, autopct='%1.1f%%', startangle=140, textprops={'fontproperties': font_prop})
-        plt.title('2024年3月各類別消費總金額', fontproperties=font_prop)
-        plt.axis('equal')
-
-        file_name = 'expense_pie_chart.jpg'
-        plt.savefig(file_name)
-        plt.close()
-
-        CLIENT_ID = "cd9dac4885101cf"
-        im = pyimgur.Imgur(CLIENT_ID)
-
+        account_data_dict = json.loads(req_info.responseMsg)
+        print(f'responseMsg: {account_data_dict}')
+        
+        file_name = createPieChartAndGetFileName(account_data_dict)
+        im = pyimgur.Imgur(IMGUR_CLIENT_ID)
         uploaded_image = im.upload_image(file_name, title='testChart')
-        print(uploaded_image.link)
 
         img_message = ImageSendMessage(
             original_content_url = uploaded_image.link,

@@ -390,14 +390,28 @@ def ParseRequestInfo(receive_txt):
                                                   REQUEST_TYPE_GAS,
                                                   send_param,
                                                   'text')
-    #圖表測試
+    #分析圖表
     temp_command_key = 'KEY_GET_CHART'
     if command_key == keyWordSetting.GetCommandKey(temp_command_key):
-        send_param["action"] = lineActionInfo.API_ACTION_GET_CHART
-        req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key),
-                                              REQUEST_TYPE_GAS,
-                                              send_param,
-                                              'image')
+        command_text_structure = [TextStructureType_Content, TextStructureType_Content, TextStructureType_Content]
+        text_parse_result = text_parser.ParseTextBySpecificStructure(command_text_structure)
+
+        if text_parse_result is None or \
+                text_parse_result.IsKeyWordMatch(keyWordSetting.GetCommandKey(temp_command_key)) is False:
+            req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key),
+                                                  REQUEST_TYPE_BYPASS,
+                                                  None,
+                                                  'text')
+            req_info.statusMsg = f"【格式錯誤】\n正確格式為 『{keyWordSetting.GetCommandFormatHint(temp_command_key)}』"
+            req_info.responseMsg = ' '
+        else:
+            send_param["action"] = lineActionInfo.API_ACTION_GET_CHART
+            send_param["subContent"] = text_parse_result.GetSpecificTextTypeValue(TextType_SubContent)
+            send_param["additionalContent"] = text_parse_result.GetSpecificTextTypeValue(TextType_AdditionalContent)
+            req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key),
+                                                  REQUEST_TYPE_GAS,
+                                                  send_param,
+                                                  'image')
 
     return reply_flex_message, req_info
 

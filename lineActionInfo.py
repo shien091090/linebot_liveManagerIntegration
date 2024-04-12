@@ -2,23 +2,26 @@ import manage
 import requests
 import settings
 import json
+import manage
 
 
 class RequestInfo:
 
-    def __init__(self, str_title, str_request_type, request_param, str_message_type):
+    def __init__(self, str_title, str_request_type, request_param):
         self.title = str_title
         self.requestType = str_request_type
         self.requestParam = request_param
+
         self.statusCode = 0
         self.statusMsg = ''
         self.responseMsg = ''
-        self.messageType = str_message_type
+        self.messageType = manage.MESSAGE_TYPE_TEXT
 
     def parseResponseJsonDct(self, dct):
         self.statusCode = dct['statusCode']
         self.statusMsg = dct['statusMsg']
         self.responseMsg = dct['responseMsg']
+        self.messageType = dct['messageType']
 
     def sendRequest(self):
         print(

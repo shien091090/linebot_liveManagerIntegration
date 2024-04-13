@@ -59,10 +59,10 @@ def receiveMessage(event):
 
     if req_info.messageType == MESSAGE_TYPE_CHART:
 
-        res = json.loads(req_info.responseMsg)
-        print(f'responseMsg: {res}')
+        chart_info_dict = json.loads(req_info.responseMsg)
+        print(f'responseMsg: {chart_info_dict}')
         
-        file_name = createPieChartAndGetFileName(res.data, res.chartTitle)
+        file_name = createPieChartAndGetFileName(chart_info_dict['data'], chart_info_dict['chartTitle'])
         im = pyimgur.Imgur(IMGUR_CLIENT_ID)
         uploaded_image = im.upload_image(file_name, title='testChart')
 

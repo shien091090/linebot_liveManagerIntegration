@@ -2,7 +2,7 @@ from matplotlib import pyplot as plt
 from matplotlib.font_manager import FontProperties
 import pandas as pd
 
-def createPieChartAndGetFileName(data_dict):
+def createPieChartAndGetFileName(data_dict, title_str):
     category_sums = pd.Series(data_dict)
     
     e = []
@@ -24,7 +24,7 @@ def createPieChartAndGetFileName(data_dict):
     autopct=lambda i: func(i,category_sums),
     startangle=90,
     textprops={'fontproperties': font_prop})
-    plt.title('2024年3月各類別消費總金額', fontproperties=font_prop)
+    plt.title(title_str, fontproperties=font_prop)
     plt.axis('equal')
 
     file_name = 'expense_pie_chart.jpg'

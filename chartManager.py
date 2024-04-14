@@ -14,7 +14,7 @@ def createPieChartAndGetFileName(data_dict, title_str):
 
     def func(s,d):
         t = int(round(s/100.*sum(d)))
-        return f'{s:,}%\n({t})'
+        return f'{s:.1f}%\n({t:,})'
 
     plt.figure(figsize=(10, 7))
     plt.pie(

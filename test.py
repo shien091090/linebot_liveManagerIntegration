@@ -10,7 +10,6 @@ INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK = 'prefix_multi_blank'
 INPUT_FLAW_TYPE_MULTI_BLANK_BETWEEN = 'multi_blank_between_command_part'
 INPUT_FLAW_TYPE_SUFFIX_BLANK = 'suffix_blank'
 
-
 # [How To Use]
 # Terminal : python -m unittest test
 def GetDecoratedCommand(input_flaw_type, origin_input_command):

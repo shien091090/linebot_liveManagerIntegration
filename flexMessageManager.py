@@ -122,6 +122,68 @@ def getMemoFlexMessage(str_title, str_status_message, colored_items):
     }}'
 
 
+def getUrlButtonFlexMessage(str_title, str_status_message, url):
+    new_status_message = _escape_json(str_status_message)
+    escaped_url = _escape_json(url)
+    return f'{{ \
+    "type": "bubble", \
+    "header": {{ \
+        "type": "box", \
+        "layout": "vertical", \
+        "contents": [ \
+        {{ \
+            "type": "text", \
+            "text": "{str_title}", \
+            "size": "xl", \
+            "weight": "bold", \
+            "color": "#587cbe" \
+        }} \
+        ], \
+        "paddingTop": "15px", \
+        "paddingBottom": "13px" \
+    }}, \
+    "hero": {{ \
+        "type": "box", \
+        "layout": "vertical", \
+        "contents": [ \
+        {{ \
+            "type": "separator", \
+            "color": "#B3C2CD" \
+        }}, \
+        {{ \
+            "type": "text", \
+            "text": "{new_status_message}", \
+            "wrap": true, \
+            "size": "xxs", \
+            "color": "#5e637e", \
+            "align": "start" \
+        }} \
+        ], \
+        "spacing": "10px", \
+        "paddingStart" : "18px", \
+        "paddingEnd" : "18px" \
+    }}, \
+    "body": {{ \
+        "type": "box", \
+        "layout": "vertical", \
+        "contents": [ \
+        {{ \
+            "type": "button", \
+            "action": {{ \
+                "type": "uri", \
+                "label": "開啟頁面", \
+                "uri": "{escaped_url}" \
+            }}, \
+            "style": "primary", \
+            "color": "#587cbe", \
+            "height": "sm" \
+        }} \
+        ], \
+        "paddingAll": "16px" \
+    }} \
+    }}'
+
+
 def GetCommandExplanationFlexMessage(str_title, str_array_command_keys, str_array_formats):
     command_count = len(str_array_command_keys)
 

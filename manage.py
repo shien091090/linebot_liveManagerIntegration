@@ -4,7 +4,7 @@ from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextMessage, FlexSendMessage, ImageSendMessage
 from textParserManager import TextParser, TextType_AdditionalContent, TextType_KeyWord, TextType_Number, \
     TextType_SubContent, TextStructureType_Content, TextStructureType_Number, TextType_SubNumber
-from flexMessageManager import GetCommandExplanationFlexMessage, getFlexMessage, getMemoFlexMessage
+from flexMessageManager import GetCommandExplanationFlexMessage, getFlexMessage, getMemoFlexMessage, getUrlButtonFlexMessage
 from dateColorHelper import build_colored_memo_items
 from datetime import date as date_today
 from chartManager import createPieChartAndGetFileName
@@ -14,6 +14,7 @@ import textParserManager
 import lineActionInfo
 import settings
 import re
+import uuid
 import pyimgur
 import json
 
@@ -28,6 +29,7 @@ IMGUR_CLIENT_ID = "cd9dac4885101cf"
 
 MESSAGE_TYPE_TEXT = 'text'
 MESSAGE_TYPE_CHART = 'chart'
+MESSAGE_TYPE_URL = 'url'
 
 MEMO_ACTIONS = {
     lineActionInfo.API_ACTION_MEMO_ADD,
@@ -38,6 +40,7 @@ MEMO_ACTIONS = {
 }
 
 app = Flask(__name__)
+mockup_store = {}
 
 line_bot_api = LineBotApi(settings.LINE_CHANNEL_ACCESS_TOKEN)
 handler = WebhookHandler(settings.LINE_CHANNEL_SECRET)
@@ -54,6 +57,49 @@ def callback():
         abort(400)
 
     return 'OK'
+
+
+@app.route('/mockup/<token>')
+def serve_mockup(token):
+    html = mockup_store.get(token)
+    if not html:
+        return 'Not found', 404
+    return html, 200, {'Content-Type': 'text/html; charset=utf-8'}
+
+
+def _generate_test_mockup():
+    return '''<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>待辦事項 Mockup</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, sans-serif; max-width: 480px; margin: 0 auto; padding: 16px; background: #f0f2f5; }
+  h2 { color: #587cbe; font-size: 18px; margin: 0 0 16px; }
+  .card { background: #fff; border-radius: 12px; padding: 16px; box-shadow: 0 1px 4px rgba(0,0,0,.1); }
+  .item { padding: 8px 0; border-bottom: 1px solid #f0f0f0; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+  .item:last-child { border-bottom: none; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .past .dot { background: #CC0000; }
+  .upcoming .dot { background: #E5A800; }
+  .normal .dot { background: #587cbe; }
+  .past span { color: #CC0000; }
+  .upcoming span { color: #E5A800; }
+  .normal span { color: #5e637e; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h2>待辦事項</h2>
+    <div class="item past"><div class="dot"></div><span>① 6/8(一) 買藥</span></div>
+    <div class="item upcoming"><div class="dot"></div><span>② 6/15(日) 開會</span></div>
+    <div class="item normal"><div class="dot"></div><span>③ 7/24 出差</span></div>
+    <div class="item normal"><div class="dot"></div><span>④ 購物 衛生紙</span></div>
+  </div>
+</body>
+</html>'''
 
 
 @handler.add(MessageEvent, message=TextMessage)
@@ -85,6 +131,12 @@ def receiveMessage(event):
             event.reply_token,
             img_message)
         
+    elif req_info.messageType == MESSAGE_TYPE_URL:
+        flex_dict = json.loads(getUrlButtonFlexMessage(req_info.title, req_info.statusMsg, req_info.responseMsg))
+        line_bot_api.reply_message(
+            event.reply_token,
+            FlexSendMessage(alt_text=req_info.title, contents=flex_dict))
+
     elif req_info.messageType == MESSAGE_TYPE_TEXT:
         if reply_flex_message == '':
             action = req_info.requestParam.get('action') if req_info.requestParam else None
@@ -417,6 +469,16 @@ def ParseRequestInfo(receive_txt):
             req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key),
                                                   REQUEST_TYPE_GAS,
                                                   send_param)
+
+    # 測試網頁mockup（不加入使用者指令列表）
+    if command_key == '測試網頁mockup':
+        token = str(uuid.uuid4())[:8]
+        mockup_store[token] = _generate_test_mockup()
+        url = f'https://linebot-livemanagerintegration.herokuapp.com/mockup/{token}'
+        req_info = lineActionInfo.RequestInfo('測試網頁Mockup', REQUEST_TYPE_BYPASS, None)
+        req_info.statusMsg = '已生成測試頁面'
+        req_info.responseMsg = url
+        req_info.messageType = MESSAGE_TYPE_URL
 
     return reply_flex_message, req_info
 

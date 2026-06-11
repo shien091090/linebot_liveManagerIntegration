@@ -59,7 +59,7 @@ def getFlexMessage(str_title, str_status_message, str_content):
 
 
 def _escape_json(text):
-    return text.replace('\\', '\\\\').replace('"', '\\"').replace('\n', '\\n')
+    return text.replace('"', '\\"').replace('\n', '\\n')
 
 
 def getMemoFlexMessage(str_title, str_status_message, colored_items):

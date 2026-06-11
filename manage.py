@@ -11,6 +11,7 @@ import keyWordSetting
 import textParserManager
 import lineActionInfo
 import settings
+import re
 import pyimgur
 import json
 
@@ -140,23 +141,34 @@ def ParseRequestInfo(receive_txt):
     # 刪除待辦事項
     temp_command_key = 'KEY_MEMO_REMOVE'
     if command_key == keyWordSetting.GetCommandKey(temp_command_key):
-        command_text_structure = [TextStructureType_Content, TextStructureType_Number]
-        text_parse_result = text_parser.ParseTextBySpecificStructure(command_text_structure)
+        raw_tokens = text_parser.rawContent.split(textParserManager.DEFAULT_SPLIT_CHAR)
+        numbers_token = raw_tokens[1].strip() if len(raw_tokens) >= 2 else ''
+        is_multiple = bool(re.match(r'^\d+~\d+$', numbers_token) or re.match(r'^\d+([/.,]\d+)+$', numbers_token))
 
-        if text_parse_result is None or \
-                text_parse_result.IsKeyWordMatch(keyWordSetting.GetCommandKey(temp_command_key)) is False:
-            req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key),
-                                                  REQUEST_TYPE_BYPASS,
-                                                  None)
-            req_info.statusMsg = f"【格式錯誤】\n正確格式為 『{keyWordSetting.GetCommandFormatHint(temp_command_key)}』"
-            req_info.responseMsg = ' '
-        else:
-            text_parse_result.PrintLog()
-            send_param["action"] = lineActionInfo.API_ACTION_MEMO_REMOVE
-            send_param["number"] = text_parse_result.GetSpecificTextTypeValue(TextType_Number)
-            req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key),
+        if is_multiple:
+            send_param["action"] = lineActionInfo.API_ACTION_MEMO_REMOVE_MULTIPLE
+            send_param["numbers"] = numbers_token
+            req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle('KEY_MEMO_REMOVE_MULTIPLE'),
                                                   REQUEST_TYPE_GAS,
                                                   send_param)
+        else:
+            command_text_structure = [TextStructureType_Content, TextStructureType_Number]
+            text_parse_result = text_parser.ParseTextBySpecificStructure(command_text_structure)
+
+            if text_parse_result is None or \
+                    text_parse_result.IsKeyWordMatch(keyWordSetting.GetCommandKey(temp_command_key)) is False:
+                req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key),
+                                                      REQUEST_TYPE_BYPASS,
+                                                      None)
+                req_info.statusMsg = f"【格式錯誤】\n正確格式為 『{keyWordSetting.GetCommandFormatHint(temp_command_key)}』"
+                req_info.responseMsg = ' '
+            else:
+                text_parse_result.PrintLog()
+                send_param["action"] = lineActionInfo.API_ACTION_MEMO_REMOVE
+                send_param["number"] = text_parse_result.GetSpecificTextTypeValue(TextType_Number)
+                req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key),
+                                                      REQUEST_TYPE_GAS,
+                                                      send_param)
     # 修改待辦事項
     temp_command_key = 'KEY_MEMO_MODIFY'
     if command_key == keyWordSetting.GetCommandKey(temp_command_key):

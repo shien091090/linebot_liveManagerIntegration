@@ -38,6 +38,7 @@ class RequestInfo:
 
 API_ACTION_MEMO_ADD = 'action_memo_add'
 API_ACTION_MEMO_REMOVE = 'action_memo_remove'
+API_ACTION_MEMO_REMOVE_MULTIPLE = 'action_memo_remove_multiple'
 API_ACTION_MEMO_MODIFY = 'action_memo_modify'
 API_ACTION_MEMO_GET = 'action_memo_get'
 API_ACTION_SCHEDULE_ADD = 'action_schedule_add'

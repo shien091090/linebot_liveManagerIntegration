@@ -58,6 +58,70 @@ def getFlexMessage(str_title, str_status_message, str_content):
     }}'
 
 
+def _escape_json(text):
+    return text.replace('\\', '\\\\').replace('"', '\\"').replace('\n', '\\n')
+
+
+def getMemoFlexMessage(str_title, str_status_message, colored_items):
+    new_status_message = _escape_json(str_status_message)
+
+    if colored_items:
+        elements = []
+        for (text, color) in colored_items:
+            elements.append(
+                f'{{ "type": "text", "text": "{_escape_json(text)}", "wrap": true, "size": "xs", "color": "{color}" }}'
+            )
+        body_contents = ','.join(elements)
+    else:
+        body_contents = '{ "type": "text", "text": " ", "size": "xs" }'
+
+    return f'{{ \
+    "type": "bubble", \
+    "header": {{ \
+        "type": "box", \
+        "layout": "vertical", \
+        "contents": [ \
+        {{ \
+            "type": "text", \
+            "text": "{str_title}", \
+            "size": "xl", \
+            "weight": "bold", \
+            "color": "#587cbe" \
+        }} \
+        ], \
+        "paddingTop": "15px", \
+        "paddingBottom": "13px" \
+    }}, \
+    "hero": {{ \
+        "type": "box", \
+        "layout": "vertical", \
+        "contents": [ \
+        {{ \
+            "type": "separator", \
+            "color": "#B3C2CD" \
+        }}, \
+        {{ \
+            "type": "text", \
+            "text": "{new_status_message}", \
+            "wrap": true, \
+            "size": "xxs", \
+            "color": "#5e637e", \
+            "align": "start" \
+        }} \
+        ], \
+        "spacing": "10px", \
+        "paddingStart" : "18px", \
+        "paddingEnd" : "18px" \
+    }}, \
+    "body": {{ \
+        "type": "box", \
+        "layout": "vertical", \
+        "contents": [{body_contents}], \
+        "paddingStart": "18px" \
+    }} \
+    }}'
+
+
 def GetCommandExplanationFlexMessage(str_title, str_array_command_keys, str_array_formats):
     command_count = len(str_array_command_keys)
 

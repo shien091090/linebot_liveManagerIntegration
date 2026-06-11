@@ -4,7 +4,9 @@ from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextMessage, FlexSendMessage, ImageSendMessage
 from textParserManager import TextParser, TextType_AdditionalContent, TextType_KeyWord, TextType_Number, \
     TextType_SubContent, TextStructureType_Content, TextStructureType_Number, TextType_SubNumber
-from flexMessageManager import GetCommandExplanationFlexMessage, getFlexMessage
+from flexMessageManager import GetCommandExplanationFlexMessage, getFlexMessage, getMemoFlexMessage
+from dateColorHelper import build_colored_memo_items
+from datetime import date as date_today
 from chartManager import createPieChartAndGetFileName
 
 import keyWordSetting
@@ -26,6 +28,14 @@ IMGUR_CLIENT_ID = "cd9dac4885101cf"
 
 MESSAGE_TYPE_TEXT = 'text'
 MESSAGE_TYPE_CHART = 'chart'
+
+MEMO_ACTIONS = {
+    lineActionInfo.API_ACTION_MEMO_ADD,
+    lineActionInfo.API_ACTION_MEMO_REMOVE,
+    lineActionInfo.API_ACTION_MEMO_REMOVE_MULTIPLE,
+    lineActionInfo.API_ACTION_MEMO_MODIFY,
+    lineActionInfo.API_ACTION_MEMO_GET,
+}
 
 app = Flask(__name__)
 
@@ -77,7 +87,12 @@ def receiveMessage(event):
         
     elif req_info.messageType == MESSAGE_TYPE_TEXT:
         if reply_flex_message == '':
-            reply_flex_message = getFlexMessage(req_info.title, req_info.statusMsg, req_info.responseMsg)
+            action = req_info.requestParam.get('action') if req_info.requestParam else None
+            if action in MEMO_ACTIONS and req_info.statusCode == STATUS_CODE_SUCCESS:
+                colored_items = build_colored_memo_items(req_info.responseMsg, date_today.today())
+                reply_flex_message = getMemoFlexMessage(req_info.title, req_info.statusMsg, colored_items)
+            else:
+                reply_flex_message = getFlexMessage(req_info.title, req_info.statusMsg, req_info.responseMsg)
 
         flex_message_json_dict = json.loads(reply_flex_message)
 

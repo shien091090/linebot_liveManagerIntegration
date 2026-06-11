@@ -444,9 +444,8 @@ def ParseRequestInfo(receive_txt):
             html = generate_expense_dashboard_html(months, cats)
         except Exception as e:
             html = f'<html><body><p>Error: {e}</p></body></html>'
-        token = str(uuid.uuid4())[:8]
-        mockup_store[token] = html
-        url = f'https://linebot-livemanagerintegration.herokuapp.com/mockup/{token}'
+        mockup_store['expense_dashboard'] = html
+        url = 'https://linebot-livemanagerintegration.herokuapp.com/mockup/expense_dashboard'
         req_info = lineActionInfo.RequestInfo('分析家庭收支', REQUEST_TYPE_BYPASS, None)
         req_info.statusMsg = '已生成家庭收支分析報表'
         req_info.responseMsg = url

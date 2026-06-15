@@ -40,6 +40,13 @@ MEMO_ACTIONS = {
     lineActionInfo.API_ACTION_MEMO_GET,
 }
 
+SCHEDULE_ACTIONS = {
+    lineActionInfo.API_ACTION_SCHEDULE_ADD,
+    lineActionInfo.API_ACTION_SCHEDULE_REMOVE,
+    lineActionInfo.API_ACTION_SCHEDULE_MODIFY,
+    lineActionInfo.API_ACTION_SCHEDULE_GET,
+}
+
 app = Flask(__name__)
 mockup_store = {}
 
@@ -108,6 +115,9 @@ def receiveMessage(event):
         if reply_flex_message == '':
             action = req_info.requestParam.get('action') if req_info.requestParam else None
             if action in MEMO_ACTIONS and req_info.statusCode == STATUS_CODE_SUCCESS:
+                colored_items = build_colored_memo_items(req_info.responseMsg, date_today.today())
+                reply_flex_message = getMemoFlexMessage(req_info.title, req_info.statusMsg, colored_items)
+            elif action in SCHEDULE_ACTIONS and req_info.statusCode == STATUS_CODE_SUCCESS:
                 colored_items = build_colored_memo_items(req_info.responseMsg, date_today.today())
                 reply_flex_message = getMemoFlexMessage(req_info.title, req_info.statusMsg, colored_items)
             else:

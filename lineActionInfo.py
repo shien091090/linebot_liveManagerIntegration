@@ -1,8 +1,6 @@
-import manage
 import requests
 import settings
 import json
-import manage
 
 
 class RequestInfo:
@@ -15,7 +13,7 @@ class RequestInfo:
         self.statusCode = 0
         self.statusMsg = ''
         self.responseMsg = ''
-        self.messageType = manage.MESSAGE_TYPE_TEXT
+        self.messageType = 'text'
 
     def parseResponseJsonDct(self, dct):
         self.statusCode = dct['statusCode']
@@ -26,7 +24,7 @@ class RequestInfo:
     def sendRequest(self):
         print(
             f'[SNTest] [Request Info] title = {self.title}, requestType = {self.requestType}, requestParam = {self.requestParam}')
-        if self.requestType == manage.REQUEST_TYPE_GAS:
+        if self.requestType == 'request_type_gas':
             req = requests.get(settings.URL_GAS_API, params=self.requestParam)
             json.loads(req.text, object_hook=self.parseResponseJsonDct)
             self.PrintResponseLog()

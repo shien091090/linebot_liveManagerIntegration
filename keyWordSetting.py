@@ -9,9 +9,8 @@ commandDataEnum = {
     'KEY_SCHEDULE_REMOVE': ['刪除行程', '刪除行程 <編號數字>', '刪除週期行程'],
     'KEY_SCHEDULE_MODIFY': ['修改行程', '修改行程 <編號數字> <每月/每週/每天/每年> <數字> <新內容文字>', '修改週期行程'],
     'KEY_SCHEDULE_GET': ['確認行程', '確認行程', '確認週期行程'],
-    'KEY_BUY': ['買', '買 <記帳項目> <價格>', '新增記帳項目'],
     'KEY_BUY_WITH_BUDGET_TYPE': ['記帳', '記帳 <記帳項目> <價格> <預算種類>', '新增記帳項目'],
-    'KEY_GET_CHART': ['分析', '分析 <N月/N~N月> 花費', '建立分析圖表'],
+    'KEY_EXPENSE_DASHBOARD': ['分析家庭收支', '分析家庭收支', '分析家庭收支報表'],
 }
 
 period_key_word_arr = ['每月', '每週', '每天', '每年']

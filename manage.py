@@ -387,45 +387,6 @@ def ParseRequestInfo(receive_txt):
                                                   REQUEST_TYPE_GAS,
                                                   send_param)
 
-    # 紀錄寶寶換尿布時間
-    temp_command_key = 'KEY_BABY_DIAPER'
-    if command_key == keyWordSetting.GetCommandKey(temp_command_key):
-        send_param["action"] = lineActionInfo.API_ACTION_RECORD_BABY_DIAPER_CHANGING_TIME
-        req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key),
-                                              REQUEST_TYPE_GAS,
-                                              send_param)
-
-    # 紀錄寶寶吃飯時間
-    temp_command_key = 'KEY_BABY_EAT'
-    if command_key == keyWordSetting.GetCommandKey(temp_command_key):
-        command_text_structure = [TextStructureType_Content, TextStructureType_Number]
-        text_parse_result = text_parser.ParseTextBySpecificStructure(command_text_structure)
-
-        if text_parse_result is None or \
-                text_parse_result.IsKeyWordMatch(keyWordSetting.GetCommandKey(temp_command_key)) is False:
-
-            command_text_structure = [TextStructureType_Content]
-            text_parse_result = text_parser.ParseTextBySpecificStructure(command_text_structure)
-
-            if text_parse_result is None or \
-                    text_parse_result.IsKeyWordMatch(keyWordSetting.GetCommandKey(temp_command_key)) is False:
-                req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key),
-                                                      REQUEST_TYPE_BYPASS,
-                                                      None)
-                req_info.statusMsg = f"【格式錯誤】\n正確格式為 『{keyWordSetting.GetCommandFormatHint(temp_command_key)}』"
-                req_info.responseMsg = ' '
-
-            else:
-                send_param["action"] = lineActionInfo.API_ACTION_RECORD_BABY_EAT_TIME
-                req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key),
-                                                      REQUEST_TYPE_GAS,
-                                                      send_param)
-        else:
-            send_param["action"] = lineActionInfo.API_ACTION_RECORD_BABY_EAT_TIME
-            send_param["number"] = text_parse_result.GetSpecificTextTypeValue(TextType_Number)
-            req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key),
-                                                  REQUEST_TYPE_GAS,
-                                                  send_param)
     #分析圖表
     temp_command_key = 'KEY_GET_CHART'
     if command_key == keyWordSetting.GetCommandKey(temp_command_key):

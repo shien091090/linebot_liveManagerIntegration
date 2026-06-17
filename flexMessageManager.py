@@ -263,7 +263,7 @@ def GetCommandExplanationFlexMessage(str_title, str_array_command_keys, str_arra
         }}, \
         {command_join_explanation} \
         ], \
-        "spacing": "10px" \
+        "spacing": "xs" \
     }} \
     }}'
 
@@ -282,11 +282,12 @@ def GetCommandExplanationFlexMessageElement(str_command_key, str_array_format):
                 "align": "center", \
                 "text": "{str_command_key}", \
                 "size": "xs", \
-                "color": "#D41B1B" \
+                "color": "#D41B1B", \
+                "wrap": true \
             }} \
             ], \
-            "paddingAll": "5px", \
-            "flex": 1, \
+            "paddingAll": "3px", \
+            "flex": 2, \
             "justifyContent": "center" \
         }}, \
         {{ \
@@ -300,8 +301,8 @@ def GetCommandExplanationFlexMessageElement(str_command_key, str_array_format):
                 "wrap": true \
             }} \
             ], \
-            "paddingAll": "5px", \
-            "flex": 3, \
+            "paddingAll": "3px", \
+            "flex": 4, \
             "justifyContent": "center" \
         }} \
         ] \

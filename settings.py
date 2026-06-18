@@ -1,3 +1,3 @@
 LINE_CHANNEL_ACCESS_TOKEN = 'sPl0gKPsWSuq0Av7Us2F4Km8dLwDSuiYW75NmR9mpCRdug5Z9+a5psZ5iK/c3rgjdQfXp2L9iKi5vMG3QtRoAcT/G32RMhbHVUdMJZy1zeQ2D+7B7VHvMKnFLM/dZMe5zc/ukUCZ4YlA9j3lLA16/gdB04t89/1O/w1cDnyilFU='
 LINE_CHANNEL_SECRET = 'ab8d822858f40fa8a92abf575061211a'
-URL_GAS_API = 'https://script.google.com/macros/s/AKfycbwLGXMeUnnlspP9IxaPuNZ27m_wnCXTvcktc84mpcapUxZYntFOZMV429URiUe3u6qWMA/exec'
+URL_GAS_API = 'https://script.google.com/macros/s/AKfycbxScTw9-oXf9JfshClEPqXB6u2_Jjq5R37iu3H71gH1zK8KE1lWllEmkzDBrclN9aCNoQ/exec'

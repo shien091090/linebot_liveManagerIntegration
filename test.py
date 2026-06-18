@@ -1009,6 +1009,83 @@ class MyTestCase(unittest.TestCase):
         self.RequestTypeShouldBe(manage.REQUEST_TYPE_GAS)
         self.RequestActionShouldBe(lineActionInfo.API_ACTION_RECORD_BABY_EAT_TIME)
 
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK
+    ])
+    def test_request_extend_memo_command_and_no_any_param(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '延伸')
+        self.RequestResultShouldBeFormatError('延伸待辦事項')
+
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
+        INPUT_FLAW_TYPE_MULTI_BLANK_BETWEEN
+    ])
+    def test_request_extend_memo_command_and_input_deficient_param(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '延伸 2')
+        self.RequestResultShouldBeFormatError('延伸待辦事項')
+
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
+        INPUT_FLAW_TYPE_MULTI_BLANK_BETWEEN
+    ])
+    def test_request_extend_memo_command_and_input_wrong_param(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '延伸 abc')
+        self.RequestResultShouldBeFormatError('延伸待辦事項')
+
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
+        INPUT_FLAW_TYPE_MULTI_BLANK_BETWEEN
+    ])
+    def test_request_extend_memo_command(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '延伸 1 /沐浴乳')
+        self.RequestTitleShouldBe('延伸待辦事項')
+        self.RequestTypeShouldBe(manage.REQUEST_TYPE_GAS)
+        self.RequestActionShouldBe(lineActionInfo.API_ACTION_MEMO_EXTEND)
+        self.RequestNumberShouldBe('1')
+        self.RequestSubContentShouldBe('/沐浴乳')
+
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
+        INPUT_FLAW_TYPE_MULTI_BLANK_BETWEEN
+    ])
+    def test_request_extend_memo_command_and_sub_content_with_blank(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '延伸 3 /沐浴乳 /洗髮精')
+        self.RequestTitleShouldBe('延伸待辦事項')
+        self.RequestTypeShouldBe(manage.REQUEST_TYPE_GAS)
+        self.RequestActionShouldBe(lineActionInfo.API_ACTION_MEMO_EXTEND)
+        self.RequestNumberShouldBe('3')
+        self.RequestSubContentShouldBe('/沐浴乳 /洗髮精')
+
+    @parameterized.expand([
+        '',
+        INPUT_FLAW_TYPE_PREFIX_BLANK,
+        INPUT_FLAW_TYPE_SUFFIX_BLANK,
+        INPUT_FLAW_TYPE_PREFIX_MULTI_BLANK,
+        INPUT_FLAW_TYPE_MULTI_BLANK_BETWEEN
+    ])
+    def test_request_extend_memo_command_and_input_formatted_number(self, input_flaw_type):
+        self.GivenCommandWithFlawType(input_flaw_type, '延伸 05 買點心')
+        self.RequestTitleShouldBe('延伸待辦事項')
+        self.RequestTypeShouldBe(manage.REQUEST_TYPE_GAS)
+        self.RequestActionShouldBe(lineActionInfo.API_ACTION_MEMO_EXTEND)
+        self.RequestNumberShouldBe('5')
+        self.RequestSubContentShouldBe('買點心')
+
     def RequestSubContentShouldBe(self, expected_sub_content):
         self.assertEqual(expected_sub_content, self.req_info.requestParam['subContent'])
 

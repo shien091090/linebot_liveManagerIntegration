@@ -37,6 +37,7 @@ MEMO_ACTIONS = {
     lineActionInfo.API_ACTION_MEMO_REMOVE,
     lineActionInfo.API_ACTION_MEMO_REMOVE_MULTIPLE,
     lineActionInfo.API_ACTION_MEMO_MODIFY,
+    lineActionInfo.API_ACTION_MEMO_EXTEND,
     lineActionInfo.API_ACTION_MEMO_GET,
 }
 
@@ -228,6 +229,26 @@ def ParseRequestInfo(receive_txt):
             req_info.responseMsg = ' '
         else:
             send_param["action"] = lineActionInfo.API_ACTION_MEMO_MODIFY
+            send_param["number"] = text_parse_result.GetSpecificTextTypeValue(TextType_Number)
+            send_param["subContent"] = text_parse_result.GetSpecificTextTypeValue(TextType_SubContent)
+            req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key),
+                                                  REQUEST_TYPE_GAS,
+                                                  send_param)
+    # 延伸待辦事項
+    temp_command_key = 'KEY_MEMO_EXTEND'
+    if command_key == keyWordSetting.GetCommandKey(temp_command_key):
+        command_text_structure = [TextStructureType_Content, TextStructureType_Number, TextStructureType_Content]
+        text_parse_result = text_parser.ParseTextBySpecificStructure(command_text_structure)
+
+        if text_parse_result is None or \
+                text_parse_result.IsKeyWordMatch(keyWordSetting.GetCommandKey(temp_command_key)) is False:
+            req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key),
+                                                  REQUEST_TYPE_BYPASS,
+                                                  None)
+            req_info.statusMsg = f"【格式錯誤】\n正確格式為 『{keyWordSetting.GetCommandFormatHint(temp_command_key)}』"
+            req_info.responseMsg = ' '
+        else:
+            send_param["action"] = lineActionInfo.API_ACTION_MEMO_EXTEND
             send_param["number"] = text_parse_result.GetSpecificTextTypeValue(TextType_Number)
             send_param["subContent"] = text_parse_result.GetSpecificTextTypeValue(TextType_SubContent)
             req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key),

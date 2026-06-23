@@ -80,9 +80,12 @@ def serve_mockup(token):
 def preparation_list():
     import requests as req_lib
     params = {'action': 'action_get_preparation_list', 'format': 'text'}
-    preset = request.args.get('preset', '')
-    if preset:
-        params['preset'] = preset
+    attributes = request.args.get('attributes', '')
+    condition = request.args.get('condition', '')
+    if attributes:
+        params['attributes'] = attributes
+    if condition:
+        params['condition'] = condition
     r = req_lib.get(settings.URL_GAS_API, params=params)
     return r.text, 200, {'Content-Type': 'text/plain; charset=utf-8'}
 

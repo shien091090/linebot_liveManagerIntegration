@@ -76,6 +76,17 @@ def serve_mockup(token):
     return html, 200, {'Content-Type': 'text/html; charset=utf-8'}
 
 
+@app.route('/preparation-list')
+def preparation_list():
+    import requests as req_lib
+    params = {'action': 'action_get_preparation_list', 'format': 'text'}
+    preset = request.args.get('preset', '')
+    if preset:
+        params['preset'] = preset
+    r = req_lib.get(settings.URL_GAS_API, params=params)
+    return r.text, 200, {'Content-Type': 'text/plain; charset=utf-8'}
+
+
 
 @handler.add(MessageEvent, message=TextMessage)
 def receiveMessage(event):

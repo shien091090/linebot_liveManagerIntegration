@@ -1,5 +1,10 @@
 import re
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime, timezone
+
+TAIWAN_TZ = timezone(timedelta(hours=8))
+
+def taiwan_today():
+    return datetime.now(TAIWAN_TZ).date()
 
 COLOR_DEFAULT = '#5e637e'
 COLOR_PAST = '#CC0000'

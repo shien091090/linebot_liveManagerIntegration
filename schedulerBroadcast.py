@@ -1,10 +1,9 @@
 from linebot import LineBotApi
 from linebot.models import FlexSendMessage
 from flexMessageManager import getMemoFlexMessage
-from dateColorHelper import build_colored_memo_items
+from dateColorHelper import build_colored_memo_items, taiwan_today
 from lineActionInfo import RequestInfo, API_ACTION_DAILY_SCHEDULER
 from manage import REQUEST_TYPE_GAS
-from datetime import date as date_today
 import json
 import settings
 
@@ -19,7 +18,7 @@ def DailyBroadCast():
     req_info = RequestInfo(TITLE_DAILY_REMIND, REQUEST_TYPE_GAS, send_param)
     req_info.sendRequest()
 
-    colored_items = build_colored_memo_items(req_info.responseMsg, date_today.today())
+    colored_items = build_colored_memo_items(req_info.responseMsg, taiwan_today())
     reply_flex_message = getMemoFlexMessage(req_info.title, req_info.statusMsg, colored_items)
     flex_message_json_dict = json.loads(reply_flex_message)
 

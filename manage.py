@@ -5,9 +5,8 @@ from linebot.models import MessageEvent, TextMessage, FlexSendMessage, ImageSend
 from textParserManager import TextParser, TextType_AdditionalContent, TextType_KeyWord, TextType_Number, \
     TextType_SubContent, TextStructureType_Content, TextStructureType_Number, TextType_SubNumber
 from flexMessageManager import GetCommandExplanationFlexMessage, getFlexMessage, getMemoFlexMessage, getUrlButtonFlexMessage
-from dateColorHelper import build_colored_memo_items
+from dateColorHelper import build_colored_memo_items, taiwan_today
 from expenseDashboardHelper import fetch_expense_data, generate_expense_dashboard_html
-from datetime import date as date_today
 from chartManager import createPieChartAndGetFileName
 
 import keyWordSetting
@@ -130,10 +129,10 @@ def receiveMessage(event):
         if reply_flex_message == '':
             action = req_info.requestParam.get('action') if req_info.requestParam else None
             if action in MEMO_ACTIONS and req_info.statusCode == STATUS_CODE_SUCCESS:
-                colored_items = build_colored_memo_items(req_info.responseMsg, date_today.today())
+                colored_items = build_colored_memo_items(req_info.responseMsg, taiwan_today())
                 reply_flex_message = getMemoFlexMessage(req_info.title, req_info.statusMsg, colored_items)
             elif action in SCHEDULE_ACTIONS and req_info.statusCode == STATUS_CODE_SUCCESS:
-                colored_items = build_colored_memo_items(req_info.responseMsg, date_today.today())
+                colored_items = build_colored_memo_items(req_info.responseMsg, taiwan_today())
                 reply_flex_message = getMemoFlexMessage(req_info.title, req_info.statusMsg, colored_items)
             else:
                 reply_flex_message = getFlexMessage(req_info.title, req_info.statusMsg, req_info.responseMsg)

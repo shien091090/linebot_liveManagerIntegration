@@ -89,6 +89,15 @@ def preparation_list():
     return r.text, 200, {'Content-Type': 'text/plain; charset=utf-8'}
 
 
+@app.route('/record-daily-time')
+def record_daily_time():
+    import requests as req_lib
+    event_type = request.args.get('eventType', '')
+    params = {'action': 'action_record_daily_time', 'eventType': event_type}
+    r = req_lib.get(settings.URL_GAS_API, params=params)
+    return r.text, 200, {'Content-Type': 'application/json; charset=utf-8'}
+
+
 
 @handler.add(MessageEvent, message=TextMessage)
 def receiveMessage(event):

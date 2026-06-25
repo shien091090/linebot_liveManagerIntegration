@@ -4,7 +4,7 @@ from datetime import datetime, timezone, timedelta
 import requests
 
 TAIWAN_TZ = timezone(timedelta(hours=8))
-LARGE_INCOME_NAMES = {'生生薪水', '老婆薪水'}
+LARGE_INCOME_NAMES = {'生生收入', '老婆收入'}
 MONTH_NAMES = ['', '1月', '2月', '3月', '4月', '5月', '6月',
                '7月', '8月', '9月', '10月', '11月', '12月']
 

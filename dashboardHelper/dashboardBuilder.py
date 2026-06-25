@@ -124,6 +124,37 @@ body {
 .card-value.positive { color: #059669; }
 .card-value.negative { color: #DC2626; }
 
+/* Income tooltip */
+.income-card { position: relative; }
+.info-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 13px; height: 13px; border-radius: 50%;
+    background: #CBD5E1; color: #64748B;
+    border: none; cursor: pointer; font-size: 9px; font-weight: 700;
+    margin-left: 4px; vertical-align: middle;
+    font-family: inherit; padding: 0; line-height: 1; flex-shrink: 0;
+}
+.info-btn:hover { background: #94A3B8; color: #fff; }
+.income-tooltip {
+    display: none; position: absolute;
+    bottom: calc(100% + 6px); left: 0;
+    background: #1E293B; color: #F1F5F9;
+    border-radius: 8px; padding: 10px 12px;
+    font-size: 12px; min-width: 160px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+    z-index: 200; white-space: nowrap;
+}
+.income-tooltip.show { display: block; }
+.tooltip-row {
+    display: flex; justify-content: space-between;
+    gap: 16px; padding: 2px 0; color: #CBD5E1;
+}
+.tooltip-total {
+    display: flex; justify-content: space-between; gap: 16px;
+    border-top: 1px solid #334155; margin-top: 6px; padding-top: 6px;
+    font-weight: 600; color: #F1F5F9;
+}
+
 /* Update time */
 .update-time { font-size: 11px; color: #94A3B8; text-align: right; margin-top: 4px; }
 
@@ -143,6 +174,14 @@ function switchTab(btn, name) {
     document.getElementById('tab-' + name).style.display = 'block';
     btn.classList.add('active');
 }
+function toggleIncomeTooltip(e) {
+    e.stopPropagation();
+    document.getElementById('income-tooltip').classList.toggle('show');
+}
+document.addEventListener('click', function() {
+    var t = document.getElementById('income-tooltip');
+    if (t) t.classList.remove('show');
+});
 '''
 
 

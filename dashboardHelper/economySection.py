@@ -6,6 +6,7 @@ import requests
 TAIWAN_TZ = timezone(timedelta(hours=8))
 LARGE_INCOME_NAMES = {'生生收入', '老婆收入'}
 MONTHLY_INCOME_NAMES = {'生生收入', '老婆收入', '租屋補助', '育兒補助'}
+MONTHLY_INCOME_ORDER = ['生生收入', '老婆收入', '租屋補助', '育兒補助']
 MONTH_NAMES = ['', '1月', '2月', '3月', '4月', '5月', '6月',
                '7月', '8月', '9月', '10月', '11月', '12月']
 
@@ -93,10 +94,13 @@ def generate_html(gas_url):
     diff_cls = 'positive' if diff >= 0 else 'negative'
     diff_prefix = '+' if diff >= 0 else ''
 
-    monthly_income = sum(
-        c['effectiveBudget'] for c in budget['categories']
+    income_cat_map = {
+        c['name']: c['effectiveBudget']
+        for c in budget['categories']
         if c['name'] in MONTHLY_INCOME_NAMES
-    )
+    }
+    income_breakdown = [(name, income_cat_map.get(name, 0)) for name in MONTHLY_INCOME_ORDER]
+    monthly_income = sum(amt for _, amt in income_breakdown)
     income_diff = monthly_income - total_spent_all
     income_diff_cls = 'positive' if income_diff >= 0 else 'negative'
     income_diff_prefix = '+' if income_diff >= 0 else ''
@@ -119,9 +123,13 @@ def generate_html(gas_url):
           <div class="card-label">預算使用結餘</div>
           <div class="card-value {diff_cls}">{diff_prefix}＄{_fmt(abs(diff))}</div>
         </div>
-        <div class="summary-card-small">
-          <div class="card-label">本月收入</div>
+        <div class="summary-card-small income-card">
+          <div class="card-label">本月收入<button class="info-btn" onclick="toggleIncomeTooltip(event)">?</button></div>
           <div class="card-value">＄{_fmt(monthly_income)}</div>
+          <div class="income-tooltip" id="income-tooltip">
+            {''.join(f'<div class="tooltip-row"><span>{_e(name)}</span><span>＄{_fmt(amt)}</span></div>' for name, amt in income_breakdown)}
+            <div class="tooltip-total"><span>合計</span><span>＄{_fmt(monthly_income)}</span></div>
+          </div>
         </div>
         <div class="summary-card-small">
           <div class="card-label">收支結餘</div>

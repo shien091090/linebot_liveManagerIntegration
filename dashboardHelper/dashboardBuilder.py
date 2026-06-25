@@ -121,6 +121,8 @@ body {
 .positive { color: #059669; }
 .negative { color: #DC2626; }
 .dim { color: #64748B; }
+.card-value.positive { color: #059669; }
+.card-value.negative { color: #DC2626; }
 
 /* Update time */
 .update-time { font-size: 11px; color: #94A3B8; text-align: right; margin-top: 4px; }

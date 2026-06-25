@@ -89,6 +89,12 @@ def preparation_list():
     return r.text, 200, {'Content-Type': 'text/plain; charset=utf-8'}
 
 
+@app.route('/dashboard')
+def dashboard():
+    from dashboardHelper.dashboardBuilder import build_dashboard
+    return build_dashboard(settings.URL_GAS_API), 200, {'Content-Type': 'text/html; charset=utf-8'}
+
+
 @app.route('/record-daily-time')
 def record_daily_time():
     import requests as req_lib

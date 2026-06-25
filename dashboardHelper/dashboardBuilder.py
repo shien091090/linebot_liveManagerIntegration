@@ -40,22 +40,33 @@ body {
 .section-title { font-size: 15px; font-weight: 600; color: #1E293B; margin-bottom: 12px; }
 
 /* Summary cards */
-.summary-cards { display: flex; gap: 10px; }
-.summary-card {
-    flex: 1; min-width: 0;
-    background: #fff;
-    border-radius: 12px;
-    padding: 14px 12px;
+.summary-cards { display: flex; gap: 10px; align-items: stretch; }
+.summary-card-main {
+    flex: 1.1; min-width: 0;
+    background: #fff; border-radius: 12px; padding: 18px 14px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.07), 0 0 0 1px rgba(0,0,0,0.04);
+    display: flex; flex-direction: column; justify-content: center;
+}
+.summary-cards-right {
+    flex: 1; display: grid;
+    grid-template-columns: 1fr 1fr; gap: 8px;
+}
+.summary-card-small {
+    background: #fff; border-radius: 10px; padding: 10px 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.07), 0 0 0 1px rgba(0,0,0,0.04);
+    min-width: 0;
 }
 .card-label {
     font-size: 10px; font-weight: 600; color: #94A3B8;
-    text-transform: uppercase; letter-spacing: 0.04em;
-    margin-bottom: 6px;
+    letter-spacing: 0.04em; margin-bottom: 6px;
+    white-space: normal; overflow: hidden;
+}
+.summary-card-main .card-value {
+    font-size: 22px; font-weight: 700; color: #0F172A;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.card-value {
-    font-size: 19px; font-weight: 700; color: #0F172A;
+.summary-card-small .card-value {
+    font-size: 14px; font-weight: 700; color: #0F172A;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 

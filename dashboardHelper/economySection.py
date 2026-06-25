@@ -5,6 +5,7 @@ import requests
 
 TAIWAN_TZ = timezone(timedelta(hours=8))
 LARGE_INCOME_NAMES = {'生生收入', '老婆收入'}
+MONTHLY_INCOME_NAMES = {'生生收入', '老婆收入', '租屋補助', '育兒補助'}
 MONTH_NAMES = ['', '1月', '2月', '3月', '4月', '5月', '6月',
                '7月', '8月', '9月', '10月', '11月', '12月']
 
@@ -91,24 +92,41 @@ def generate_html(gas_url):
 
     diff_cls = 'positive' if diff >= 0 else 'negative'
     diff_prefix = '+' if diff >= 0 else ''
-    diff_label = '結餘' if diff >= 0 else '超支'
+
+    monthly_income = sum(
+        c['effectiveBudget'] for c in budget['categories']
+        if c['name'] in MONTHLY_INCOME_NAMES
+    )
+    income_diff = monthly_income - total_spent_all
+    income_diff_cls = 'positive' if income_diff >= 0 else 'negative'
+    income_diff_prefix = '+' if income_diff >= 0 else ''
 
     # ── Section 1: 概覽 ──────────────────────────────────────────
     section1 = f'''
   <div class="section">
     <h2 class="section-title">📅 {year}年{month}月概覽</h2>
     <div class="summary-cards">
-      <div class="summary-card">
+      <div class="summary-card-main">
         <div class="card-label">當月總花費</div>
         <div class="card-value">＄{_fmt(total_spent_all)}</div>
       </div>
-      <div class="summary-card">
-        <div class="card-label">預算合計</div>
-        <div class="card-value">＄{_fmt(budget_total)}</div>
-      </div>
-      <div class="summary-card">
-        <div class="card-label">{diff_label}</div>
-        <div class="card-value {diff_cls}">{diff_prefix}＄{_fmt(abs(diff))}</div>
+      <div class="summary-cards-right">
+        <div class="summary-card-small">
+          <div class="card-label">預算合計</div>
+          <div class="card-value">＄{_fmt(budget_total)}</div>
+        </div>
+        <div class="summary-card-small">
+          <div class="card-label">預算使用結餘</div>
+          <div class="card-value {diff_cls}">{diff_prefix}＄{_fmt(abs(diff))}</div>
+        </div>
+        <div class="summary-card-small">
+          <div class="card-label">本月收入</div>
+          <div class="card-value">＄{_fmt(monthly_income)}</div>
+        </div>
+        <div class="summary-card-small">
+          <div class="card-label">收支結餘</div>
+          <div class="card-value {income_diff_cls}">{income_diff_prefix}＄{_fmt(abs(income_diff))}</div>
+        </div>
       </div>
     </div>
   </div>'''

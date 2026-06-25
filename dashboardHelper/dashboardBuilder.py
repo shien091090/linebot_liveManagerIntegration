@@ -149,6 +149,10 @@ body {
     display: flex; justify-content: space-between;
     gap: 16px; padding: 2px 0; color: #CBD5E1;
 }
+.tooltip-special {
+    padding-left: 10px; font-size: 11px; color: #94A3B8;
+}
+.tooltip-plus { color: #34D399; }
 .tooltip-total {
     display: flex; justify-content: space-between; gap: 16px;
     border-top: 1px solid #334155; margin-top: 6px; padding-top: 6px;

@@ -94,16 +94,30 @@ def generate_html(gas_url):
     diff_cls = 'positive' if diff >= 0 else 'negative'
     diff_prefix = '+' if diff >= 0 else ''
 
-    income_cat_map = {
-        c['name']: c['effectiveBudget']
-        for c in budget['categories']
-        if c['name'] in MONTHLY_INCOME_NAMES
-    }
-    income_breakdown = [(name, income_cat_map.get(name, 0)) for name in MONTHLY_INCOME_ORDER]
-    monthly_income = sum(amt for _, amt in income_breakdown)
+    income_cat_map = {c['name']: c for c in budget['categories'] if c['name'] in MONTHLY_INCOME_NAMES}
+    special_this_month = {}
+    for s in schedule:
+        if s['name'] in MONTHLY_INCOME_NAMES and s['specialMonth'] == month:
+            special_this_month.setdefault(s['name'], []).append(s)
+    income_breakdown = [
+        {
+            'name': name,
+            'total': income_cat_map.get(name, {}).get('effectiveBudget', 0),
+            'specials': special_this_month.get(name, [])
+        }
+        for name in MONTHLY_INCOME_ORDER
+    ]
+    monthly_income = sum(item['total'] for item in income_breakdown)
     income_diff = monthly_income - total_spent_all
     income_diff_cls = 'positive' if income_diff >= 0 else 'negative'
     income_diff_prefix = '+' if income_diff >= 0 else ''
+
+    tooltip_rows = ''
+    for item in income_breakdown:
+        tooltip_rows += f'<div class="tooltip-row"><span>{_e(item["name"])}</span><span>＄{_fmt(item["total"])}</span></div>'
+        for s in item['specials']:
+            tooltip_rows += f'<div class="tooltip-row tooltip-special"><span>{_e(s["specialItem"])}</span><span class="tooltip-plus">+＄{_fmt(s["specialAmount"])}</span></div>'
+    tooltip_rows += f'<div class="tooltip-total"><span>合計</span><span>＄{_fmt(monthly_income)}</span></div>'
 
     # ── Section 1: 概覽 ──────────────────────────────────────────
     section1 = f'''
@@ -127,8 +141,7 @@ def generate_html(gas_url):
           <div class="card-label">本月收入<button class="info-btn" onclick="toggleIncomeTooltip(event)">?</button></div>
           <div class="card-value">＄{_fmt(monthly_income)}</div>
           <div class="income-tooltip" id="income-tooltip">
-            {''.join(f'<div class="tooltip-row"><span>{_e(name)}</span><span>＄{_fmt(amt)}</span></div>' for name, amt in income_breakdown)}
-            <div class="tooltip-total"><span>合計</span><span>＄{_fmt(monthly_income)}</span></div>
+            {tooltip_rows}
           </div>
         </div>
         <div class="summary-card-small">

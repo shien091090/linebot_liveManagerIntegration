@@ -137,7 +137,7 @@ body {
 .info-btn:hover { background: #94A3B8; color: #fff; }
 .income-tooltip {
     display: none; position: absolute;
-    bottom: calc(100% + 6px); left: 0;
+    top: calc(100% + 6px); left: 0;
     background: #1E293B; color: #F1F5F9;
     border-radius: 8px; padding: 10px 12px;
     font-size: 12px; min-width: 160px;

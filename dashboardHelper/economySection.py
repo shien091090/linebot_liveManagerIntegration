@@ -222,9 +222,9 @@ def generate_html(gas_url):
                     timing = m_obj.group(2)
                     item_name = m_obj.group(3).strip()
                     if next_month > month:
-                        in_range = month < m_num < next_month
+                        in_range = month < m_num <= next_month
                     else:
-                        in_range = m_num > month or m_num < next_month
+                        in_range = m_num > month or m_num <= next_month
                     if in_range:
                         pending_by_month.setdefault(m_num, []).append({
                             'timing': timing, 'name': item_name

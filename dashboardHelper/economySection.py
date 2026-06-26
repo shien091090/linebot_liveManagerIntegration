@@ -69,9 +69,9 @@ def _filter_pending_for_range(all_pending, from_month, to_month):
     pending_by_month = {}
     for m_num, timing, name in all_pending:
         if to_month >= from_month:
-            in_range = from_month < m_num <= to_month
+            in_range = from_month <= m_num <= to_month
         else:
-            in_range = m_num > from_month or m_num <= to_month
+            in_range = m_num >= from_month or m_num <= to_month
         if in_range:
             pending_by_month.setdefault(m_num, []).append({'timing': timing, 'name': name})
     for m_num in pending_by_month:
@@ -196,9 +196,9 @@ def _next_next_income_info(schedule, next_month):
             continue
         m = item['specialMonth']
         if target > next_month:
-            in_range = next_month < m <= target
+            in_range = next_month <= m <= target
         else:
-            in_range = m > next_month or m <= target
+            in_range = m >= next_month or m <= target
         if in_range:
             expenses.setdefault(m, []).append(item)
 

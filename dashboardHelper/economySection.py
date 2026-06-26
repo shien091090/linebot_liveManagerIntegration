@@ -210,6 +210,9 @@ def generate_html(gas_url):
           <span>{_e(item["name"])}</span>
           <span class="negative">＄{_fmt(item["specialAmount"])}</span>
         </div>'''
+                    if item.get('specialItem'):
+                        expense_rows += f'''
+        <div class="flow-item-desc">{_e(item["specialItem"])}</div>'''
             expense_rows += f'''
         <div class="flow-row total-row">
           <span></span><span>合計</span>

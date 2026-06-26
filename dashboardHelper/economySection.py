@@ -196,9 +196,9 @@ def _next_next_income_info(schedule, next_month):
             continue
         m = item['specialMonth']
         if target > next_month:
-            in_range = next_month < m < target
+            in_range = next_month < m <= target
         else:
-            in_range = m > next_month or m < target
+            in_range = m > next_month or m <= target
         if in_range:
             expenses.setdefault(m, []).append(item)
 
@@ -214,13 +214,8 @@ def generate_html(gas_url):
     budget_total = sum(c['effectiveBudget'] for c in active_cats)
     diff = budget_total - total_spent_all
 
-    next_month, income_items, expense_by_month = _next_income_info(schedule, month)
+    next_month, income_items, _ = _next_income_info(schedule, month)
     total_income = sum(i['specialAmount'] for i in income_items)
-    total_special_expense = sum(
-        i['specialAmount']
-        for month_items in expense_by_month.values()
-        for i in month_items
-    )
 
     diff_cls = 'positive' if diff >= 0 else 'negative'
     diff_prefix = '+' if diff >= 0 else ''
@@ -314,7 +309,6 @@ def generate_html(gas_url):
 
     # ── Sections 3 & 4: 下次 & 下下次大筆入帳前 ─────────────────
     section3 = ''
-    section4 = ''
 
     if next_month:
         all_pending = _parse_pending_purchases(memo_text)
@@ -336,13 +330,28 @@ def generate_html(gas_url):
           <span class="positive">+＄{_fmt(total_income)}</span>
         </div>'''
 
-        pending_for_next = _filter_pending_for_range(all_pending, month, next_month)
-        expense_rows, _ = _build_expense_rows(
-            expense_by_month, pending_for_next,
-            month, next_month, year, year, total_special_expense
-        )
-
+        nn_month, _, nn_expense_by_month = _next_next_income_info(schedule, next_month)
         next_hdr = _income_month_label(next_month, next_year_offset, year)
+
+        if nn_month:
+            nn_year_offset = next_year_offset + (1 if nn_month < next_month else 0)
+            nn_base_year = year + next_year_offset
+            nn_total_expense = sum(
+                i['specialAmount']
+                for m_items in nn_expense_by_month.values()
+                for i in m_items
+            )
+            nn_hdr = _income_month_label(nn_month, nn_year_offset, year)
+            pending_for_nn = _filter_pending_for_range(all_pending, next_month, nn_month)
+            expense_rows, _ = _build_expense_rows(
+                nn_expense_by_month, pending_for_nn,
+                next_month, nn_month, nn_base_year, year, nn_total_expense
+            )
+            expense_subheader = f'在此之後的特殊支出（截至下下次大筆入帳前，時間：{nn_hdr}）'
+        else:
+            expense_rows = '<div class="empty-msg">無下下次入帳資訊</div>'
+            expense_subheader = '在此之後的特殊支出'
+
         section3 = f'''
   <div class="section">
     <h2 class="section-title">💰 下次大筆入帳前</h2>
@@ -350,56 +359,8 @@ def generate_html(gas_url):
       <div class="flow-header">下次大筆入帳：{next_hdr}</div>
       <div class="flow-block">{income_rows}</div>
       <div class="flow-divider"></div>
-      <div class="flow-subheader">在此之前的特殊支出</div>
+      <div class="flow-subheader">{expense_subheader}</div>
       <div class="flow-block">{expense_rows}</div>
-    </div>
-  </div>'''
-
-        # ── Section 4: 下下次大筆入帳前 ──────────────────────────
-        nn_month, nn_income_items, nn_expense_by_month = _next_next_income_info(schedule, next_month)
-
-        if nn_month:
-            nn_total_income = sum(i['specialAmount'] for i in nn_income_items)
-            nn_total_expense = sum(
-                i['specialAmount']
-                for m_items in nn_expense_by_month.values()
-                for i in m_items
-            )
-            nn_year_offset = next_year_offset + (1 if nn_month < next_month else 0)
-            nn_base_year = year + next_year_offset  # calendar year of next_month
-
-            # Income rows for 下下次
-            nn_income_rows = ''
-            for item in nn_income_items:
-                nn_income_rows += f'''
-        <div class="flow-row">
-          <span>{_e(item["name"])}</span>
-          <span class="positive">+＄{_fmt(item["specialAmount"])}</span>
-        </div>'''
-                if item.get('specialItem'):
-                    nn_income_rows += f'<div class="flow-item-desc">{_e(item["specialItem"])}</div>'
-            nn_income_rows += f'''
-        <div class="flow-row total-row">
-          <span>合計</span>
-          <span class="positive">+＄{_fmt(nn_total_income)}</span>
-        </div>'''
-
-            pending_for_nn = _filter_pending_for_range(all_pending, next_month, nn_month)
-            nn_expense_rows, _ = _build_expense_rows(
-                nn_expense_by_month, pending_for_nn,
-                next_month, nn_month, nn_base_year, year, nn_total_expense
-            )
-
-            nn_hdr = _income_month_label(nn_month, nn_year_offset, year)
-            section4 = f'''
-  <div class="section">
-    <h2 class="section-title">💰 下下次大筆入帳前</h2>
-    <div class="flow-card">
-      <div class="flow-header">下下次大筆入帳：{nn_hdr}</div>
-      <div class="flow-block">{nn_income_rows}</div>
-      <div class="flow-divider"></div>
-      <div class="flow-subheader">在此之前的特殊支出</div>
-      <div class="flow-block">{nn_expense_rows}</div>
     </div>
   </div>'''
 
@@ -407,5 +368,4 @@ def generate_html(gas_url):
     return f'''{section1}
 {section2}
 {section3}
-{section4}
   <div class="update-time">資料更新時間：{update_time}</div>'''

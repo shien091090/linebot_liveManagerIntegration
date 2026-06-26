@@ -118,6 +118,8 @@ body {
 .flow-cat-group { display: flex; flex-direction: column; flex: 1; min-width: 0; }
 .flow-item-desc { font-size: 11px; color: #94A3B8; padding-top: 2px; }
 .empty-msg { font-size: 13px; color: #94A3B8; padding: 6px 0; }
+.pending-row { opacity: 0.65; font-style: italic; }
+.pending-tag { background: #FEF3C7; color: #92400E; }
 
 /* Colors */
 .positive { color: #059669; }

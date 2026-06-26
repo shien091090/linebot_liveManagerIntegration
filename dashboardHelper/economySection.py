@@ -35,6 +35,93 @@ def _e(s):
     return html_lib.escape(str(s))
 
 
+def _sort_months_from(months, from_month):
+    """Sort months in chronological order starting after from_month, cross-year aware."""
+    return sorted(months, key=lambda m: (m - from_month) % 12 or 12)
+
+
+def _month_display(m, from_month, to_month, base_year, current_year):
+    """Return month label with year prefix when the month falls in a different calendar year."""
+    is_cross_year = to_month < from_month
+    disp_year = base_year + 1 if (is_cross_year and m <= to_month) else base_year
+    if disp_year > current_year:
+        return f'{disp_year}/{MONTH_NAMES[m]}'
+    return MONTH_NAMES[m]
+
+
+def _income_month_label(m, year_offset, base_year):
+    if year_offset > 0:
+        return f'{base_year + year_offset}/{MONTH_NAMES[m]}'
+    return MONTH_NAMES[m]
+
+
+def _parse_pending_purchases(memo_text):
+    items = []
+    if memo_text:
+        for line in memo_text.splitlines():
+            m_obj = MEMO_BUY_RE.search(line.strip())
+            if m_obj:
+                items.append((int(m_obj.group(1)), m_obj.group(2), m_obj.group(3).strip()))
+    return items
+
+
+def _filter_pending_for_range(all_pending, from_month, to_month):
+    pending_by_month = {}
+    for m_num, timing, name in all_pending:
+        if to_month >= from_month:
+            in_range = from_month < m_num <= to_month
+        else:
+            in_range = m_num > from_month or m_num <= to_month
+        if in_range:
+            pending_by_month.setdefault(m_num, []).append({'timing': timing, 'name': name})
+    for m_num in pending_by_month:
+        pending_by_month[m_num].sort(key=lambda x: TIMING_ORDER.get(x['timing'], 99))
+    return pending_by_month
+
+
+def _build_expense_rows(expense_by_month, pending_by_month, from_month, to_month,
+                        base_year, current_year, total_expense):
+    all_months = _sort_months_from(
+        sorted(set(list(expense_by_month.keys()) + list(pending_by_month.keys()))),
+        from_month
+    )
+    pending_count = sum(len(v) for v in pending_by_month.values())
+
+    if not all_months:
+        return '<div class="empty-msg">此期間無特殊支出</div>', 0
+
+    rows = ''
+    for m in all_months:
+        tag = _month_display(m, from_month, to_month, base_year, current_year)
+        for item in expense_by_month.get(m, []):
+            item_desc = (f'<div class="flow-item-desc">{_e(item["specialItem"])}</div>'
+                         if item.get('specialItem') else '')
+            rows += f'''
+        <div class="flow-row">
+          <span class="month-tag">{tag}</span>
+          <span class="flow-cat-group"><span>{_e(item["name"])}</span>{item_desc}</span>
+          <span class="negative">＄{_fmt(item["specialAmount"])}</span>
+        </div>'''
+        for p in pending_by_month.get(m, []):
+            rows += f'''
+        <div class="flow-row pending-row">
+          <span class="month-tag pending-tag">{tag}{p["timing"]}</span>
+          <span class="flow-cat-group"><span>{_e(p["name"])}</span><div class="flow-item-desc">待購買</div></span>
+          <span class="dim">—</span>
+        </div>'''
+
+    total_label = f'＄{_fmt(total_expense)}'
+    if pending_count:
+        total_label += f' + {pending_count}筆待購買'
+    rows += f'''
+        <div class="flow-row total-row">
+          <span></span><span>合計</span>
+          <span class="negative">{total_label}</span>
+        </div>'''
+
+    return rows, pending_count
+
+
 def _fetch_all(gas_url):
     now = datetime.now(TAIWAN_TZ)
     year, month = now.year, now.month
@@ -80,6 +167,38 @@ def _next_income_info(schedule, current_month):
             in_range = current_month < m < target
         else:
             in_range = m > current_month or m < target
+        if in_range:
+            expenses.setdefault(m, []).append(item)
+
+    return target, income_items, expenses
+
+
+def _next_next_income_info(schedule, next_month):
+    income_by_month = {}
+    for item in schedule:
+        if item['name'] in LARGE_INCOME_NAMES:
+            income_by_month.setdefault(item['specialMonth'], []).append(item)
+
+    if not income_by_month:
+        return None, [], {}
+
+    sorted_months = sorted(income_by_month)
+    future = [m for m in sorted_months if m > next_month]
+    target = future[0] if future else sorted_months[0]
+
+    if target == next_month:
+        return None, [], {}
+
+    income_items = income_by_month[target]
+    expenses = {}
+    for item in schedule:
+        if item['name'] in LARGE_INCOME_NAMES:
+            continue
+        m = item['specialMonth']
+        if target > next_month:
+            in_range = next_month < m < target
+        else:
+            in_range = m > next_month or m < target
         if in_range:
             expenses.setdefault(m, []).append(item)
 
@@ -193,9 +312,15 @@ def generate_html(gas_url):
     </div>
   </div>'''
 
-    # ── Section 3: 下次大筆入帳 ──────────────────────────────────
+    # ── Sections 3 & 4: 下次 & 下下次大筆入帳前 ─────────────────
     section3 = ''
+    section4 = ''
+
     if next_month:
+        all_pending = _parse_pending_purchases(memo_text)
+        next_year_offset = 1 if next_month < month else 0
+
+        # Income rows for 下次
         income_rows = ''
         for item in income_items:
             income_rows += f'''
@@ -204,71 +329,25 @@ def generate_html(gas_url):
           <span class="positive">+＄{_fmt(item["specialAmount"])}</span>
         </div>'''
             if item.get('specialItem'):
-                income_rows += f'''
-        <div class="flow-item-desc">{_e(item["specialItem"])}</div>'''
+                income_rows += f'<div class="flow-item-desc">{_e(item["specialItem"])}</div>'
         income_rows += f'''
         <div class="flow-row total-row">
           <span>合計</span>
           <span class="positive">+＄{_fmt(total_income)}</span>
         </div>'''
 
-        # Parse pending purchases from memo items
-        pending_by_month = {}
-        if memo_text:
-            for line in memo_text.splitlines():
-                m_obj = MEMO_BUY_RE.search(line.strip())
-                if m_obj:
-                    m_num = int(m_obj.group(1))
-                    timing = m_obj.group(2)
-                    item_name = m_obj.group(3).strip()
-                    if next_month > month:
-                        in_range = month < m_num <= next_month
-                    else:
-                        in_range = m_num > month or m_num <= next_month
-                    if in_range:
-                        pending_by_month.setdefault(m_num, []).append({
-                            'timing': timing, 'name': item_name
-                        })
-        for m_num in pending_by_month:
-            pending_by_month[m_num].sort(key=lambda x: TIMING_ORDER.get(x['timing'], 99))
+        pending_for_next = _filter_pending_for_range(all_pending, month, next_month)
+        expense_rows, _ = _build_expense_rows(
+            expense_by_month, pending_for_next,
+            month, next_month, year, year, total_special_expense
+        )
 
-        all_months = sorted(set(list(expense_by_month.keys()) + list(pending_by_month.keys())))
-        pending_count = sum(len(v) for v in pending_by_month.values())
-
-        if all_months:
-            expense_rows = ''
-            for m in all_months:
-                for item in expense_by_month.get(m, []):
-                    item_desc = f'<div class="flow-item-desc">{_e(item["specialItem"])}</div>' if item.get('specialItem') else ''
-                    expense_rows += f'''
-        <div class="flow-row">
-          <span class="month-tag">{MONTH_NAMES[m]}</span>
-          <span class="flow-cat-group"><span>{_e(item["name"])}</span>{item_desc}</span>
-          <span class="negative">＄{_fmt(item["specialAmount"])}</span>
-        </div>'''
-                for p in pending_by_month.get(m, []):
-                    expense_rows += f'''
-        <div class="flow-row pending-row">
-          <span class="month-tag pending-tag">{MONTH_NAMES[m]}{p["timing"]}</span>
-          <span class="flow-cat-group"><span>{_e(p["name"])}</span><div class="flow-item-desc">待購買</div></span>
-          <span class="dim">—</span>
-        </div>'''
-            total_label = f'＄{_fmt(total_special_expense)}'
-            if pending_count:
-                total_label += f' + {pending_count}筆待購買'
-            expense_rows += f'''
-        <div class="flow-row total-row">
-          <span></span><span>合計</span>
-          <span class="negative">{total_label}</span>
-        </div>'''
-        else:
-            expense_rows = '<div class="empty-msg">此期間無特殊支出</div>'
-
+        next_hdr = _income_month_label(next_month, next_year_offset, year)
         section3 = f'''
   <div class="section">
     <h2 class="section-title">💰 下次大筆入帳前</h2>
     <div class="flow-card">
-      <div class="flow-header">下次大筆入帳：{MONTH_NAMES[next_month]}</div>
+      <div class="flow-header">下次大筆入帳：{next_hdr}</div>
       <div class="flow-block">{income_rows}</div>
       <div class="flow-divider"></div>
       <div class="flow-subheader">在此之前的特殊支出</div>
@@ -276,8 +355,57 @@ def generate_html(gas_url):
     </div>
   </div>'''
 
+        # ── Section 4: 下下次大筆入帳前 ──────────────────────────
+        nn_month, nn_income_items, nn_expense_by_month = _next_next_income_info(schedule, next_month)
+
+        if nn_month:
+            nn_total_income = sum(i['specialAmount'] for i in nn_income_items)
+            nn_total_expense = sum(
+                i['specialAmount']
+                for m_items in nn_expense_by_month.values()
+                for i in m_items
+            )
+            nn_year_offset = next_year_offset + (1 if nn_month < next_month else 0)
+            nn_base_year = year + next_year_offset  # calendar year of next_month
+
+            # Income rows for 下下次
+            nn_income_rows = ''
+            for item in nn_income_items:
+                nn_income_rows += f'''
+        <div class="flow-row">
+          <span>{_e(item["name"])}</span>
+          <span class="positive">+＄{_fmt(item["specialAmount"])}</span>
+        </div>'''
+                if item.get('specialItem'):
+                    nn_income_rows += f'<div class="flow-item-desc">{_e(item["specialItem"])}</div>'
+            nn_income_rows += f'''
+        <div class="flow-row total-row">
+          <span>合計</span>
+          <span class="positive">+＄{_fmt(nn_total_income)}</span>
+        </div>'''
+
+            pending_for_nn = _filter_pending_for_range(all_pending, next_month, nn_month)
+            nn_expense_rows, _ = _build_expense_rows(
+                nn_expense_by_month, pending_for_nn,
+                next_month, nn_month, nn_base_year, year, nn_total_expense
+            )
+
+            nn_hdr = _income_month_label(nn_month, nn_year_offset, year)
+            section4 = f'''
+  <div class="section">
+    <h2 class="section-title">💰 下下次大筆入帳前</h2>
+    <div class="flow-card">
+      <div class="flow-header">下下次大筆入帳：{nn_hdr}</div>
+      <div class="flow-block">{nn_income_rows}</div>
+      <div class="flow-divider"></div>
+      <div class="flow-subheader">在此之前的特殊支出</div>
+      <div class="flow-block">{nn_expense_rows}</div>
+    </div>
+  </div>'''
+
     update_time = now.strftime('%Y/%m/%d %H:%M')
     return f'''{section1}
 {section2}
 {section3}
+{section4}
   <div class="update-time">資料更新時間：{update_time}</div>'''

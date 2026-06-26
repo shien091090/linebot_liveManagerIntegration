@@ -204,15 +204,13 @@ def generate_html(gas_url):
             expense_rows = ''
             for m in sorted(expense_by_month):
                 for item in expense_by_month[m]:
+                    item_desc = f'<div class="flow-item-desc">{_e(item["specialItem"])}</div>' if item.get('specialItem') else ''
                     expense_rows += f'''
         <div class="flow-row">
           <span class="month-tag">{MONTH_NAMES[m]}</span>
-          <span>{_e(item["name"])}</span>
+          <span class="flow-cat-group"><span>{_e(item["name"])}</span>{item_desc}</span>
           <span class="negative">＄{_fmt(item["specialAmount"])}</span>
         </div>'''
-                    if item.get('specialItem'):
-                        expense_rows += f'''
-        <div class="flow-item-desc">{_e(item["specialItem"])}</div>'''
             expense_rows += f'''
         <div class="flow-row total-row">
           <span></span><span>合計</span>

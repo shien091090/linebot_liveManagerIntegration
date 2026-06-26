@@ -115,7 +115,8 @@ body {
     flex-shrink: 0;
 }
 .flow-divider { height: 1px; background: #E2E8F0; margin: 12px 0; }
-.flow-item-desc { font-size: 11px; color: #94A3B8; padding: 1px 0 4px 4px; }
+.flow-cat-group { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.flow-item-desc { font-size: 11px; color: #94A3B8; padding-top: 2px; }
 .empty-msg { font-size: 13px; color: #94A3B8; padding: 6px 0; }
 
 /* Colors */

@@ -194,6 +194,31 @@ body {
 /* Update time */
 .update-time { font-size: 11px; color: #94A3B8; text-align: right; margin-top: 4px; }
 
+/* Weather forecast */
+.weather-list {
+    border-radius: 12px; overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.07), 0 0 0 1px rgba(0,0,0,0.04);
+}
+.weather-card {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 16px; background: #fff;
+    border-bottom: 1px solid #F1F5F9;
+}
+.weather-card:last-child { border-bottom: none; }
+.weather-card-today { background: #EFF6FF; }
+.weather-day { min-width: 38px; }
+.weather-day-main { display: block; font-size: 14px; font-weight: 600; color: #1E293B; }
+.weather-day-sub { display: block; font-size: 11px; color: #94A3B8; margin-top: 1px; }
+.weather-icon { font-size: 30px; line-height: 1; flex-shrink: 0; }
+.weather-detail { flex: 1; min-width: 0; }
+.weather-temp { font-size: 14px; font-weight: 600; color: #1E293B; }
+.temp-sep { color: #CBD5E1; margin: 0 2px; }
+.weather-desc { font-size: 11px; color: #64748B; margin-top: 2px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.weather-rain { display: flex; align-items: center; gap: 3px; flex-shrink: 0; min-width: 36px; justify-content: flex-end; }
+.rain-icon { font-size: 12px; }
+.rain-pct { font-size: 13px; font-weight: 600; color: #3B82F6; }
+
 /* WIP */
 .wip {
     background: #fff; border-radius: 12px;

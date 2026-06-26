@@ -159,6 +159,12 @@ body {
     font-weight: 600; color: #F1F5F9;
 }
 
+/* Responsive: stack summary cards vertically on narrow screens */
+@media (max-width: 480px) {
+    .summary-cards { flex-direction: column; }
+    .summary-card-small .card-value { font-size: 16px; }
+}
+
 /* Update time */
 .update-time { font-size: 11px; color: #94A3B8; text-align: right; margin-top: 4px; }
 

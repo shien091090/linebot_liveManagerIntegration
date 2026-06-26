@@ -36,8 +36,7 @@ def _e(s):
 
 
 def _sort_months_from(months, from_month):
-    """Sort months in chronological order starting after from_month, cross-year aware."""
-    return sorted(months, key=lambda m: (m - from_month) % 12 or 12)
+    return sorted(months, key=lambda m: (m - from_month) % 12)
 
 
 def _month_display(m, from_month, to_month, base_year, current_year):

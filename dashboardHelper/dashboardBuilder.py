@@ -90,6 +90,28 @@ body {
 .progress-warn { background: #D97706; }
 .progress-over { background: #DC2626; }
 
+/* Budget detail expand */
+.row-header-right { display: flex; align-items: center; gap: 8px; }
+.detail-toggle {
+    background: none; border: none; cursor: pointer;
+    color: #94A3B8; font-size: 11px; padding: 2px 2px;
+    transition: transform 0.2s ease; line-height: 1;
+    font-family: inherit; flex-shrink: 0;
+}
+.detail-toggle:hover { color: #64748B; }
+.detail-toggle.open { transform: rotate(90deg); }
+.budget-details { display: none; border-top: 1px dashed #E2E8F0; margin-top: 8px; padding-top: 4px; }
+.budget-details.open { display: block; }
+.budget-detail-row {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12px; padding: 4px 0;
+    border-bottom: 1px solid #F8FAFC; color: #475569;
+}
+.budget-detail-row:last-child { border-bottom: none; }
+.detail-rank { font-size: 10px; font-weight: 700; color: #CBD5E1; min-width: 14px; text-align: center; flex-shrink: 0; }
+.detail-content { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.detail-amount { font-weight: 600; color: #1E293B; flex-shrink: 0; }
+
 /* Flow card */
 .flow-card {
     background: #fff;
@@ -187,6 +209,13 @@ function switchTab(btn, name) {
     document.querySelectorAll('.tab-btn').forEach(function(el) { el.classList.remove('active'); });
     document.getElementById('tab-' + name).style.display = 'block';
     btn.classList.add('active');
+}
+function toggleBudgetDetail(idx) {
+    var detail = document.getElementById('bdetail-' + idx);
+    var btn = document.getElementById('btoggle-' + idx);
+    if (!detail) return;
+    var isOpen = detail.classList.toggle('open');
+    if (btn) btn.classList.toggle('open', isOpen);
 }
 function toggleIncomeTooltip(e) {
     e.stopPropagation();

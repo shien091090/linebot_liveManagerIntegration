@@ -115,7 +115,7 @@ def _build_expense_rows(expense_by_month, pending_by_month, from_month, to_month
         total_label += f' + {pending_count}筆待購買'
     rows += f'''
         <div class="flow-row total-row">
-          <span></span><span>合計</span>
+          <span>合計</span>
           <span class="negative">{total_label}</span>
         </div>'''
 
@@ -279,8 +279,20 @@ def generate_html(gas_url):
   </div>'''
 
     # ── Section 2: 各分類預算 ────────────────────────────────────
+    cat_items_map = {}
+    for orig_idx, item in enumerate(items):
+        if item['prize'] > 0 and item.get('budgetType'):
+            cat_items_map.setdefault(item['budgetType'], []).append((orig_idx, item))
+    top_items_by_cat = {}
+    for cat_name, cat_list in cat_items_map.items():
+        sorted_list = sorted(
+            cat_list,
+            key=lambda x: (-x[1]['prize'], -int(x[1]['date'].replace('/', '')), x[0])
+        )
+        top_items_by_cat[cat_name] = [item for _, item in sorted_list[:5]]
+
     rows = ''
-    for cat in active_cats:
+    for i, cat in enumerate(active_cats):
         pct = int(cat['spent'] / cat['effectiveBudget'] * 100) if cat['effectiveBudget'] > 0 else 0
         bar_width = min(pct, 100)
         bar_cls = 'progress-over' if pct >= 100 else ('progress-warn' if pct >= 80 else 'progress-normal')
@@ -288,16 +300,35 @@ def generate_html(gas_url):
         d = cat['diff']
         d_cls = 'negative' if d < 0 else 'dim'
         d_prefix = '-' if d < 0 else ''
+        top_items = top_items_by_cat.get(cat['name'], [])
+        if top_items:
+            detail_rows = ''.join(
+                f'<div class="budget-detail-row">'
+                f'<span class="detail-rank">{r}</span>'
+                f'<span class="detail-content">{_e(item["content"])}</span>'
+                f'<span class="detail-amount">＄{_fmt(item["prize"])}</span>'
+                f'</div>'
+                for r, item in enumerate(top_items, 1)
+            )
+            toggle_html = f'<button class="detail-toggle" id="btoggle-{i}" onclick="toggleBudgetDetail({i})">&#9658;</button>'
+            detail_html = f'<div class="budget-details" id="bdetail-{i}">{detail_rows}</div>'
+        else:
+            toggle_html = ''
+            detail_html = ''
         rows += f'''
       <div class="{row_cls}">
         <div class="row-header">
           <span class="cat-name">{_e(cat["name"])}</span>
-          <span class="cat-diff {d_cls}">{d_prefix}＄{_fmt(abs(d))}</span>
+          <div class="row-header-right">
+            <span class="cat-diff {d_cls}">{d_prefix}＄{_fmt(abs(d))}</span>
+            {toggle_html}
+          </div>
         </div>
         <div class="row-meta">花費 ＄{_fmt(cat["spent"])} / 預算 ＄{_fmt(cat["effectiveBudget"])} ({pct}%)</div>
         <div class="progress-bar">
           <div class="progress-fill {bar_cls}" style="width:{bar_width}%"></div>
         </div>
+        {detail_html}
       </div>'''
 
     section2 = f'''

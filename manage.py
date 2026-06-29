@@ -15,7 +15,6 @@ import lineActionInfo
 import settings
 import re
 import uuid
-import time
 import pyimgur
 import json
 
@@ -94,42 +93,6 @@ def preparation_list():
 def dashboard():
     from dashboardHelper.dashboardBuilder import build_dashboard
     return build_dashboard(settings.URL_GAS_API), 200, {'Content-Type': 'text/html; charset=utf-8'}
-
-
-@app.route('/carrier-invoices')
-def carrier_invoices():
-    import requests as req_lib
-    start_date = request.args.get('startDate', '')
-    end_date = request.args.get('endDate', '')
-    if not start_date or not end_date:
-        roc_year = time.localtime().tm_year - 1911
-        start_date = f'{roc_year}-01-01'
-        end_date = f'{roc_year}-12-31'
-    payload = {
-        'version': '0.5',
-        'action': 'carrierInvChk',
-        'cardType': settings.CARRIER_CARD_TYPE,
-        'cardNo': settings.CARRIER_CARD_NO,
-        'cardEncrypt': settings.CARRIER_CARD_ENCRYPT,
-        'onlyWinningInv': 'N',
-        'uuid': str(uuid.uuid4()),
-        'appID': 'EINV_APP',
-        'timeStamp': str(int(time.time())),
-        'startDate': start_date,
-        'endDate': end_date
-    }
-    headers = {
-        'User-Agent': 'Dalvik/2.1.0 (Linux; U; Android 11; SM-G991B Build/RP1A.200720.012)',
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Accept': 'application/json'
-    }
-    r = req_lib.post(
-        'https://www.einvoice.nat.gov.tw/PB2CAPIVAN/invapp/InvApp',
-        data=payload,
-        headers=headers,
-        timeout=15
-    )
-    return r.text, r.status_code, {'Content-Type': 'application/json; charset=utf-8'}
 
 
 @app.route('/record-daily-time')

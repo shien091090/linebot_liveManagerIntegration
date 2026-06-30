@@ -1,5 +1,7 @@
 import requests
 import html as html_lib
+import json
+import re
 from datetime import datetime, timezone, timedelta
 from collections import defaultdict
 import settings
@@ -36,6 +38,86 @@ def _parse_dt(s):
 
 def _avg(values):
     return round(sum(values) / len(values)) if values else None
+
+
+_DATE_RE = re.compile(r'^\d{1,2}/\d{1,2}')
+
+
+def _has_explicit_date(content):
+    return bool(_DATE_RE.match(content.strip()))
+
+
+def _age_days(time_str, today):
+    try:
+        dt = datetime.strptime(time_str, '%Y/%m/%d %H:%M:%S')
+        return (today - dt.date()).days
+    except Exception:
+        return None
+
+
+def _age_badge(days):
+    if days is None:
+        return ''
+    if days == 0:
+        cls, label = 'age-today', '今天'
+    elif days <= 2:
+        cls, label = 'age-recent', f'{days}天'
+    elif days <= 6:
+        cls, label = 'age-warn', f'{days}天'
+    else:
+        cls, label = 'age-old', f'{days}天'
+    return f'<span class="future-item-age {cls}">{label}</span>'
+
+
+def _memo_section_html(today):
+    try:
+        r = requests.get(settings.URL_GAS_API,
+                         params={'action': 'action_memo_get_with_time'}, timeout=10)
+        resp = r.json()
+        if resp.get('statusCode') != 200:
+            return ''
+        items = json.loads(resp.get('responseMsg', '[]'))
+        if not items:
+            return ''
+        rows = ''
+        for item in items:
+            content = item.get('content', '')
+            badge = '' if _has_explicit_date(content) else _age_badge(
+                _age_days(item.get('modifyTime', ''), today))
+            rows += (f'<div class="future-item">'
+                     f'<span class="future-item-content">{html_lib.escape(content)}</span>'
+                     f'{badge}</div>')
+        return (f'<div class="section">'
+                f'<div class="section-title">待辦事項</div>'
+                f'<div class="future-list-card">{rows}</div>'
+                f'</div>')
+    except Exception:
+        return ''
+
+
+def _purchase_section_html(today):
+    try:
+        r = requests.get(settings.URL_GAS_API,
+                         params={'action': 'action_purchase_list_get'}, timeout=10)
+        resp = r.json()
+        if resp.get('statusCode') != 200:
+            return ''
+        items = json.loads(resp.get('responseMsg', '[]'))
+        if not items:
+            return ''
+        rows = ''
+        for item in items:
+            name = item.get('name', '')
+            badge = _age_badge(_age_days(item.get('addTime', ''), today))
+            rows += (f'<div class="future-item">'
+                     f'<span class="future-item-content">{html_lib.escape(name)}</span>'
+                     f'{badge}</div>')
+        return (f'<div class="section">'
+                f'<div class="section-title">待買清單</div>'
+                f'<div class="future-list-card">{rows}</div>'
+                f'</div>')
+    except Exception:
+        return ''
 
 
 _ALL_SLOT_NAMES = ['早上', '下午', '晚上']
@@ -159,13 +241,14 @@ def generate_html():
     </div>'''
 
         update_time = now.strftime('%H:%M')
-
-        return f'''<div class="section">
+        weather_html = f'''<div class="section">
   <div class="section-title">台中市西屯區 天氣預報</div>
   <div class="weather-list">{cards_html}
   </div>
   <div class="update-time">資料來源：中央氣象署 · 今日 {update_time} 更新</div>
 </div>'''
+        extra_html = _memo_section_html(today) + _purchase_section_html(today)
+        return weather_html + extra_html
 
     except Exception as e:
         return f'<div class="wip">天氣資料載入失敗：{html_lib.escape(str(e))}</div>'

@@ -234,6 +234,27 @@ body {
 }
 .weather-summary-item::before { content: '· '; color: #94A3B8; }
 
+/* Todo / Purchase list in future tab */
+.future-list-card {
+    background: #fff; border-radius: 12px; overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.07), 0 0 0 1px rgba(0,0,0,0.04);
+}
+.future-item {
+    display: flex; align-items: center;
+    padding: 10px 14px; border-bottom: 1px solid #F1F5F9;
+    font-size: 13px; gap: 8px;
+}
+.future-item:last-child { border-bottom: none; }
+.future-item-content { flex: 1; color: #1E293B; min-width: 0; }
+.future-item-age {
+    font-size: 10px; font-weight: 600; padding: 2px 8px;
+    border-radius: 10px; flex-shrink: 0; white-space: nowrap;
+}
+.age-today { background: #DCFCE7; color: #059669; }
+.age-recent { background: #F1F5F9; color: #64748B; }
+.age-warn { background: #FEF3C7; color: #D97706; }
+.age-old { background: #FEE2E2; color: #DC2626; }
+
 /* WIP */
 .wip {
     background: #fff; border-radius: 12px;

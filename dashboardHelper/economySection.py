@@ -1,7 +1,6 @@
 import json
 import re
 import html as html_lib
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone, timedelta
 import requests
 
@@ -130,24 +129,18 @@ def _fetch_all(gas_url):
     else:
         last_day = (datetime(year, month + 1, 1, tzinfo=TAIWAN_TZ) - timedelta(days=1)).day
 
-    tasks = {
-        'items':    (lambda: _call_gas(gas_url, {
-                        'action': 'action_get_accounting_items',
-                        'startDate': f'{year}/{month:02d}/01',
-                        'endDate': f'{year}/{month:02d}/{last_day:02d}'})),
-        'budget':   (lambda: _call_gas(gas_url, {
-                        'action': 'action_get_budget_status',
-                        'year': year, 'month': month})),
-        'schedule': (lambda: _call_gas(gas_url, {'action': 'action_get_special_schedule'})),
-        'memo':     (lambda: _call_gas_raw(gas_url, {'action': 'action_memo_get'})),
-    }
-    results = {}
-    with ThreadPoolExecutor(max_workers=4) as ex:
-        futures = {ex.submit(fn): key for key, fn in tasks.items()}
-        for f in as_completed(futures):
-            results[futures[f]] = f.result()
-
-    return now, results['items'], results['budget'], results['schedule'], results['memo']
+    items = _call_gas(gas_url, {
+        'action': 'action_get_accounting_items',
+        'startDate': f'{year}/{month:02d}/01',
+        'endDate': f'{year}/{month:02d}/{last_day:02d}'
+    })
+    budget = _call_gas(gas_url, {
+        'action': 'action_get_budget_status',
+        'year': year, 'month': month
+    })
+    schedule = _call_gas(gas_url, {'action': 'action_get_special_schedule'})
+    memo_text = _call_gas_raw(gas_url, {'action': 'action_memo_get'})
+    return now, items, budget, schedule, memo_text
 
 
 def _next_income_info(schedule, current_month):

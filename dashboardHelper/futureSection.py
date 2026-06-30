@@ -9,17 +9,12 @@ CWA_DATASET = 'F-D0047-073'
 CWA_LOCATION = '西屯區'
 WEEKDAY_NAMES = ['週一', '週二', '週三', '週四', '週五', '週六', '週日']
 
-_CODE_EMOJI = {1: '☀️', 2: '🌤️', 3: '🌤️', 4: '⛅', 5: '⛅', 6: '☁️', 7: '☁️'}
-
-
-def _emoji(code):
-    try:
-        c = int(code)
-    except (TypeError, ValueError):
-        return '🌡️'
-    if c in _CODE_EMOJI:
-        return _CODE_EMOJI[c]
-    return '🌧️' if c <= 17 else '⛈️'
+# (label, time_display, temp_hours, rain_start_hours)
+TIME_SLOTS = [
+    ('早上', '06–12', range(6, 12),  [6, 9]),
+    ('下午', '12–18', range(12, 18), [12, 15]),
+    ('晚上', '18–00', range(18, 24), [18, 21]),
+]
 
 
 def _day_label(d, today):
@@ -29,9 +24,7 @@ def _day_label(d, today):
         return '今天', wd
     if delta == 1:
         return '明天', wd
-    if delta == 2:
-        return '後天', wd
-    return f'{d.month}/{d.day}', wd
+    return '後天', wd
 
 
 def _parse_dt(s):
@@ -41,9 +34,14 @@ def _parse_dt(s):
         return None
 
 
+def _avg(values):
+    return round(sum(values) / len(values)) if values else None
+
+
 def generate_html():
     now = datetime.now(TAIWAN_TZ)
     today = now.date()
+    target_dates = [today + timedelta(days=i) for i in range(3)]
 
     try:
         url = (f'https://opendata.cwa.gov.tw/api/v1/rest/datastore/{CWA_DATASET}'
@@ -59,97 +57,62 @@ def generate_html():
 
         elements = {el['ElementName']: el for el in loc['WeatherElement']}
 
-        # Hourly temp: DataTime → temperature int
-        temp_by_dt = {}
+        # date → {hour: temp}
+        temp_dh = defaultdict(dict)
         for slot in elements.get('溫度', {}).get('Time', []):
             dt_str = slot.get('DataTime', '')
-            if dt_str:
-                try:
-                    temp_by_dt[dt_str] = int(slot['ElementValue'][0]['Temperature'])
-                except (KeyError, ValueError, IndexError):
-                    pass
-
-        # 3-hour rain probability: StartTime → int
-        rain_map = {}
-        for slot in elements.get('3小時降雨機率', {}).get('Time', []):
-            dt_str = slot.get('StartTime', '')
-            if dt_str:
-                try:
-                    rain_map[dt_str] = int(slot['ElementValue'][0]['ProbabilityOfPrecipitation'])
-                except (KeyError, ValueError, IndexError):
-                    pass
-
-        # 3-hour weather phenomenon
-        slots_3h = []
-        for slot in elements.get('天氣現象', {}).get('Time', []):
-            dt_str = slot.get('StartTime', '')
-            if not dt_str:
-                continue
             dt = _parse_dt(dt_str)
             if not dt:
                 continue
             try:
-                ev = slot['ElementValue'][0]
-                slots_3h.append({
-                    'dt': dt,
-                    'weather': ev.get('Weather', ''),
-                    'code': ev.get('WeatherCode', ''),
-                    'rain': rain_map.get(dt_str, 0),
-                })
-            except (KeyError, IndexError):
+                temp_dh[dt.date()][dt.hour] = int(slot['ElementValue'][0]['Temperature'])
+            except (KeyError, ValueError, IndexError):
                 pass
 
-        # Aggregate by calendar date
-        days = defaultdict(lambda: {'temps': [], 'day_slots': [], 'all_slots': []})
-        for dt_str, temp in temp_by_dt.items():
+        # date → {start_hour: rain_pct}
+        rain_dh = defaultdict(dict)
+        for slot in elements.get('3小時降雨機率', {}).get('Time', []):
+            dt_str = slot.get('StartTime', '')
             dt = _parse_dt(dt_str)
-            if dt:
-                days[dt.date()]['temps'].append(temp)
-        for slot in slots_3h:
-            d = slot['dt'].date()
-            days[d]['all_slots'].append(slot)
-            if 6 <= slot['dt'].hour < 21:
-                days[d]['day_slots'].append(slot)
+            if not dt:
+                continue
+            try:
+                rain_dh[dt.date()][dt.hour] = int(slot['ElementValue'][0]['ProbabilityOfPrecipitation'])
+            except (KeyError, ValueError, IndexError):
+                pass
 
         cards_html = ''
-        for d in sorted(days.keys()):
-            info = days[d]
-            temps = info['temps']
-            min_t = min(temps) if temps else '--'
-            max_t = max(temps) if temps else '--'
-
-            active = info['day_slots'] or info['all_slots']
-            max_rain = max((s['rain'] for s in active), default=0)
-
-            if active:
-                dominant = max(active,
-                               key=lambda s: int(s['code']) if s['code'].isdigit() else 0)
-                dominant_weather = dominant['weather']
-                dominant_code = dominant['code']
-            else:
-                dominant_weather, dominant_code = '無資料', '01'
-
-            emoji = _emoji(dominant_code)
+        for d in target_dates:
             label, weekday = _day_label(d, today)
-            rain_display = f'{max_rain}%' if max_rain > 0 else '—'
+            date_str = f'{d.month}/{d.day}'
             today_cls = ' weather-card-today' if d == today else ''
 
+            slots_html = ''
+            for slot_name, slot_time, temp_hours, rain_hours in TIME_SLOTS:
+                temps = [temp_dh[d][h] for h in temp_hours if h in temp_dh[d]]
+                rains = [rain_dh[d][h] for h in rain_hours if h in rain_dh[d]]
+                avg_temp = _avg(temps)
+                avg_rain = _avg(rains)
+                temp_display = f'{avg_temp}°' if avg_temp is not None else '--'
+                rain_display = f'{avg_rain}%' if avg_rain is not None else '--'
+
+                slots_html += f'''
+        <div class="weather-slot">
+          <div class="slot-period">{slot_name}</div>
+          <div class="slot-time">{slot_time}</div>
+          <div class="slot-temp">{temp_display}</div>
+          <div class="slot-rain">💧 {rain_display}</div>
+        </div>'''
+
             cards_html += f'''
-      <div class="weather-card{today_cls}">
-        <div class="weather-day">
-          <span class="weather-day-main">{html_lib.escape(label)}</span>
-          <span class="weather-day-sub">{weekday}</span>
-        </div>
-        <div class="weather-icon">{emoji}</div>
-        <div class="weather-detail">
-          <div class="weather-temp">{min_t}° <span class="temp-sep">/</span> {max_t}°</div>
-          <div class="weather-desc">{html_lib.escape(dominant_weather)}</div>
-        </div>
-        <div class="weather-rain">
-          <span class="rain-icon">💧</span>
-          <span class="rain-pct">{rain_display}</span>
-        </div>
-      </div>'''
+    <div class="weather-card{today_cls}">
+      <div class="weather-card-header">
+        <span class="weather-day-main">{html_lib.escape(label)}</span>
+        <span class="weather-day-sub">{weekday} · {date_str}</span>
+      </div>
+      <div class="weather-slots">{slots_html}
+      </div>
+    </div>'''
 
         update_time = now.strftime('%H:%M')
 

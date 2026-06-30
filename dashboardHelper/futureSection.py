@@ -2,6 +2,7 @@ import requests
 import html as html_lib
 import json
 import re
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone, timedelta
 from collections import defaultdict
 import settings
@@ -247,7 +248,10 @@ def generate_html():
   </div>
   <div class="update-time">資料來源：中央氣象署 · 今日 {update_time} 更新</div>
 </div>'''
-        extra_html = _memo_section_html(today) + _purchase_section_html(today)
+        with ThreadPoolExecutor(max_workers=2) as ex:
+            memo_f = ex.submit(_memo_section_html, today)
+            purchase_f = ex.submit(_purchase_section_html, today)
+            extra_html = memo_f.result() + purchase_f.result()
         return weather_html + extra_html
 
     except Exception as e:

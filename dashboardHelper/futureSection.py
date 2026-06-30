@@ -111,7 +111,7 @@ _MEMO_GROUPS = [
 def _memo_section_html(today):
     try:
         r = requests.get(settings.URL_GAS_API,
-                         params={'action': 'action_memo_get_json'}, timeout=10)
+                         params={'action': 'action_memo_get_json'}, timeout=25)
         resp = r.json()
         if resp.get('statusCode') != 200:
             return ''
@@ -164,7 +164,7 @@ def _memo_section_html(today):
 def _purchase_section_html(today):
     try:
         r = requests.get(settings.URL_GAS_API,
-                         params={'action': 'action_purchase_list_get'}, timeout=10)
+                         params={'action': 'action_purchase_list_get'}, timeout=25)
         resp = r.json()
         if resp.get('statusCode') != 200:
             return ''
@@ -234,7 +234,7 @@ def generate_html():
     try:
         url = (f'https://opendata.cwa.gov.tw/api/v1/rest/datastore/{CWA_DATASET}'
                f'?Authorization={settings.CWA_API_KEY}')
-        resp = requests.get(url, timeout=10)
+        resp = requests.get(url, timeout=25)
         resp.raise_for_status()
         data = resp.json()
 

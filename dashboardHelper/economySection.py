@@ -16,12 +16,12 @@ TIMING_ORDER = {'初': 1, '中': 2, '底': 3}
 
 
 def _call_gas(gas_url, params):
-    r = requests.get(gas_url, params=params, timeout=15)
+    r = requests.get(gas_url, params=params, timeout=25)
     return json.loads(r.json()['responseMsg'])
 
 
 def _call_gas_raw(gas_url, params):
-    r = requests.get(gas_url, params=params, timeout=15)
+    r = requests.get(gas_url, params=params, timeout=25)
     data = r.json()
     if data.get('statusCode') != 200:
         return ''

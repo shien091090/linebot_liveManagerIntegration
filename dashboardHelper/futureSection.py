@@ -72,7 +72,7 @@ def _age_badge(days):
 def _memo_section_html(today):
     try:
         r = requests.get(settings.URL_GAS_API,
-                         params={'action': 'action_memo_get_with_time'}, timeout=10)
+                         params={'action': 'action_memo_get_json'}, timeout=10)
         resp = r.json()
         if resp.get('statusCode') != 200:
             return ''

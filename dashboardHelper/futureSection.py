@@ -86,17 +86,17 @@ def _age_days(time_str, today):
         return None
 
 
-def _age_badge(days):
-    if days is None:
+def _memo_age_badge(days):
+    if days is None or days < 30:
         return ''
-    if days == 0:
-        cls, label = 'age-today', '今天'
-    elif days <= 2:
-        cls, label = 'age-recent', f'{days}天'
-    elif days <= 6:
-        cls, label = 'age-warn', f'{days}天'
+    if days >= 365:
+        cls, label = 'age-old', '已列待辦超過1年'
+    elif days >= 183:
+        cls, label = 'age-old', '已列待辦超過半年'
+    elif days >= 90:
+        cls, label = 'age-warn', '已列待辦超過90天'
     else:
-        cls, label = 'age-old', f'{days}天'
+        cls, label = 'age-recent', '已列待辦超過30天'
     return f'<span class="future-item-age {cls}">{label}</span>'
 
 
@@ -135,7 +135,7 @@ def _memo_section_html(today):
                     else:
                         groups['future'].append((content, ''))
             else:
-                badge = _age_badge(_age_days(item.get('modifyTime', ''), today))
+                badge = _memo_age_badge(_age_days(item.get('modifyTime', ''), today))
                 groups['other'].append((content, badge))
 
         body = ''
@@ -174,10 +174,9 @@ def _purchase_section_html(today):
         rows = ''
         for item in items:
             name = item.get('name', '')
-            badge = _age_badge(_age_days(item.get('addTime', ''), today))
             rows += (f'<div class="future-item">'
                      f'<span class="future-item-content">{html_lib.escape(name)}</span>'
-                     f'{badge}</div>')
+                     f'</div>')
         return (f'<div class="section">'
                 f'<div class="section-title">待買清單</div>'
                 f'<div class="future-list-card">{rows}</div>'

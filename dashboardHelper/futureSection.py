@@ -38,6 +38,46 @@ def _avg(values):
     return round(sum(values) / len(values)) if values else None
 
 
+_ALL_SLOT_NAMES = ['早上', '下午', '晚上']
+
+
+def _day_summary(slots_data):
+    """slots_data: list of (slot_name, avg_temp, avg_rain)"""
+    very_hot, hot, very_cold, cool, rainy = [], [], [], [], []
+    for name, temp, rain in slots_data:
+        if temp is not None:
+            if temp >= 35:
+                very_hot.append(name)
+            elif temp >= 30:
+                hot.append(name)
+            if temp < 10:
+                very_cold.append(name)
+            elif temp < 20:
+                cool.append(name)
+        if rain is not None and rain > 50:
+            rainy.append(name)
+
+    def fmt(names):
+        return '整天' if set(names) == set(_ALL_SLOT_NAMES) else '、'.join(names)
+
+    messages = []
+    if very_hot:
+        messages.append(f'{fmt(very_hot)}非常熱，建議不要外出')
+    if hot:
+        messages.append(f'{fmt(hot)}氣溫偏高，注意補水')
+    if very_cold:
+        messages.append(f'{fmt(very_cold)}非常冷，建議不要外出')
+    if cool:
+        messages.append(f'{fmt(cool)}偏涼，注意保暖')
+    if rainy:
+        messages.append(f'{fmt(rainy)}可能會下雨，建議帶傘')
+
+    if not messages:
+        return ''
+    items = ''.join(f'<div class="weather-summary-item">{m}</div>' for m in messages)
+    return f'<div class="weather-summary">{items}</div>'
+
+
 def generate_html():
     now = datetime.now(TAIWAN_TZ)
     today = now.date()
@@ -88,11 +128,13 @@ def generate_html():
             today_cls = ' weather-card-today' if d == today else ''
 
             slots_html = ''
+            slots_data = []
             for slot_name, slot_time, temp_hours, rain_hours in TIME_SLOTS:
                 temps = [temp_dh[d][h] for h in temp_hours if h in temp_dh[d]]
                 rains = [rain_dh[d][h] for h in rain_hours if h in rain_dh[d]]
                 avg_temp = _avg(temps)
                 avg_rain = _avg(rains)
+                slots_data.append((slot_name, avg_temp, avg_rain))
                 temp_display = f'{avg_temp}°' if avg_temp is not None else '--'
                 rain_display = f'{avg_rain}%' if avg_rain is not None else '--'
 
@@ -104,6 +146,8 @@ def generate_html():
           <div class="slot-rain">💧 {rain_display}</div>
         </div>'''
 
+            summary_html = _day_summary(slots_data)
+
             cards_html += f'''
     <div class="weather-card{today_cls}">
       <div class="weather-card-header">
@@ -111,7 +155,7 @@ def generate_html():
         <span class="weather-day-sub">{weekday} · {date_str}</span>
       </div>
       <div class="weather-slots">{slots_html}
-      </div>
+      </div>{summary_html}
     </div>'''
 
         update_time = now.strftime('%H:%M')

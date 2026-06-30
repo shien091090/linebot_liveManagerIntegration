@@ -223,6 +223,16 @@ body {
 .slot-time { font-size: 10px; color: #94A3B8; margin-top: 1px; }
 .slot-temp { font-size: 18px; font-weight: 700; color: #1E293B; margin-top: 6px; }
 .slot-rain { font-size: 12px; color: #3B82F6; margin-top: 3px; }
+.weather-summary {
+    padding: 8px 14px 7px;
+    border-top: 1px solid #E2E8F0;
+    background: #F8FAFC;
+}
+.weather-card-today .weather-summary { background: #EBF3FF; }
+.weather-summary-item {
+    font-size: 11px; color: #475569; line-height: 1.6;
+}
+.weather-summary-item::before { content: '· '; color: #94A3B8; }
 
 /* WIP */
 .wip {

@@ -1,3 +1,4 @@
+from concurrent.futures import ThreadPoolExecutor
 from dashboardHelper.economySection import generate_html as economy_html
 from dashboardHelper.futureSection import generate_html as future_html
 from dashboardHelper.recentSection import generate_html as recent_html
@@ -302,9 +303,13 @@ document.addEventListener('click', function() {
 
 
 def build_dashboard(gas_url):
-    econ = economy_html(gas_url)
-    fut = future_html()
-    rec = recent_html()
+    with ThreadPoolExecutor(max_workers=3) as ex:
+        econ_f = ex.submit(economy_html, gas_url)
+        fut_f  = ex.submit(future_html)
+        rec_f  = ex.submit(recent_html)
+        econ = econ_f.result()
+        fut  = fut_f.result()
+        rec  = rec_f.result()
 
     return f'''<!DOCTYPE html>
 <html lang="zh-TW">

@@ -234,6 +234,18 @@ body {
 }
 .weather-summary-item::before { content: '· '; color: #94A3B8; }
 
+/* Memo group labels */
+.memo-group-label {
+    font-size: 11px; font-weight: 700; padding: 3px 10px;
+    border-radius: 6px; display: inline-block; margin: 10px 0 6px;
+    letter-spacing: 0.03em;
+}
+.memo-group-label:first-child { margin-top: 0; }
+.memo-group-expired { background: #FEE2E2; color: #DC2626; }
+.memo-group-soon    { background: #FEF3C7; color: #D97706; }
+.memo-group-future  { background: #DBEAFE; color: #2563EB; }
+.memo-group-other   { background: #F1F5F9; color: #64748B; }
+
 /* Todo / Purchase list in future tab */
 .future-list-card {
     background: #fff; border-radius: 12px; overflow: hidden;

@@ -3,7 +3,7 @@ import html as html_lib
 import json
 import re
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, date, timezone, timedelta
 from collections import defaultdict
 import settings
 
@@ -41,11 +41,41 @@ def _avg(values):
     return round(sum(values) / len(values)) if values else None
 
 
-_DATE_RE = re.compile(r'^\d{1,2}/\d{1,2}')
+_DATE_RE = re.compile(r'^(\d{4}/\d{1,2}/\d{1,2}|\d{1,2}/\d{1,2}|\d{1,2}月[初中底])')
 
 
 def _has_explicit_date(content):
     return bool(_DATE_RE.match(content.strip()))
+
+
+_TIMING_DAY = {'初': 1, '中': 15, '底': 28}
+
+
+def _parse_explicit_date(content, today):
+    s = content.strip()
+    m = re.match(r'^(\d{4})/(\d{1,2})/(\d{1,2})', s)
+    if m:
+        try:
+            return date(int(m.group(1)), int(m.group(2)), int(m.group(3)))
+        except ValueError:
+            return None
+    m = re.match(r'^(\d{1,2})/(\d{1,2})', s)
+    if m:
+        try:
+            mo, day = int(m.group(1)), int(m.group(2))
+            d = date(today.year, mo, day)
+            return date(today.year + 1, mo, day) if d < today else d
+        except ValueError:
+            return None
+    m = re.match(r'^(\d{1,2})月([初中底])', s)
+    if m:
+        try:
+            mo, day = int(m.group(1)), _TIMING_DAY[m.group(2)]
+            d = date(today.year, mo, day)
+            return date(today.year + 1, mo, day) if d < today else d
+        except ValueError:
+            return None
+    return None
 
 
 def _age_days(time_str, today):
@@ -70,6 +100,14 @@ def _age_badge(days):
     return f'<span class="future-item-age {cls}">{label}</span>'
 
 
+_MEMO_GROUPS = [
+    ('expired', '已過期', 'memo-group-expired'),
+    ('soon',    '7天內',  'memo-group-soon'),
+    ('future',  '7天後',  'memo-group-future'),
+    ('other',   '其他項目', 'memo-group-other'),
+]
+
+
 def _memo_section_html(today):
     try:
         r = requests.get(settings.URL_GAS_API,
@@ -80,17 +118,44 @@ def _memo_section_html(today):
         items = json.loads(resp.get('responseMsg', '[]'))
         if not items:
             return ''
-        rows = ''
+
+        groups = {key: [] for key, _, _ in _MEMO_GROUPS}
         for item in items:
             content = item.get('content', '')
-            badge = '' if _has_explicit_date(content) else _age_badge(
-                _age_days(item.get('modifyTime', ''), today))
-            rows += (f'<div class="future-item">'
-                     f'<span class="future-item-content">{html_lib.escape(content)}</span>'
-                     f'{badge}</div>')
+            if _has_explicit_date(content):
+                d = _parse_explicit_date(content, today)
+                if d is None:
+                    groups['other'].append((content, ''))
+                else:
+                    days_until = (d - today).days
+                    if days_until <= 0:
+                        groups['expired'].append((content, ''))
+                    elif days_until <= 7:
+                        groups['soon'].append((content, ''))
+                    else:
+                        groups['future'].append((content, ''))
+            else:
+                badge = _age_badge(_age_days(item.get('modifyTime', ''), today))
+                groups['other'].append((content, badge))
+
+        body = ''
+        for key, label, cls in _MEMO_GROUPS:
+            if not groups[key]:
+                continue
+            rows = ''.join(
+                f'<div class="future-item">'
+                f'<span class="future-item-content">{html_lib.escape(c)}</span>'
+                f'{badge}</div>'
+                for c, badge in groups[key]
+            )
+            body += (f'<div class="memo-group-label {cls}">{label}</div>'
+                     f'<div class="future-list-card">{rows}</div>')
+
+        if not body:
+            return ''
         return (f'<div class="section">'
                 f'<div class="section-title">待辦事項</div>'
-                f'<div class="future-list-card">{rows}</div>'
+                f'{body}'
                 f'</div>')
     except Exception:
         return ''

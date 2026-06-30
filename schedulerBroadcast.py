@@ -27,7 +27,7 @@ def DailyBroadCast():
     dashboard_flex = getUrlButtonFlexMessage('家庭總覽', '點擊查看家庭狀況', DASHBOARD_URL)
     push_dashboard = FlexSendMessage(alt_text='家庭總覽', contents=json.loads(dashboard_flex))
 
-    messages = [push_daily, push_dashboard]
+    messages = [push_dashboard, push_daily]
 
     try:
         r = requests.get(settings.URL_GAS_API, params={'action': API_ACTION_PURCHASE_LIST_GET}, timeout=10)

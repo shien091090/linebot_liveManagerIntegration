@@ -12,6 +12,10 @@ commandDataEnum = {
     'KEY_SCHEDULE_GET': ['確認行程', '確認行程', '確認週期行程'],
     'KEY_BUY_WITH_BUDGET_TYPE': ['記帳', '記帳 <記帳項目> <價格> <預算種類>', '新增記帳項目'],
     'KEY_EXPENSE_DASHBOARD': ['分析家庭收支', '分析家庭收支', '分析家庭收支報表'],
+    'KEY_PURCHASE_ADD': ['新增待買', '新增待買 <品項名稱>', '新增待購買品項'],
+    'KEY_PURCHASE_GET': ['確認待買', '確認待買', '確認待購買清單'],
+    'KEY_PURCHASE_DELETE': ['刪除待買', '刪除待買 <編號>', '刪除待購買品項'],
+    'KEY_PURCHASE_MARK_BOUGHT': ['已購買', '已購買 <編號>', '標記品項為已購買'],
 }
 
 period_key_word_arr = ['每月', '每週', '每天', '每年']

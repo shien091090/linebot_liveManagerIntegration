@@ -17,6 +17,7 @@ import re
 import uuid
 import pyimgur
 import json
+import requests
 
 REQUEST_TYPE_BYPASS = 'request_type_bypass'
 REQUEST_TYPE_GAS = 'request_type_gas'
@@ -456,6 +457,99 @@ def ParseRequestInfo(receive_txt):
             req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key),
                                                   REQUEST_TYPE_GAS,
                                                   send_param)
+
+    # 新增待購買品項
+    temp_command_key = 'KEY_PURCHASE_ADD'
+    if command_key == keyWordSetting.GetCommandKey(temp_command_key):
+        command_text_structure = [TextStructureType_Content, TextStructureType_Content]
+        text_parse_result = text_parser.ParseTextBySpecificStructure(command_text_structure)
+        if text_parse_result is None or \
+                text_parse_result.IsKeyWordMatch(keyWordSetting.GetCommandKey(temp_command_key)) is False:
+            req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key),
+                                                  REQUEST_TYPE_BYPASS, None)
+            req_info.statusMsg = f"【格式錯誤】\n正確格式為 『{keyWordSetting.GetCommandFormatHint(temp_command_key)}』"
+            req_info.responseMsg = ' '
+        else:
+            send_param["action"] = lineActionInfo.API_ACTION_PURCHASE_LIST_ADD
+            send_param["itemName"] = text_parse_result.GetSpecificTextTypeValue(TextType_SubContent)
+            req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key),
+                                                  REQUEST_TYPE_GAS, send_param)
+
+    # 確認待購買清單
+    temp_command_key = 'KEY_PURCHASE_GET'
+    if command_key == keyWordSetting.GetCommandKey(temp_command_key):
+        r = requests.get(settings.URL_GAS_API,
+                         params={'action': lineActionInfo.API_ACTION_PURCHASE_LIST_GET}, timeout=10)
+        resp = json.loads(r.text)
+        req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key),
+                                              REQUEST_TYPE_BYPASS, None)
+        req_info.statusMsg = keyWordSetting.GetCommandTitle(temp_command_key)
+        if resp.get('statusCode') == 200:
+            items = json.loads(resp.get('responseMsg', '[]'))
+            req_info.responseMsg = '\n'.join(
+                f'{i+1}. {item["name"]}' for i, item in enumerate(items)) if items else '(空)'
+        else:
+            req_info.responseMsg = resp.get('statusMsg', '取得清單失敗')
+
+    # 刪除待購買品項
+    temp_command_key = 'KEY_PURCHASE_DELETE'
+    if command_key == keyWordSetting.GetCommandKey(temp_command_key):
+        command_text_structure = [TextStructureType_Content, TextStructureType_Number]
+        text_parse_result = text_parser.ParseTextBySpecificStructure(command_text_structure)
+        if text_parse_result is None or \
+                text_parse_result.IsKeyWordMatch(keyWordSetting.GetCommandKey(temp_command_key)) is False:
+            req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key),
+                                                  REQUEST_TYPE_BYPASS, None)
+            req_info.statusMsg = f"【格式錯誤】\n正確格式為 『{keyWordSetting.GetCommandFormatHint(temp_command_key)}』"
+            req_info.responseMsg = ' '
+        else:
+            number = int(text_parse_result.GetSpecificTextTypeValue(TextType_Number))
+            r = requests.get(settings.URL_GAS_API,
+                             params={'action': lineActionInfo.API_ACTION_PURCHASE_LIST_GET}, timeout=10)
+            items = json.loads(json.loads(r.text).get('responseMsg', '[]'))
+            req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key),
+                                                  REQUEST_TYPE_BYPASS, None)
+            if number < 1 or number > len(items):
+                req_info.statusMsg = '【錯誤】'
+                req_info.responseMsg = f'編號 {number} 不存在（共 {len(items)} 筆）'
+            else:
+                item_name = items[number - 1]['name']
+                r2 = requests.get(settings.URL_GAS_API,
+                                  params={'action': lineActionInfo.API_ACTION_PURCHASE_LIST_DELETE,
+                                          'itemName': item_name}, timeout=10)
+                resp2 = json.loads(r2.text)
+                req_info.statusMsg = resp2.get('statusMsg', '')
+                req_info.responseMsg = item_name
+
+    # 標記品項為已購買
+    temp_command_key = 'KEY_PURCHASE_MARK_BOUGHT'
+    if command_key == keyWordSetting.GetCommandKey(temp_command_key):
+        command_text_structure = [TextStructureType_Content, TextStructureType_Number]
+        text_parse_result = text_parser.ParseTextBySpecificStructure(command_text_structure)
+        if text_parse_result is None or \
+                text_parse_result.IsKeyWordMatch(keyWordSetting.GetCommandKey(temp_command_key)) is False:
+            req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key),
+                                                  REQUEST_TYPE_BYPASS, None)
+            req_info.statusMsg = f"【格式錯誤】\n正確格式為 『{keyWordSetting.GetCommandFormatHint(temp_command_key)}』"
+            req_info.responseMsg = ' '
+        else:
+            number = int(text_parse_result.GetSpecificTextTypeValue(TextType_Number))
+            r = requests.get(settings.URL_GAS_API,
+                             params={'action': lineActionInfo.API_ACTION_PURCHASE_LIST_GET}, timeout=10)
+            items = json.loads(json.loads(r.text).get('responseMsg', '[]'))
+            req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key),
+                                                  REQUEST_TYPE_BYPASS, None)
+            if number < 1 or number > len(items):
+                req_info.statusMsg = '【錯誤】'
+                req_info.responseMsg = f'編號 {number} 不存在（共 {len(items)} 筆）'
+            else:
+                item_name = items[number - 1]['name']
+                r2 = requests.get(settings.URL_GAS_API,
+                                  params={'action': lineActionInfo.API_ACTION_PURCHASE_LIST_MARK_BOUGHT,
+                                          'itemName': item_name}, timeout=10)
+                resp2 = json.loads(r2.text)
+                req_info.statusMsg = resp2.get('statusMsg', '')
+                req_info.responseMsg = item_name
 
     # 花費統計報表（不加入使用者指令列表）
     if command_key == '分析家庭收支':

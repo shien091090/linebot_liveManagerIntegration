@@ -98,10 +98,11 @@ def _memo_age_badge(days):
 
 
 _MEMO_GROUPS = [
-    ('expired', '已過期', 'memo-group-expired'),
-    ('soon',    '7天內',  'memo-group-soon'),
-    ('future',  '7天後',  'memo-group-future'),
-    ('other',   '其他項目', 'memo-group-other'),
+    ('expired',    '已過期',  'memo-group-expired'),
+    ('soon',       '7天內',   'memo-group-soon'),
+    ('future',     '7天後',   'memo-group-future'),
+    ('far_future', '一個月後', 'memo-group-far-future'),
+    ('other',      '其他項目', 'memo-group-other'),
 ]
 
 
@@ -124,8 +125,10 @@ def _build_memo_html(items, important_items, today):
                     groups['expired'].append((d, content, '', False))
                 elif days_until <= 7:
                     groups['soon'].append((d, content, '', False))
-                else:
+                elif days_until <= 30:
                     groups['future'].append((d, content, '', False))
+                else:
+                    groups['far_future'].append((d, content, '', False))
         else:
             badge = _memo_age_badge(_age_days(item.get('modifyTime', ''), today))
             groups['other'].append((date.max, content, badge, False))
@@ -146,8 +149,10 @@ def _build_memo_html(items, important_items, today):
         date_label = f'{d.month}/{d.day}'
         if days_until <= 7:
             groups['soon'].append((d, name, date_label, True))
-        else:
+        elif days_until <= 30:
             groups['future'].append((d, name, date_label, True))
+        else:
+            groups['far_future'].append((d, name, date_label, True))
 
     for key in groups:
         groups[key].sort(key=lambda x: x[0])

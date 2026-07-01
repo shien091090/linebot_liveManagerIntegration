@@ -125,7 +125,7 @@ def _fetch_all(gas_url):
     now = datetime.now(TAIWAN_TZ)
     r = requests.get(gas_url, params={'action': 'action_get_dashboard_economy'}, timeout=25)
     data = json.loads(r.json()['responseMsg'])
-    return now, data['items'], data['budget'], data['schedule'], data['memo']
+    return now, data['items'], data['budget'], data['schedule'], data['memo'], set(data.get('budgetTypes', []))
 
 
 def _next_income_info(schedule, current_month):
@@ -197,13 +197,14 @@ def generate_html(gas_url):
 
 
 def _generate_html_inner(gas_url):
-    now, items, budget, schedule, memo_text = _fetch_all(gas_url)
+    now, items, budget, schedule, memo_text, budget_types = _fetch_all(gas_url)
     year, month = now.year, now.month
 
     total_spent_all = sum(i['prize'] for i in items)
     active_cats = [c for c in budget['categories']
                    if (c['spent'] > 0 or c['effectiveBudget'] > 0)
-                   and c['name'] not in MONTHLY_INCOME_NAMES]
+                   and c['name'] not in MONTHLY_INCOME_NAMES
+                   and (not budget_types or c['name'] in budget_types)]
     budget_total = sum(c['effectiveBudget'] for c in active_cats)
     diff = budget_total - total_spent_all
 

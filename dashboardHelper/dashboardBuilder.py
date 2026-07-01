@@ -268,6 +268,21 @@ body {
 .age-warn { background: #FEF3C7; color: #D97706; }
 .age-old { background: #FEE2E2; color: #DC2626; }
 
+/* Month toggle tabs */
+.month-tabs {
+    display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px;
+}
+.month-tab {
+    padding: 5px 12px;
+    border: 1px solid #E2E8F0; border-radius: 20px;
+    background: #fff; cursor: pointer;
+    font-size: 13px; font-weight: 500; color: #64748B;
+    font-family: inherit; line-height: 1.4;
+    transition: all 0.15s;
+}
+.month-tab.active { background: #2563EB; color: #fff; border-color: #2563EB; font-weight: 600; }
+.month-tab:hover:not(.active) { background: #F1F5F9; }
+
 /* WIP */
 .wip {
     background: #fff; border-radius: 12px;
@@ -293,11 +308,19 @@ function toggleBudgetDetail(idx) {
 }
 function toggleIncomeTooltip(e) {
     e.stopPropagation();
-    document.getElementById('income-tooltip').classList.toggle('show');
+    var t = e.currentTarget.closest('.income-card').querySelector('.income-tooltip');
+    if (t) t.classList.toggle('show');
+}
+function switchMonth(m) {
+    document.querySelectorAll('.month-pane').forEach(function(el) { el.style.display = 'none'; });
+    document.querySelectorAll('.month-tab').forEach(function(el) { el.classList.remove('active'); });
+    var pane = document.querySelector('.month-pane[data-month="' + m + '"]');
+    if (pane) pane.style.display = 'block';
+    var tab = document.querySelector('.month-tab[data-month="' + m + '"]');
+    if (tab) tab.classList.add('active');
 }
 document.addEventListener('click', function() {
-    var t = document.getElementById('income-tooltip');
-    if (t) t.classList.remove('show');
+    document.querySelectorAll('.income-tooltip').forEach(function(t) { t.classList.remove('show'); });
 });
 '''
 

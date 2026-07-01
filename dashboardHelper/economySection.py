@@ -14,19 +14,6 @@ MEMO_BUY_RE = re.compile(r'(\d{1,2})月(初|中|底)買(.+)')
 TIMING_ORDER = {'初': 1, '中': 2, '底': 3}
 
 
-def _call_gas(gas_url, params):
-    r = requests.get(gas_url, params=params, timeout=25)
-    return json.loads(r.json()['responseMsg'])
-
-
-def _call_gas_raw(gas_url, params):
-    r = requests.get(gas_url, params=params, timeout=25)
-    data = r.json()
-    if data.get('statusCode') != 200:
-        return ''
-    return data.get('responseMsg', '')
-
-
 def _fmt(n):
     return f'{int(n):,}'
 
@@ -40,7 +27,6 @@ def _sort_months_from(months, from_month):
 
 
 def _month_display(m, from_month, to_month, base_year, current_year):
-    """Return month label with year prefix when the month falls in a different calendar year."""
     is_cross_year = to_month < from_month
     disp_year = base_year + 1 if (is_cross_year and m <= to_month) else base_year
     if disp_year > current_year:
@@ -121,13 +107,6 @@ def _build_expense_rows(expense_by_month, pending_by_month, from_month, to_month
     return rows, pending_count
 
 
-def _fetch_all(gas_url):
-    now = datetime.now(TAIWAN_TZ)
-    r = requests.get(gas_url, params={'action': 'action_get_dashboard_economy'}, timeout=25)
-    data = json.loads(r.json()['responseMsg'])
-    return now, data['items'], data['budget'], data['schedule'], data['memo'], set(data.get('budgetTypes', []))
-
-
 def _next_income_info(schedule, current_month):
     income_by_month = {}
     for item in schedule:
@@ -189,32 +168,19 @@ def _next_next_income_info(schedule, next_month):
     return target, income_items, expenses
 
 
-def generate_html(gas_url):
-    try:
-        return _generate_html_inner(gas_url)
-    except Exception as e:
-        return f'<div class="wip">資料載入失敗：{html_lib.escape(str(e))}</div>'
-
-
-def _generate_html_inner(gas_url):
-    now, items, budget, schedule, memo_text, budget_types = _fetch_all(gas_url)
-    year, month = now.year, now.month
-
+def _render_month_pane(year, month, items, budget, budget_types, schedule, prefix):
     total_spent_all = sum(i['prize'] for i in items)
-    active_cats = [c for c in budget['categories']
+    active_cats = [c for c in budget.get('categories', [])
                    if (c['spent'] > 0 or c['effectiveBudget'] > 0)
                    and c['name'] not in MONTHLY_INCOME_NAMES
                    and (not budget_types or c['name'] in budget_types)]
     budget_total = sum(c['effectiveBudget'] for c in active_cats)
     diff = budget_total - total_spent_all
 
-    next_month, income_items, _ = _next_income_info(schedule, month)
-    total_income = sum(i['specialAmount'] for i in income_items)
-
     diff_cls = 'positive' if diff >= 0 else 'negative'
     diff_prefix = '+' if diff >= 0 else ''
 
-    income_cat_map = {c['name']: c for c in budget['categories'] if c['name'] in MONTHLY_INCOME_NAMES}
+    income_cat_map = {c['name']: c for c in budget.get('categories', []) if c['name'] in MONTHLY_INCOME_NAMES}
     special_this_month = {}
     for s in schedule:
         if s['name'] in MONTHLY_INCOME_NAMES and s['specialMonth'] == month:
@@ -239,7 +205,6 @@ def _generate_html_inner(gas_url):
             tooltip_rows += f'<div class="tooltip-row tooltip-special"><span>{_e(s["specialItem"])}</span><span class="tooltip-plus">+＄{_fmt(s["specialAmount"])}</span></div>'
     tooltip_rows += f'<div class="tooltip-total"><span>合計</span><span>＄{_fmt(monthly_income)}</span></div>'
 
-    # ── Section 1: 概覽 ──────────────────────────────────────────
     section1 = f'''
   <div class="section">
     <h2 class="section-title">📅 {year}年{month}月概覽</h2>
@@ -258,9 +223,9 @@ def _generate_html_inner(gas_url):
           <div class="card-value {diff_cls}">{diff_prefix}＄{_fmt(abs(diff))}</div>
         </div>
         <div class="summary-card-small income-card">
-          <div class="card-label">本月收入<button class="info-btn" onclick="toggleIncomeTooltip(event)">?</button></div>
+          <div class="card-label">{month}月收入<button class="info-btn" onclick="toggleIncomeTooltip(event)">?</button></div>
           <div class="card-value">＄{_fmt(monthly_income)}</div>
-          <div class="income-tooltip" id="income-tooltip">
+          <div class="income-tooltip">
             {tooltip_rows}
           </div>
         </div>
@@ -272,7 +237,6 @@ def _generate_html_inner(gas_url):
     </div>
   </div>'''
 
-    # ── Section 2: 各分類預算 ────────────────────────────────────
     cat_items_map = {}
     for orig_idx, item in enumerate(items):
         if item['prize'] > 0 and item.get('budgetType'):
@@ -295,6 +259,7 @@ def _generate_html_inner(gas_url):
         d_cls = 'negative' if d < 0 else 'dim'
         d_prefix = '-' if d < 0 else ''
         top_items = top_items_by_cat.get(cat['name'], [])
+        uid = f'{prefix}_{i}'
         if top_items:
             detail_rows = ''.join(
                 f'<div class="budget-detail-row">'
@@ -304,8 +269,8 @@ def _generate_html_inner(gas_url):
                 f'</div>'
                 for r, item in enumerate(top_items, 1)
             )
-            toggle_html = f'<button class="detail-toggle" id="btoggle-{i}" onclick="toggleBudgetDetail({i})">&#9658;</button>'
-            detail_html = f'<div class="budget-details" id="bdetail-{i}">{detail_rows}</div>'
+            toggle_html = f'<button class="detail-toggle" id="btoggle-{uid}" onclick="toggleBudgetDetail(\'{uid}\')">&#9658;</button>'
+            detail_html = f'<div class="budget-details" id="bdetail-{uid}">{detail_rows}</div>'
         else:
             toggle_html = ''
             detail_html = ''
@@ -332,14 +297,56 @@ def _generate_html_inner(gas_url):
     </div>
   </div>'''
 
-    # ── Sections 3 & 4: 下次 & 下下次大筆入帳前 ─────────────────
-    section3 = ''
+    return section1 + section2
 
+
+def generate_html(gas_url):
+    try:
+        return _generate_html_inner(gas_url)
+    except Exception as e:
+        return f'<div class="wip">資料載入失敗：{html_lib.escape(str(e))}</div>'
+
+
+def _generate_html_inner(gas_url):
+    now = datetime.now(TAIWAN_TZ)
+    r = requests.get(gas_url, params={'action': 'action_get_dashboard_economy_all_months'}, timeout=25)
+    data = json.loads(r.json()['responseMsg'])
+
+    year = data['year']
+    current_month = data['currentMonth']
+    months_map = {m['month']: m for m in data['months']}
+    schedule = data['schedule']
+    memo_text = data['memo']
+    budget_types = set(data.get('budgetTypes', []))
+
+    # Month toggle tabs
+    tab_buttons = ''
+    for m in range(1, current_month + 1):
+        active_cls = ' active' if m == current_month else ''
+        tab_buttons += f'<button class="month-tab{active_cls}" data-month="{m}" onclick="switchMonth({m})">{m}月</button>'
+
+    # All month panes (only current month visible by default)
+    all_panes = ''
+    for m in range(1, current_month + 1):
+        md = months_map.get(m, {})
+        pane_html = _render_month_pane(
+            year, m,
+            md.get('items', []),
+            md.get('budget', {'categories': []}),
+            budget_types, schedule, f'm{m}'
+        )
+        display = 'block' if m == current_month else 'none'
+        all_panes += f'<div class="month-pane" data-month="{m}" style="display:{display}">{pane_html}</div>'
+
+    # Section 3: 下次大筆入帳前 (always based on current month, unaffected by toggle)
+    next_month, income_items, _ = _next_income_info(schedule, current_month)
+    total_income = sum(i['specialAmount'] for i in income_items)
+
+    section3 = ''
     if next_month:
         all_pending = _parse_pending_purchases(memo_text)
-        next_year_offset = 1 if next_month < month else 0
+        next_year_offset = 1 if next_month < current_month else 0
 
-        # Income rows for 下次
         income_rows = ''
         for item in income_items:
             income_rows += f'''
@@ -390,7 +397,7 @@ def _generate_html_inner(gas_url):
   </div>'''
 
     update_time = now.strftime('%Y/%m/%d %H:%M')
-    return f'''{section1}
-{section2}
+    return f'''<div class="month-tabs">{tab_buttons}</div>
+{all_panes}
 {section3}
   <div class="update-time">資料更新時間：{update_time}</div>'''

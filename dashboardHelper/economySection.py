@@ -178,7 +178,7 @@ def _render_month_pane(year, month, items, budget, budget_types, schedule, prefi
     diff = budget_total - total_spent_all
 
     diff_cls = 'positive' if diff >= 0 else 'negative'
-    diff_prefix = '+' if diff >= 0 else ''
+    diff_prefix = '+' if diff >= 0 else '-'
 
     income_cat_map = {c['name']: c for c in budget.get('categories', []) if c['name'] in MONTHLY_INCOME_NAMES}
     special_this_month = {}
@@ -196,7 +196,7 @@ def _render_month_pane(year, month, items, budget, budget_types, schedule, prefi
     monthly_income = sum(item['total'] for item in income_breakdown)
     income_diff = monthly_income - total_spent_all
     income_diff_cls = 'positive' if income_diff >= 0 else 'negative'
-    income_diff_prefix = '+' if income_diff >= 0 else ''
+    income_diff_prefix = '+' if income_diff >= 0 else '-'
 
     tooltip_rows = ''
     for item in income_breakdown:

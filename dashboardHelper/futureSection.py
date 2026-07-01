@@ -2,7 +2,6 @@ import requests
 import html as html_lib
 import json
 import re
-from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, date, timezone, timedelta
 from collections import defaultdict
 import settings
@@ -108,81 +107,62 @@ _MEMO_GROUPS = [
 ]
 
 
-def _memo_section_html(today):
-    try:
-        r = requests.get(settings.URL_GAS_API,
-                         params={'action': 'action_memo_get_json'}, timeout=25)
-        resp = r.json()
-        if resp.get('statusCode') != 200:
-            return ''
-        items = json.loads(resp.get('responseMsg', '[]'))
-        if not items:
-            return ''
-
-        groups = {key: [] for key, _, _ in _MEMO_GROUPS}
-        for item in items:
-            content = item.get('content', '')
-            if _has_explicit_date(content):
-                d = _parse_explicit_date(content, today)
-                if d is None:
-                    groups['other'].append((content, ''))
-                else:
-                    days_until = (d - today).days
-                    if days_until <= 0:
-                        groups['expired'].append((content, ''))
-                    elif days_until <= 7:
-                        groups['soon'].append((content, ''))
-                    else:
-                        groups['future'].append((content, ''))
+def _build_memo_html(items, today):
+    if not items:
+        return ''
+    groups = {key: [] for key, _, _ in _MEMO_GROUPS}
+    for item in items:
+        content = item.get('content', '')
+        if _has_explicit_date(content):
+            d = _parse_explicit_date(content, today)
+            if d is None:
+                groups['other'].append((content, ''))
             else:
-                badge = _memo_age_badge(_age_days(item.get('modifyTime', ''), today))
-                groups['other'].append((content, badge))
+                days_until = (d - today).days
+                if days_until <= 0:
+                    groups['expired'].append((content, ''))
+                elif days_until <= 7:
+                    groups['soon'].append((content, ''))
+                else:
+                    groups['future'].append((content, ''))
+        else:
+            badge = _memo_age_badge(_age_days(item.get('modifyTime', ''), today))
+            groups['other'].append((content, badge))
 
-        body = ''
-        for key, label, cls in _MEMO_GROUPS:
-            if not groups[key]:
-                continue
-            rows = ''.join(
-                f'<div class="future-item">'
-                f'<span class="future-item-content">{html_lib.escape(c)}</span>'
-                f'{badge}</div>'
-                for c, badge in groups[key]
-            )
-            body += (f'<div class="memo-group-label {cls}">{label}</div>'
-                     f'<div class="future-list-card">{rows}</div>')
+    body = ''
+    for key, label, cls in _MEMO_GROUPS:
+        if not groups[key]:
+            continue
+        rows = ''.join(
+            f'<div class="future-item">'
+            f'<span class="future-item-content">{html_lib.escape(c)}</span>'
+            f'{badge}</div>'
+            for c, badge in groups[key]
+        )
+        body += (f'<div class="memo-group-label {cls}">{label}</div>'
+                 f'<div class="future-list-card">{rows}</div>')
 
-        if not body:
-            return ''
-        return (f'<div class="section">'
-                f'<div class="section-title">待辦事項</div>'
-                f'{body}'
-                f'</div>')
-    except Exception:
+    if not body:
         return ''
+    return (f'<div class="section">'
+            f'<div class="section-title">待辦事項</div>'
+            f'{body}'
+            f'</div>')
 
 
-def _purchase_section_html(today):
-    try:
-        r = requests.get(settings.URL_GAS_API,
-                         params={'action': 'action_purchase_list_get'}, timeout=25)
-        resp = r.json()
-        if resp.get('statusCode') != 200:
-            return ''
-        items = json.loads(resp.get('responseMsg', '[]'))
-        if not items:
-            return ''
-        rows = ''
-        for item in items:
-            name = item.get('name', '')
-            rows += (f'<div class="future-item">'
-                     f'<span class="future-item-content">{html_lib.escape(name)}</span>'
-                     f'</div>')
-        return (f'<div class="section">'
-                f'<div class="section-title">待買清單</div>'
-                f'<div class="future-list-card">{rows}</div>'
-                f'</div>')
-    except Exception:
+def _build_purchase_html(items):
+    if not items:
         return ''
+    rows = ''.join(
+        f'<div class="future-item">'
+        f'<span class="future-item-content">{html_lib.escape(item.get("name", ""))}</span>'
+        f'</div>'
+        for item in items
+    )
+    return (f'<div class="section">'
+            f'<div class="section-title">待買清單</div>'
+            f'<div class="future-list-card">{rows}</div>'
+            f'</div>')
 
 
 _ALL_SLOT_NAMES = ['早上', '下午', '晚上']
@@ -312,10 +292,14 @@ def generate_html():
   </div>
   <div class="update-time">資料來源：中央氣象署 · 今日 {update_time} 更新</div>
 </div>'''
-        with ThreadPoolExecutor(max_workers=2) as ex:
-            memo_f = ex.submit(_memo_section_html, today)
-            purchase_f = ex.submit(_purchase_section_html, today)
-            extra_html = memo_f.result() + purchase_f.result()
+        try:
+            r = requests.get(settings.URL_GAS_API,
+                             params={'action': 'action_get_dashboard_future'}, timeout=25)
+            future_data = json.loads(r.json().get('responseMsg', '{}'))
+        except Exception:
+            future_data = {}
+        extra_html = (_build_memo_html(future_data.get('memo', []), today) +
+                      _build_purchase_html(future_data.get('purchase', [])))
         return weather_html + extra_html
 
     except Exception as e:

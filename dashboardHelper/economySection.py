@@ -123,24 +123,9 @@ def _build_expense_rows(expense_by_month, pending_by_month, from_month, to_month
 
 def _fetch_all(gas_url):
     now = datetime.now(TAIWAN_TZ)
-    year, month = now.year, now.month
-    if month == 12:
-        last_day = 31
-    else:
-        last_day = (datetime(year, month + 1, 1, tzinfo=TAIWAN_TZ) - timedelta(days=1)).day
-
-    items = _call_gas(gas_url, {
-        'action': 'action_get_accounting_items',
-        'startDate': f'{year}/{month:02d}/01',
-        'endDate': f'{year}/{month:02d}/{last_day:02d}'
-    })
-    budget = _call_gas(gas_url, {
-        'action': 'action_get_budget_status',
-        'year': year, 'month': month
-    })
-    schedule = _call_gas(gas_url, {'action': 'action_get_special_schedule'})
-    memo_text = _call_gas_raw(gas_url, {'action': 'action_memo_get'})
-    return now, items, budget, schedule, memo_text
+    r = requests.get(gas_url, params={'action': 'action_get_dashboard_economy'}, timeout=25)
+    data = json.loads(r.json()['responseMsg'])
+    return now, data['items'], data['budget'], data['schedule'], data['memo']
 
 
 def _next_income_info(schedule, current_month):

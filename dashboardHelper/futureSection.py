@@ -62,16 +62,14 @@ def _parse_explicit_date(content, today):
     if m:
         try:
             mo, day = int(m.group(1)), int(m.group(2))
-            d = date(today.year, mo, day)
-            return date(today.year + 1, mo, day) if d < today else d
+            return date(today.year, mo, day)
         except ValueError:
             return None
     m = re.match(r'^(\d{1,2})月([初中底])', s)
     if m:
         try:
             mo, day = int(m.group(1)), _TIMING_DAY[m.group(2)]
-            d = date(today.year, mo, day)
-            return date(today.year + 1, mo, day) if d < today else d
+            return date(today.year, mo, day)
         except ValueError:
             return None
     return None

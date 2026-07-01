@@ -105,38 +105,65 @@ _MEMO_GROUPS = [
 ]
 
 
-def _build_memo_html(items, today):
-    if not items:
+def _build_memo_html(items, important_items, today):
+    if not items and not important_items:
         return ''
+    # Each entry: (content, extra, is_important)
+    # extra: badge HTML for regular items, date string for important items
     groups = {key: [] for key, _, _ in _MEMO_GROUPS}
+
     for item in items:
         content = item.get('content', '')
         if _has_explicit_date(content):
             d = _parse_explicit_date(content, today)
             if d is None:
-                groups['other'].append((content, ''))
+                groups['other'].append((content, '', False))
             else:
                 days_until = (d - today).days
                 if days_until <= 0:
-                    groups['expired'].append((content, ''))
+                    groups['expired'].append((content, '', False))
                 elif days_until <= 7:
-                    groups['soon'].append((content, ''))
+                    groups['soon'].append((content, '', False))
                 else:
-                    groups['future'].append((content, ''))
+                    groups['future'].append((content, '', False))
         else:
             badge = _memo_age_badge(_age_days(item.get('modifyTime', ''), today))
-            groups['other'].append((content, badge))
+            groups['other'].append((content, badge, False))
+
+    for item in important_items:
+        name = item.get('name', '')
+        date_str = item.get('date', '')
+        if not name or not date_str:
+            continue
+        try:
+            parts = date_str.split('/')
+            d = date(int(parts[0]), int(parts[1]), int(parts[2]))
+        except (ValueError, IndexError):
+            continue
+        days_until = (d - today).days
+        if days_until < 0:
+            continue
+        date_label = f'{d.month}/{d.day}'
+        if days_until <= 7:
+            groups['soon'].append((name, date_label, True))
+        else:
+            groups['future'].append((name, date_label, True))
 
     body = ''
     for key, label, cls in _MEMO_GROUPS:
         if not groups[key]:
             continue
-        rows = ''.join(
-            f'<div class="future-item">'
-            f'<span class="future-item-content">{html_lib.escape(c)}</span>'
-            f'{badge}</div>'
-            for c, badge in groups[key]
-        )
+        rows = ''
+        for c, extra, is_important in groups[key]:
+            if is_important:
+                rows += (f'<div class="future-item future-item-important">'
+                         f'<span class="future-item-content">{html_lib.escape(c)}</span>'
+                         f'<span class="important-date-badge">{html_lib.escape(extra)}</span>'
+                         f'</div>')
+            else:
+                rows += (f'<div class="future-item">'
+                         f'<span class="future-item-content">{html_lib.escape(c)}</span>'
+                         f'{extra}</div>')
         body += (f'<div class="memo-group-label {cls}">{label}</div>'
                  f'<div class="future-list-card">{rows}</div>')
 
@@ -296,7 +323,7 @@ def generate_html():
             future_data = json.loads(r.json().get('responseMsg', '{}'))
         except Exception:
             future_data = {}
-        extra_html = (_build_memo_html(future_data.get('memo', []), today) +
+        extra_html = (_build_memo_html(future_data.get('memo', []), future_data.get('importantSchedule', []), today) +
                       _build_purchase_html(future_data.get('purchase', [])))
         return weather_html + extra_html
 

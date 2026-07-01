@@ -258,7 +258,14 @@ body {
     font-size: 13px; gap: 8px;
 }
 .future-item:last-child { border-bottom: none; }
+.future-item-important { background: #FAF5FF; border-left: 3px solid #8B5CF6; }
 .future-item-content { flex: 1; color: #1E293B; min-width: 0; }
+.important-date-badge {
+    font-size: 11px; font-weight: 600;
+    color: #5B21B6; background: #EDE9FE;
+    padding: 2px 8px; border-radius: 10px;
+    flex-shrink: 0; white-space: nowrap;
+}
 .future-item-age {
     font-size: 10px; font-weight: 600; padding: 2px 8px;
     border-radius: 10px; flex-shrink: 0; white-space: nowrap;

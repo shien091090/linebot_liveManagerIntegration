@@ -96,11 +96,11 @@ def dashboard():
     return build_dashboard(settings.URL_GAS_API), 200, {'Content-Type': 'text/html; charset=utf-8'}
 
 
-@app.route('/record-daily-time')
-def record_daily_time():
+@app.route('/trigger-nfc')
+def trigger_nfc():
     import requests as req_lib
-    event_type = request.args.get('eventType', '')
-    params = {'action': 'action_record_daily_time', 'eventType': event_type}
+    location = request.args.get('location', '')
+    params = {'action': 'action_trigger_nfc', 'location': location}
     r = req_lib.get(settings.URL_GAS_API, params=params)
     return r.text, 200, {'Content-Type': 'application/json; charset=utf-8'}
 

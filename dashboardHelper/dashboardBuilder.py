@@ -316,7 +316,7 @@ def build_dashboard(gas_url):
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>家庭財務總覽</title>
+<title>家庭總覽</title>
 <style>{_CSS}</style>
 </head>
 <body>

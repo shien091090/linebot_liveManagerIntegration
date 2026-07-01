@@ -108,7 +108,7 @@ _MEMO_GROUPS = [
 def _build_memo_html(items, important_items, today):
     if not items and not important_items:
         return ''
-    # Each entry: (content, extra, is_important)
+    # Each entry: (sort_date, content, extra, is_important)
     # extra: badge HTML for regular items, date string for important items
     groups = {key: [] for key, _, _ in _MEMO_GROUPS}
 
@@ -117,18 +117,18 @@ def _build_memo_html(items, important_items, today):
         if _has_explicit_date(content):
             d = _parse_explicit_date(content, today)
             if d is None:
-                groups['other'].append((content, '', False))
+                groups['other'].append((date.max, content, '', False))
             else:
                 days_until = (d - today).days
                 if days_until <= 0:
-                    groups['expired'].append((content, '', False))
+                    groups['expired'].append((d, content, '', False))
                 elif days_until <= 7:
-                    groups['soon'].append((content, '', False))
+                    groups['soon'].append((d, content, '', False))
                 else:
-                    groups['future'].append((content, '', False))
+                    groups['future'].append((d, content, '', False))
         else:
             badge = _memo_age_badge(_age_days(item.get('modifyTime', ''), today))
-            groups['other'].append((content, badge, False))
+            groups['other'].append((date.max, content, badge, False))
 
     for item in important_items:
         name = item.get('name', '')
@@ -145,20 +145,23 @@ def _build_memo_html(items, important_items, today):
             continue
         date_label = f'{d.month}/{d.day}'
         if days_until <= 7:
-            groups['soon'].append((name, date_label, True))
+            groups['soon'].append((d, name, date_label, True))
         else:
-            groups['future'].append((name, date_label, True))
+            groups['future'].append((d, name, date_label, True))
+
+    for key in groups:
+        groups[key].sort(key=lambda x: x[0])
 
     body = ''
     for key, label, cls in _MEMO_GROUPS:
         if not groups[key]:
             continue
         rows = ''
-        for c, extra, is_important in groups[key]:
+        for _, c, extra, is_important in groups[key]:
             if is_important:
                 rows += (f'<div class="future-item future-item-important">'
-                         f'<span class="future-item-content">{html_lib.escape(c)}</span>'
                          f'<span class="important-date-badge">{html_lib.escape(extra)}</span>'
+                         f'<span class="future-item-content">{html_lib.escape(c)}</span>'
                          f'</div>')
             else:
                 rows += (f'<div class="future-item">'

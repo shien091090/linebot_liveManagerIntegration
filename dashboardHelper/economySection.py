@@ -201,7 +201,9 @@ def _generate_html_inner(gas_url):
     year, month = now.year, now.month
 
     total_spent_all = sum(i['prize'] for i in items)
-    active_cats = [c for c in budget['categories'] if c['spent'] > 0]
+    active_cats = [c for c in budget['categories']
+                   if (c['spent'] > 0 or c['effectiveBudget'] > 0)
+                   and c['name'] not in MONTHLY_INCOME_NAMES]
     budget_total = sum(c['effectiveBudget'] for c in active_cats)
     diff = budget_total - total_spent_all
 

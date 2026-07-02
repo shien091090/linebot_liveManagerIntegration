@@ -10,6 +10,7 @@ _COLOR_EVENING = "#F59E0B"
 _COLOR_SLEEP   = "#8B5CF6"
 _COLOR_XUAN    = "#EC4899"
 _COLOR_BATH    = "#10B981"
+_COLOR_BUSY    = "#EF4444"
 
 _CHART_CSS = """
 .chart-subtitle { font-size: 12px; color: #64748B; margin-bottom: 8px; margin-top: 2px; }
@@ -88,12 +89,14 @@ function renderLineChart(containerId, config) {
   function fmtVal(v) {
     if (config.unit === 'minutes') return Math.round(v) + ' 分';
     if (config.unit === 'hours') return v.toFixed(1) + ' 小時';
+    if (config.unit === 'count') return (Math.round(v * 10) / 10) + ' 件';
     return fmtTime(v);
   }
 
   function fmtAxisVal(v) {
     if (config.unit === 'minutes') return Math.round(v);
     if (config.unit === 'hours') return Math.round(v * 10) / 10;
+    if (config.unit === 'count') return Math.round(v * 10) / 10;
     return fmtTime(v);
   }
 
@@ -247,8 +250,7 @@ def _fetch_data():
         timeout=30
     )
     data = resp.json()
-    status = json.loads(data["responseMsg"])
-    return status.get("dailyTimeRecords", [])
+    return json.loads(data["responseMsg"])
 
 
 def _parse_records(raw_records):
@@ -372,6 +374,70 @@ def _calc_time_points(by_date):
     return my_sleep, xuan_sleep, bath
 
 
+def _parse_memo_history(raw_history):
+    blocks = []
+    current_block = []
+    for r in raw_history:
+        content = str(r.get("content", "")).strip()
+        modify_time_str = str(r.get("modifyTime", "")).strip()
+        total_count = r.get("totalCount")
+        if not content or not modify_time_str or total_count in ("", None):
+            continue
+        try:
+            number = int(r.get("number"))
+            total_count = int(total_count)
+            modify_time = datetime.strptime(modify_time_str, "%Y/%m/%d %H:%M:%S")
+        except (ValueError, TypeError):
+            continue
+        row = {"number": number, "modifyTime": modify_time, "totalCount": total_count}
+        if number == 1 and current_block:
+            blocks.append(current_block)
+            current_block = []
+        current_block.append(row)
+    if current_block:
+        blocks.append(current_block)
+    return blocks
+
+
+def _calc_busy_score(blocks):
+    daily_counts = defaultdict(int)
+    if len(blocks) < 2:
+        return daily_counts
+
+    prev_size = len(blocks[0])
+    pending_removals = 0
+    for block in blocks[1:]:
+        size = len(block)
+        if size > prev_size:
+            add_date = max(row["modifyTime"] for row in block).date()
+            daily_counts[add_date] += (size - prev_size)
+            if pending_removals:
+                daily_counts[add_date] += pending_removals
+                pending_removals = 0
+        elif size < prev_size:
+            pending_removals += (prev_size - size)
+        prev_size = size
+
+    if pending_removals:
+        last_known_date = max(row["modifyTime"] for row in blocks[-1]).date()
+        daily_counts[last_known_date] += pending_removals
+
+    return daily_counts
+
+
+def _densify_daily_counts(daily_counts):
+    if not daily_counts:
+        return []
+    dates = sorted(daily_counts)
+    start, end = dates[0], dates[-1]
+    result = []
+    d = start
+    while d <= end:
+        result.append((datetime(d.year, d.month, d.day), daily_counts.get(d, 0)))
+        d += timedelta(days=1)
+    return result
+
+
 def _rolling_avg(data, window=30):
     if len(data) < 2:
         return []
@@ -438,11 +504,14 @@ def _no_data_html(title, subtitle):
 
 def generate_html():
     try:
-        raw = _fetch_data()
+        status = _fetch_data()
     except Exception as e:
         return f'<div class="wip">資料載入失敗：{e}</div>'
 
-    if not raw:
+    raw          = status.get("dailyTimeRecords", [])
+    memo_history = status.get("memoHistory", [])
+
+    if not raw and not memo_history:
         return '<div class="wip">尚無日常時間紀錄</div>'
 
     by_date = _parse_records(raw)
@@ -450,6 +519,10 @@ def generate_html():
     my_sleep                   = _calc_my_sleep(by_date)
     xuan_sleep                 = _calc_xuan_sleep(by_date)
     my_sleep_t, xuan_t, bath_t = _calc_time_points(by_date)
+
+    memo_blocks  = _parse_memo_history(memo_history)
+    busy_daily   = _calc_busy_score(memo_blocks)
+    busy_series  = _densify_daily_counts(busy_daily)
 
     parts = [f"<style>{_CHART_CSS}</style>", f"<script>{_CHART_JS}</script>"]
 
@@ -493,5 +566,14 @@ def generate_html():
         ))
     else:
         parts.append(_no_data_html("時間點趨勢", "入睡 / 璇璇睡著 / 洗澡"))
+
+    if busy_series:
+        config = _build_chart_config([busy_series], ["忙碌指數"], [_COLOR_BUSY], "count")
+        parts.append(_interactive_chart_html(
+            "chart-busy", "最近忙不忙", "新增+完成待辦事項數 · 30天滾動平均", config,
+            [("忙碌指數", _COLOR_BUSY)]
+        ))
+    else:
+        parts.append(_no_data_html("最近忙不忙", "新增+完成待辦事項數"))
 
     return "\n".join(parts)

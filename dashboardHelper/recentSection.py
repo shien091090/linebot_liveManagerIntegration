@@ -255,11 +255,15 @@ def _chart_timepoints(series_list, colors):
         return f"{h:02d}:{m:02d}"
 
     ax.yaxis.set_major_formatter(ticker.FuncFormatter(time_fmt))
-    ax.yaxis.set_major_locator(ticker.MultipleLocator(1))
     if all_dates:
         ax.set_xlim(left=min(all_dates))
     if all_vals:
-        ax.set_ylim(min(all_vals) - 0.5, max(all_vals) + 0.5)
+        lo, hi = min(all_vals) - 0.5, max(all_vals) + 0.5
+        ax.set_ylim(lo, hi)
+        interval = max(1, round((hi - lo) / 6))
+        ax.yaxis.set_major_locator(ticker.MultipleLocator(interval))
+    else:
+        ax.yaxis.set_major_locator(ticker.MultipleLocator(1))
     fig.tight_layout(pad=0.5)
     return _to_base64(fig)
 

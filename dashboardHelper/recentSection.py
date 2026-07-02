@@ -1,15 +1,7 @@
-import io
-import base64
 import json
 import requests
 from collections import defaultdict
 from datetime import datetime, timedelta
-
-import matplotlib
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
-import matplotlib.ticker as ticker
 
 import settings
 
@@ -35,6 +27,206 @@ _CHART_CSS = """
 }
 .chart-legend-item { display: flex; align-items: center; gap: 4px; }
 .legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.linechart { position: relative; }
+.linechart svg { width: 100%; height: auto; display: block; touch-action: pan-y; }
+.chart-tooltip {
+  display: none; position: absolute;
+  background: #1E293B; color: #F1F5F9;
+  border-radius: 8px; padding: 8px 10px;
+  font-size: 11px; line-height: 1.6;
+  pointer-events: none; white-space: nowrap;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+  z-index: 50;
+}
+.chart-tooltip .tooltip-date { font-weight: 700; margin-bottom: 2px; color: #fff; }
+.chart-tooltip .tooltip-line { display: flex; align-items: center; gap: 5px; }
+.chart-tooltip .tooltip-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+"""
+
+_CHART_JS = """
+function renderLineChart(containerId, config) {
+  var container = document.getElementById(containerId);
+  if (!container || !config || !config.series || !config.series.length) return;
+
+  var width = 800, height = 260;
+  var padL = 42, padR = 12, padT = 10, padB = 24;
+  var plotW = width - padL - padR;
+  var plotH = height - padT - padB;
+
+  function parseDay(s) {
+    var p = s.split('-');
+    return Date.UTC(+p[0], +p[1] - 1, +p[2]) / 86400000;
+  }
+
+  var allDays = [], allVals = [];
+  config.series.forEach(function(s) {
+    s.avg.forEach(function(pt) { allDays.push(parseDay(pt[0])); allVals.push(pt[1]); });
+    s.raw.forEach(function(pt) { allDays.push(parseDay(pt[0])); allVals.push(pt[1]); });
+  });
+  if (!allDays.length) return;
+
+  var minDay = Math.min.apply(null, allDays);
+  var maxDay = Math.max.apply(null, allDays);
+  if (minDay === maxDay) maxDay = minDay + 1;
+
+  var minVal = Math.min.apply(null, allVals);
+  var maxVal = Math.max.apply(null, allVals);
+  var vPad = (maxVal - minVal) * 0.15 || 1;
+  minVal -= vPad; maxVal += vPad;
+
+  function xPix(day) { return padL + (day - minDay) / (maxDay - minDay) * plotW; }
+  function yPix(val) { return padT + (1 - (val - minVal) / (maxVal - minVal)) * plotH; }
+
+  function pad2(n) { return n < 10 ? '0' + n : '' + n; }
+
+  function fmtTime(v) {
+    var h = Math.floor(v), m = Math.round((v - h) * 60);
+    if (m === 60) { h += 1; m = 0; }
+    return pad2(h) + ':' + pad2(m);
+  }
+
+  function fmtVal(v) {
+    if (config.unit === 'minutes') return Math.round(v) + ' 分';
+    if (config.unit === 'hours') return v.toFixed(1) + ' 小時';
+    return fmtTime(v);
+  }
+
+  function fmtAxisVal(v) {
+    if (config.unit === 'minutes') return Math.round(v);
+    if (config.unit === 'hours') return Math.round(v * 10) / 10;
+    return fmtTime(v);
+  }
+
+  function fmtAxisDate(day) {
+    var d = new Date(day * 86400000);
+    return pad2(d.getUTCMonth() + 1) + '/' + pad2(d.getUTCDate());
+  }
+
+  function fmtFullDate(day) {
+    var d = new Date(day * 86400000);
+    return d.getUTCFullYear() + '/' + fmtAxisDate(day);
+  }
+
+  var yTickCount = 5;
+  var yTicks = [];
+  for (var i = 0; i <= yTickCount; i++) {
+    yTicks.push(minVal + (maxVal - minVal) * i / yTickCount);
+  }
+  var xTickCount = Math.max(2, Math.min(5, Math.round((maxDay - minDay) / 5)));
+  var xTicks = [];
+  for (var j = 0; j <= xTickCount; j++) {
+    xTicks.push(minDay + (maxDay - minDay) * j / xTickCount);
+  }
+
+  var svgParts = [];
+  svgParts.push('<svg viewBox="0 0 ' + width + ' ' + height + '">');
+
+  yTicks.forEach(function(v) {
+    var y = yPix(v);
+    svgParts.push('<line x1="' + padL + '" y1="' + y + '" x2="' + (width - padR) + '" y2="' + y + '" stroke="#E2E8F0" stroke-dasharray="3,3" stroke-width="1"/>');
+    svgParts.push('<text x="' + (padL - 6) + '" y="' + (y + 3) + '" text-anchor="end" font-size="9" fill="#64748B">' + fmtAxisVal(v) + '</text>');
+  });
+  xTicks.forEach(function(day) {
+    var x = xPix(day);
+    svgParts.push('<text x="' + x + '" y="' + (height - 7) + '" text-anchor="middle" font-size="9" fill="#64748B">' + fmtAxisDate(day) + '</text>');
+  });
+
+  config.series.forEach(function(s) {
+    s.raw.forEach(function(pt) {
+      var x = xPix(parseDay(pt[0])), y = yPix(pt[1]);
+      svgParts.push('<circle cx="' + x + '" cy="' + y + '" r="2.6" fill="' + s.color + '" fill-opacity="0.25"/>');
+    });
+    if (s.avg.length) {
+      var pts = s.avg.map(function(pt) { return xPix(parseDay(pt[0])) + ',' + yPix(pt[1]); }).join(' ');
+      svgParts.push('<polyline points="' + pts + '" fill="none" stroke="' + s.color + '" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>');
+    }
+  });
+
+  svgParts.push('<line id="' + containerId + '-guide" x1="0" y1="' + padT + '" x2="0" y2="' + (height - padB) + '" stroke="#94A3B8" stroke-width="1" style="display:none"/>');
+  config.series.forEach(function(s, idx) {
+    svgParts.push('<circle id="' + containerId + '-dot-' + idx + '" r="3.4" fill="' + s.color + '" stroke="#fff" stroke-width="1.2" style="display:none"/>');
+  });
+  svgParts.push('<rect id="' + containerId + '-overlay" x="' + padL + '" y="0" width="' + plotW + '" height="' + height + '" fill="transparent"/>');
+  svgParts.push('</svg>');
+  svgParts.push('<div class="chart-tooltip" id="' + containerId + '-tooltip"></div>');
+
+  container.innerHTML = svgParts.join('');
+
+  var svgEl = container.querySelector('svg');
+  var overlay = document.getElementById(containerId + '-overlay');
+  var tooltip = document.getElementById(containerId + '-tooltip');
+  var guide = document.getElementById(containerId + '-guide');
+
+  var dayMap = {};
+  config.series.forEach(function(s) {
+    s.avg.forEach(function(pt) { dayMap[parseDay(pt[0])] = true; });
+  });
+  var masterDays = Object.keys(dayMap).map(Number).sort(function(a, b) { return a - b; });
+
+  function nearestDay(day) {
+    var lo = 0, hi = masterDays.length - 1;
+    if (day <= masterDays[0]) return masterDays[0];
+    if (day >= masterDays[hi]) return masterDays[hi];
+    while (hi - lo > 1) {
+      var mid = (lo + hi) >> 1;
+      if (masterDays[mid] < day) lo = mid; else hi = mid;
+    }
+    return (day - masterDays[lo] <= masterDays[hi] - day) ? masterDays[lo] : masterDays[hi];
+  }
+
+  function showAt(clientX) {
+    var rect = svgEl.getBoundingClientRect();
+    if (!rect.width) return;
+    var scale = width / rect.width;
+    var px = (clientX - rect.left) * scale;
+    var day = nearestDay(minDay + (px - padL) / plotW * (maxDay - minDay));
+    var x = xPix(day);
+
+    guide.setAttribute('x1', x); guide.setAttribute('x2', x);
+    guide.style.display = 'block';
+
+    var rows = [];
+    config.series.forEach(function(s, idx) {
+      var dot = document.getElementById(containerId + '-dot-' + idx);
+      var match = null;
+      for (var k = 0; k < s.avg.length; k++) {
+        if (parseDay(s.avg[k][0]) === day) { match = s.avg[k]; break; }
+      }
+      if (match) {
+        dot.setAttribute('cx', x);
+        dot.setAttribute('cy', yPix(match[1]));
+        dot.style.display = 'block';
+        rows.push('<div class="tooltip-line"><span class="tooltip-dot" style="background:' + s.color + '"></span>' + s.label + '：' + fmtVal(match[1]) + '</div>');
+      } else {
+        dot.style.display = 'none';
+      }
+    });
+
+    if (!rows.length) { hide(); return; }
+
+    tooltip.innerHTML = '<div class="tooltip-date">' + fmtFullDate(day) + '</div>' + rows.join('');
+    tooltip.style.display = 'block';
+
+    var left = (x / width) * rect.width;
+    var maxLeft = rect.width - tooltip.offsetWidth - 4;
+    tooltip.style.left = Math.max(4, Math.min(left + 8, maxLeft)) + 'px';
+    tooltip.style.top = '4px';
+  }
+
+  function hide() {
+    guide.style.display = 'none';
+    config.series.forEach(function(s, idx) {
+      document.getElementById(containerId + '-dot-' + idx).style.display = 'none';
+    });
+    tooltip.style.display = 'none';
+  }
+
+  overlay.addEventListener('mousemove', function(e) { showAt(e.clientX); });
+  overlay.addEventListener('mouseleave', hide);
+  overlay.addEventListener('touchstart', function(e) { showAt(e.touches[0].clientX); }, { passive: true });
+  overlay.addEventListener('touchmove', function(e) { showAt(e.touches[0].clientX); }, { passive: true });
+  overlay.addEventListener('touchend', hide);
+}
 """
 
 SLEEP_EVENT      = "準備睡覺"
@@ -154,6 +346,13 @@ def _calc_xuan_sleep(by_date):
     return results
 
 
+def _wrap_late_night_hour(dt):
+    h = dt.hour + dt.minute / 60
+    if h < 4:
+        h += 24
+    return h
+
+
 def _calc_time_points(by_date):
     my_sleep, xuan_sleep, bath = [], [], []
     for date_str in sorted(by_date):
@@ -161,17 +360,15 @@ def _calc_time_points(by_date):
         date   = datetime.strptime(date_str, "%Y/%m/%d")
         dt = _last_event(events, SLEEP_EVENT)
         if dt:
-            h = dt.hour + dt.minute / 60
-            if h < 4:
-                h += 24
+            h = _wrap_late_night_hour(dt)
             if h >= 18:
                 my_sleep.append((date, h))
         dt = _last_event(events, XUAN_SLEEP_END)
         if dt:
-            xuan_sleep.append((date, dt.hour + dt.minute / 60))
+            xuan_sleep.append((date, _wrap_late_night_hour(dt)))
         dt = _last_event(events, BATH_EVENT)
         if dt:
-            bath.append((date, dt.hour + dt.minute / 60))
+            bath.append((date, _wrap_late_night_hour(dt)))
     return my_sleep, xuan_sleep, bath
 
 
@@ -188,84 +385,19 @@ def _rolling_avg(data, window=30):
     return result
 
 
-def _to_base64(fig):
-    buf = io.BytesIO()
-    fig.savefig(buf, format="png", dpi=130, bbox_inches="tight",
-                facecolor="white", edgecolor="none")
-    buf.seek(0)
-    enc = base64.b64encode(buf.read()).decode("utf-8")
-    plt.close(fig)
-    return enc
-
-
-def _setup_ax(ax):
-    ax.set_facecolor("#F8FAFC")
-    ax.grid(True, alpha=0.25, linestyle="--", linewidth=0.7)
-    for spine in ("top", "right"):
-        ax.spines[spine].set_visible(False)
-    ax.spines["left"].set_color("#CBD5E1")
-    ax.spines["bottom"].set_color("#CBD5E1")
-    ax.tick_params(colors="#64748B", labelsize=8)
-    ax.xaxis.set_major_formatter(mdates.DateFormatter("%y/%m"))
-    ax.xaxis.set_major_locator(mdates.MonthLocator(interval=2))
-    plt.setp(ax.xaxis.get_majorticklabels(), rotation=30, ha="right", fontsize=8)
-
-
-def _chart_duration(series_list, colors):
-    fig, ax = plt.subplots(figsize=(8, 2.6))
-    fig.patch.set_facecolor("white")
-    _setup_ax(ax)
-    all_dates = [d for s in series_list for d, _ in s]
-    for data, color in zip(series_list, colors):
+def _build_chart_config(series_list, names, colors, unit):
+    series = []
+    for data, name, color in zip(series_list, names, colors):
         if not data:
             continue
-        dates, vals = zip(*data)
-        ax.scatter(dates, vals, color=color, alpha=0.2, s=7, zorder=2)
         rolling = _rolling_avg(data)
-        if rolling:
-            rd, rv = zip(*rolling)
-            ax.plot(rd, rv, color=color, linewidth=1.8, zorder=3)
-    if all_dates:
-        ax.set_xlim(left=min(all_dates))
-    fig.tight_layout(pad=0.5)
-    return _to_base64(fig)
-
-
-def _chart_timepoints(series_list, colors):
-    fig, ax = plt.subplots(figsize=(8, 2.6))
-    fig.patch.set_facecolor("white")
-    _setup_ax(ax)
-    all_dates = [d for s in series_list for d, _ in s]
-    all_vals  = [v for s in series_list for _, v in s]
-    for data, color in zip(series_list, colors):
-        if not data:
-            continue
-        dates, vals = zip(*data)
-        ax.scatter(dates, vals, color=color, alpha=0.2, s=7, zorder=2)
-        rolling = _rolling_avg(data)
-        if rolling:
-            rd, rv = zip(*rolling)
-            ax.plot(rd, rv, color=color, linewidth=1.8, zorder=3)
-
-    def time_fmt(x, _):
-        h = int(x)
-        m = int(round((x % 1) * 60))
-        if m == 60:
-            h, m = h + 1, 0
-        return f"{h:02d}:{m:02d}"
-
-    ax.yaxis.set_major_formatter(ticker.FuncFormatter(time_fmt))
-    if all_dates:
-        ax.set_xlim(left=min(all_dates))
-    if all_vals:
-        lo, hi = min(all_vals) - 0.5, max(all_vals) + 0.5
-        ax.set_ylim(lo, hi)
-        interval = max(1, round((hi - lo) / 6))
-        ax.yaxis.set_major_locator(ticker.MultipleLocator(interval))
-    else:
-        ax.yaxis.set_major_locator(ticker.MultipleLocator(1))
-    fig.tight_layout(pad=0.5)
-    return _to_base64(fig)
+        series.append({
+            "label": name,
+            "color": color,
+            "raw": [[d.strftime("%Y-%m-%d"), round(v, 2)] for d, v in data],
+            "avg": [[d.strftime("%Y-%m-%d"), round(v, 2)] for d, v in rolling],
+        })
+    return {"unit": unit, "series": series}
 
 
 def _legend_html(items):
@@ -277,17 +409,19 @@ def _legend_html(items):
     return f'<div class="chart-legend">{dots}</div>'
 
 
-def _section_html(title, subtitle, img_b64, legend_items=None):
-    legend = _legend_html(legend_items) if legend_items else ""
+def _interactive_chart_html(chart_id, title, subtitle, config, legend_items):
+    legend = _legend_html(legend_items)
+    config_json = json.dumps(config, ensure_ascii=False)
     return (
         f'<div class="section">'
         f'<div class="section-title">{title}</div>'
         f'<div class="chart-subtitle">{subtitle}</div>'
         f'<div class="chart-card">'
-        f'<img src="data:image/png;base64,{img_b64}" style="width:100%;display:block;" loading="lazy"/>'
+        f'<div class="linechart" id="{chart_id}"></div>'
         f"{legend}"
         f"</div>"
         f"</div>"
+        f'<script>renderLineChart("{chart_id}", {config_json});</script>'
     )
 
 
@@ -317,42 +451,44 @@ def generate_html():
     xuan_sleep                 = _calc_xuan_sleep(by_date)
     my_sleep_t, xuan_t, bath_t = _calc_time_points(by_date)
 
-    parts = [f"<style>{_CHART_CSS}</style>"]
+    parts = [f"<style>{_CHART_CSS}</style>", f"<script>{_CHART_JS}</script>"]
 
     if morning or evening:
-        img = _chart_duration([morning, evening], [_COLOR_MORNING, _COLOR_EVENING])
-        parts.append(_section_html(
-            "通勤時間趨勢", "分鐘 · 30天滾動平均", img,
+        config = _build_chart_config(
+            [morning, evening], ["上班通勤", "下班通勤"], [_COLOR_MORNING, _COLOR_EVENING], "minutes"
+        )
+        parts.append(_interactive_chart_html(
+            "chart-commute", "通勤時間趨勢", "分鐘 · 30天滾動平均", config,
             [("上班通勤", _COLOR_MORNING), ("下班通勤", _COLOR_EVENING)]
         ))
     else:
         parts.append(_no_data_html("通勤時間趨勢", "分鐘"))
 
     if my_sleep:
-        img = _chart_duration([my_sleep], [_COLOR_SLEEP])
-        parts.append(_section_html(
-            "我的睡眠時長", "小時 · 30天滾動平均", img,
+        config = _build_chart_config([my_sleep], ["睡眠時長"], [_COLOR_SLEEP], "hours")
+        parts.append(_interactive_chart_html(
+            "chart-mysleep", "我的睡眠時長", "小時 · 30天滾動平均", config,
             [("睡眠時長", _COLOR_SLEEP)]
         ))
     else:
         parts.append(_no_data_html("我的睡眠時長", "小時"))
 
     if xuan_sleep:
-        img = _chart_duration([xuan_sleep], [_COLOR_XUAN])
-        parts.append(_section_html(
-            "璇璇入睡耗時", "分鐘 · 30天滾動平均", img,
+        config = _build_chart_config([xuan_sleep], ["入睡耗時"], [_COLOR_XUAN], "minutes")
+        parts.append(_interactive_chart_html(
+            "chart-xuansleep", "璇璇入睡耗時", "分鐘 · 30天滾動平均", config,
             [("入睡耗時", _COLOR_XUAN)]
         ))
     else:
         parts.append(_no_data_html("璇璇入睡耗時", "分鐘"))
 
     if my_sleep_t or xuan_t or bath_t:
-        img = _chart_timepoints(
-            [my_sleep_t, xuan_t, bath_t],
-            [_COLOR_SLEEP, _COLOR_XUAN, _COLOR_BATH]
+        config = _build_chart_config(
+            [my_sleep_t, xuan_t, bath_t], ["我的入睡", "璇璇睡著", "洗澡"],
+            [_COLOR_SLEEP, _COLOR_XUAN, _COLOR_BATH], "time"
         )
-        parts.append(_section_html(
-            "時間點趨勢", "30天滾動平均", img,
+        parts.append(_interactive_chart_html(
+            "chart-timepoints", "時間點趨勢", "30天滾動平均", config,
             [("我的入睡", _COLOR_SLEEP), ("璇璇睡著", _COLOR_XUAN), ("洗澡", _COLOR_BATH)]
         ))
     else:

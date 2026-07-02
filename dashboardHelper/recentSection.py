@@ -248,10 +248,10 @@ def _chart_timepoints(series_list, colors):
             ax.plot(rd, rv, color=color, linewidth=1.8, zorder=3)
 
     def time_fmt(x, _):
-        h = int(x) % 24
+        h = int(x)
         m = int(round((x % 1) * 60))
         if m == 60:
-            h, m = (h + 1) % 24, 0
+            h, m = h + 1, 0
         return f"{h:02d}:{m:02d}"
 
     ax.yaxis.set_major_formatter(ticker.FuncFormatter(time_fmt))

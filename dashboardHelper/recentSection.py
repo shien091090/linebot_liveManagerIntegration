@@ -70,13 +70,19 @@ function renderLineChart(containerId, config) {
   var maxDay = Math.max.apply(null, allDays);
   if (minDay === maxDay) maxDay = minDay + 1;
 
-  // Y 軸範圍優先依滾動平均線決定，避免單日離群的原始資料點把整個座標軸拉爆；
-  // 但累積天數還不滿一個滾動視窗時 avgVals 會是空的，此時退回用原始資料點決定範圍，避免圖表整個壞掉
-  var valsForRange = avgVals.length ? avgVals : rawVals;
-  var minVal = Math.min.apply(null, valsForRange);
-  var maxVal = Math.max.apply(null, valsForRange);
-  var vPad = (maxVal - minVal) * 0.15 || 1;
-  minVal -= vPad; maxVal += vPad;
+  var minVal, maxVal;
+  if (config.yMin != null && config.yMax != null) {
+    // 圖表指定固定 Y 軸範圍（例如時間點趨勢固定在特定時段），不依資料動態調整
+    minVal = config.yMin; maxVal = config.yMax;
+  } else {
+    // Y 軸範圍優先依滾動平均線決定，避免單日離群的原始資料點把整個座標軸拉爆；
+    // 但累積天數還不滿一個滾動視窗時 avgVals 會是空的，此時退回用原始資料點決定範圍，避免圖表整個壞掉
+    var valsForRange = avgVals.length ? avgVals : rawVals;
+    minVal = Math.min.apply(null, valsForRange);
+    maxVal = Math.max.apply(null, valsForRange);
+    var vPad = (maxVal - minVal) * 0.15 || 1;
+    minVal -= vPad; maxVal += vPad;
+  }
 
   function xPix(day) { return padL + (day - minDay) / (maxDay - minDay) * plotW; }
   function yPix(val) { return padT + (1 - (val - minVal) / (maxVal - minVal)) * plotH; }
@@ -113,10 +119,15 @@ function renderLineChart(containerId, config) {
     return d.getUTCFullYear() + '/' + fmtAxisDate(day);
   }
 
-  var yTickCount = 5;
-  var yTicks = [];
-  for (var i = 0; i <= yTickCount; i++) {
-    yTicks.push(minVal + (maxVal - minVal) * i / yTickCount);
+  var yTicks;
+  if (config.yTicks && config.yTicks.length) {
+    yTicks = config.yTicks;
+  } else {
+    var yTickCount = 5;
+    yTicks = [];
+    for (var i = 0; i <= yTickCount; i++) {
+      yTicks.push(minVal + (maxVal - minVal) * i / yTickCount);
+    }
   }
   var xTickCount = Math.max(2, Math.min(5, Math.round((maxDay - minDay) / 5)));
   var xTicks = [];
@@ -457,7 +468,7 @@ def _rolling_avg(data, window=30, warmup=0):
     return result
 
 
-def _build_chart_config(series_list, names, colors, unit, warmup=0):
+def _build_chart_config(series_list, names, colors, unit, warmup=0, y_min=None, y_max=None, y_ticks=None):
     series = []
     for data, name, color in zip(series_list, names, colors):
         if not data:
@@ -469,7 +480,13 @@ def _build_chart_config(series_list, names, colors, unit, warmup=0):
             "raw": [[d.strftime("%Y-%m-%d"), round(v, 2)] for d, v in data],
             "avg": [[d.strftime("%Y-%m-%d"), round(v, 2)] for d, v in rolling],
         })
-    return {"unit": unit, "series": series}
+    config = {"unit": unit, "series": series}
+    if y_min is not None and y_max is not None:
+        config["yMin"] = y_min
+        config["yMax"] = y_max
+    if y_ticks is not None:
+        config["yTicks"] = y_ticks
+    return config
 
 
 def _legend_html(items):
@@ -564,7 +581,8 @@ def generate_html():
     if my_sleep_t or xuan_t or bath_t:
         config = _build_chart_config(
             [my_sleep_t, xuan_t, bath_t], ["我的入睡", "璇璇睡著", "洗澡"],
-            [_COLOR_SLEEP, _COLOR_XUAN, _COLOR_BATH], "time"
+            [_COLOR_SLEEP, _COLOR_XUAN, _COLOR_BATH], "time",
+            y_min=21, y_max=27, y_ticks=list(range(21, 28))
         )
         parts.append(_interactive_chart_html(
             "chart-timepoints", "時間點趨勢", "30天滾動平均", config,

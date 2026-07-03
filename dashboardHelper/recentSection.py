@@ -444,8 +444,11 @@ def _rolling_avg(data, window=30):
         return []
     dates  = [d for d, _ in data]
     values = [v for _, v in data]
+    first_date = dates[0]
     result = []
     for i, d in enumerate(dates):
+        if (d - first_date).days < window:
+            continue
         w = [values[j] for j in range(len(data)) if 0 <= (d - dates[j]).days <= window]
         if w:
             result.append((d, sum(w) / len(w)))
@@ -571,10 +574,10 @@ def generate_html():
     if busy_series:
         config = _build_chart_config([busy_series], ["忙碌指數"], [_COLOR_BUSY], "count")
         parts.append(_interactive_chart_html(
-            "chart-busy", "最近忙不忙", "新增+完成待辦事項數 · 30天滾動平均", config,
+            "chart-busy", "忙碌程度", "新增+完成待辦事項數 · 30天滾動平均", config,
             [("忙碌指數", _COLOR_BUSY)]
         ))
     else:
-        parts.append(_no_data_html("最近忙不忙", "新增+完成待辦事項數"))
+        parts.append(_no_data_html("忙碌程度", "新增+完成待辦事項數"))
 
     return "\n".join(parts)

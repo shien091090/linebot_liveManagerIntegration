@@ -441,7 +441,7 @@ def _densify_daily_counts(daily_counts):
     return result
 
 
-def _rolling_avg(data, window=30):
+def _rolling_avg(data, window=30, warmup=0):
     if len(data) < 2:
         return []
     dates  = [d for d, _ in data]
@@ -449,7 +449,7 @@ def _rolling_avg(data, window=30):
     first_date = dates[0]
     result = []
     for i, d in enumerate(dates):
-        if (d - first_date).days < window:
+        if (d - first_date).days < warmup:
             continue
         w = [values[j] for j in range(len(data)) if 0 <= (d - dates[j]).days <= window]
         if w:
@@ -457,12 +457,12 @@ def _rolling_avg(data, window=30):
     return result
 
 
-def _build_chart_config(series_list, names, colors, unit):
+def _build_chart_config(series_list, names, colors, unit, warmup=0):
     series = []
     for data, name, color in zip(series_list, names, colors):
         if not data:
             continue
-        rolling = _rolling_avg(data)
+        rolling = _rolling_avg(data, warmup=warmup)
         series.append({
             "label": name,
             "color": color,
@@ -574,7 +574,7 @@ def generate_html():
         parts.append(_no_data_html("時間點趨勢", "入睡 / 璇璇睡著 / 洗澡"))
 
     if busy_series:
-        config = _build_chart_config([busy_series], ["忙碌指數"], [_COLOR_BUSY], "count")
+        config = _build_chart_config([busy_series], ["忙碌指數"], [_COLOR_BUSY], "count", warmup=30)
         parts.append(_interactive_chart_html(
             "chart-busy", "忙碌程度", "新增+完成待辦事項數 · 30天滾動平均", config,
             [("忙碌指數", _COLOR_BUSY)]

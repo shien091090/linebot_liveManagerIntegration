@@ -1,4 +1,5 @@
 import json
+import re
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
@@ -16,6 +17,26 @@ _WEEKDAY_NAMES = ['一', '二', '三', '四', '五', '六', '日']
 _TODO_LOOKAHEAD_DAYS = 2  # 今天、明天、後天 = 0~2 天後
 _BUDGET_CATEGORIES_TO_ANNOUNCE = ['外食餐費', '生鮮&調味料', '生活用品', '利卡', '璇璇', '娛樂', '醫療保健']
 _BUDGET_ALERT_THRESHOLD_PCT = 60
+
+# 開頭是 "yyyy/M/d" 或 "M/d" 這種斜線日期寫法會被 TTS 唸成分數，轉成「X月X日星期X」+「X點X分」的口語格式
+_SPEECH_FULL_DATE_RE = re.compile(r'^\d{4}/(\d{1,2})/(\d{1,2})(?:\([^)]*\))?\s*(?:(\d{2})(\d{2}))?\s*(.*)$')
+_SPEECH_MD_DATE_RE = re.compile(r'^(\d{1,2})/(\d{1,2})(?:\([^)]*\))?\s*(?:(\d{2})(\d{2}))?\s*(.*)$')
+
+
+def _speakify_dated_todo(content, parsed_date):
+    weekday_cn = _WEEKDAY_NAMES[parsed_date.weekday()]
+    m = _SPEECH_FULL_DATE_RE.match(content) or _SPEECH_MD_DATE_RE.match(content)
+    if not m:
+        return content
+
+    month, day, hh, mm, rest = m.groups()
+    spoken = f'{int(month)}月{int(day)}日星期{weekday_cn}'
+    if hh and mm:
+        spoken += f'，{int(hh)}點{mm}分'
+    rest = rest.strip()
+    if rest:
+        spoken += f'，{rest}'
+    return spoken
 
 
 def _fetch_weather_lines():
@@ -91,7 +112,7 @@ def _fetch_upcoming_todo_and_purchase():
             continue
         days_until = (d - today).days
         if 0 <= days_until <= _TODO_LOOKAHEAD_DAYS:
-            todo_lines.append(content)
+            todo_lines.append(_speakify_dated_todo(content, d))
 
     purchase_lines = [item.get('name', '').strip() for item in future_data.get('purchase', [])
                        if item.get('name', '').strip()]

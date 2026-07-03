@@ -59,10 +59,10 @@ function renderLineChart(containerId, config) {
     return Date.UTC(+p[0], +p[1] - 1, +p[2]) / 86400000;
   }
 
-  var allDays = [], avgVals = [];
+  var allDays = [], avgVals = [], rawVals = [];
   config.series.forEach(function(s) {
     s.avg.forEach(function(pt) { allDays.push(parseDay(pt[0])); avgVals.push(pt[1]); });
-    s.raw.forEach(function(pt) { allDays.push(parseDay(pt[0])); });
+    s.raw.forEach(function(pt) { allDays.push(parseDay(pt[0])); rawVals.push(pt[1]); });
   });
   if (!allDays.length) return;
 
@@ -70,9 +70,11 @@ function renderLineChart(containerId, config) {
   var maxDay = Math.max.apply(null, allDays);
   if (minDay === maxDay) maxDay = minDay + 1;
 
-  // Y 軸範圍只依滾動平均線決定，避免單日離群的原始資料點把整個座標軸拉爆，導致趨勢線起伏看不清楚
-  var minVal = Math.min.apply(null, avgVals);
-  var maxVal = Math.max.apply(null, avgVals);
+  // Y 軸範圍優先依滾動平均線決定，避免單日離群的原始資料點把整個座標軸拉爆；
+  // 但累積天數還不滿一個滾動視窗時 avgVals 會是空的，此時退回用原始資料點決定範圍，避免圖表整個壞掉
+  var valsForRange = avgVals.length ? avgVals : rawVals;
+  var minVal = Math.min.apply(null, valsForRange);
+  var maxVal = Math.max.apply(null, valsForRange);
   var vPad = (maxVal - minVal) * 0.15 || 1;
   minVal -= vPad; maxVal += vPad;
 

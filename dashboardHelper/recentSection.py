@@ -59,10 +59,10 @@ function renderLineChart(containerId, config) {
     return Date.UTC(+p[0], +p[1] - 1, +p[2]) / 86400000;
   }
 
-  var allDays = [], allVals = [];
+  var allDays = [], avgVals = [];
   config.series.forEach(function(s) {
-    s.avg.forEach(function(pt) { allDays.push(parseDay(pt[0])); allVals.push(pt[1]); });
-    s.raw.forEach(function(pt) { allDays.push(parseDay(pt[0])); allVals.push(pt[1]); });
+    s.avg.forEach(function(pt) { allDays.push(parseDay(pt[0])); avgVals.push(pt[1]); });
+    s.raw.forEach(function(pt) { allDays.push(parseDay(pt[0])); });
   });
   if (!allDays.length) return;
 
@@ -70,8 +70,9 @@ function renderLineChart(containerId, config) {
   var maxDay = Math.max.apply(null, allDays);
   if (minDay === maxDay) maxDay = minDay + 1;
 
-  var minVal = Math.min.apply(null, allVals);
-  var maxVal = Math.max.apply(null, allVals);
+  // Y 軸範圍只依滾動平均線決定，避免單日離群的原始資料點把整個座標軸拉爆，導致趨勢線起伏看不清楚
+  var minVal = Math.min.apply(null, avgVals);
+  var maxVal = Math.max.apply(null, avgVals);
   var vPad = (maxVal - minVal) * 0.15 || 1;
   minVal -= vPad; maxVal += vPad;
 

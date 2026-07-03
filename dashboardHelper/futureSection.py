@@ -201,8 +201,8 @@ def _build_purchase_html(items):
 _ALL_SLOT_NAMES = ['早上', '下午', '晚上']
 
 
-def _day_summary(slots_data):
-    """slots_data: list of (slot_name, avg_temp, avg_rain)"""
+def _day_summary_messages(slots_data):
+    """slots_data: list of (slot_name, avg_temp, avg_rain) -> list of plain-text warning sentences"""
     very_hot, hot, very_cold, cool, rainy = [], [], [], [], []
     for name, temp, rain in slots_data:
         if temp is not None:
@@ -231,7 +231,11 @@ def _day_summary(slots_data):
         messages.append(f'{fmt(cool)}偏涼，注意保暖')
     if rainy:
         messages.append(f'{fmt(rainy)}可能會下雨，建議帶傘')
+    return messages
 
+
+def _day_summary(slots_data):
+    messages = _day_summary_messages(slots_data)
     if not messages:
         return ''
     items = ''.join(f'<div class="weather-summary-item">{m}</div>' for m in messages)

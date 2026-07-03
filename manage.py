@@ -96,6 +96,12 @@ def dashboard():
     return build_dashboard(settings.URL_GAS_API), 200, {'Content-Type': 'text/html; charset=utf-8'}
 
 
+@app.route('/family-brief')
+def family_brief():
+    from dashboardHelper.speechSection import generate_text
+    return generate_text(), 200, {'Content-Type': 'text/plain; charset=utf-8'}
+
+
 @app.route('/trigger-nfc')
 def trigger_nfc():
     import requests as req_lib

@@ -334,13 +334,11 @@ document.addEventListener('click', function() {
 
 
 def build_dashboard(gas_url):
-    with ThreadPoolExecutor(max_workers=3) as ex:
+    with ThreadPoolExecutor(max_workers=2) as ex:
         econ_f = ex.submit(economy_html, gas_url)
         fut_f  = ex.submit(future_html)
-        rec_f  = ex.submit(recent_html)
         econ = econ_f.result()
         fut  = fut_f.result()
-        rec  = rec_f.result()
 
     return f'''<!DOCTYPE html>
 <html lang="zh-TW">
@@ -354,13 +352,27 @@ def build_dashboard(gas_url):
 <div class="tabs">
   <button class="tab-btn active" onclick="switchTab(this, 'economy')">經濟狀況</button>
   <button class="tab-btn" onclick="switchTab(this, 'future')">未來安排</button>
-  <button class="tab-btn" onclick="switchTab(this, 'recent')">近期狀況</button>
 </div>
 <div class="container">
   <div id="tab-economy" class="tab-content">{econ}</div>
   <div id="tab-future" class="tab-content" style="display:none">{fut}</div>
-  <div id="tab-recent" class="tab-content" style="display:none">{rec}</div>
 </div>
 <script>{_JS}</script>
+</body>
+</html>'''
+
+
+def build_recent_status_page():
+    rec = recent_html()
+    return f'''<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>近期狀況</title>
+<style>{_CSS}</style>
+</head>
+<body>
+<div class="container">{rec}</div>
 </body>
 </html>'''

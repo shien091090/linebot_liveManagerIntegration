@@ -576,6 +576,20 @@ def ParseRequestInfo(receive_txt):
         req_info.responseMsg = url
         req_info.messageType = MESSAGE_TYPE_URL
 
+    temp_command_key = 'KEY_RECENT_STATUS_DASHBOARD'
+    if command_key == keyWordSetting.GetCommandKey(temp_command_key):
+        from dashboardHelper.dashboardBuilder import build_recent_status_page
+        try:
+            html = build_recent_status_page()
+        except Exception as e:
+            html = f'<html><body><p>Error: {e}</p></body></html>'
+        mockup_store['recent_status'] = html
+        url = 'https://linebot-livemanagerintegration.herokuapp.com/mockup/recent_status'
+        req_info = lineActionInfo.RequestInfo('分析近期狀況', REQUEST_TYPE_BYPASS, None)
+        req_info.statusMsg = '已生成近期狀況分析報表'
+        req_info.responseMsg = url
+        req_info.messageType = MESSAGE_TYPE_URL
+
     return reply_flex_message, req_info
 
 def printReceiverLog(event):

@@ -468,12 +468,13 @@ def _rolling_avg(data, window=30, warmup=0):
     return result
 
 
-def _build_chart_config(series_list, names, colors, unit, warmup=0, y_min=None, y_max=None, y_ticks=None):
+def _build_chart_config(series_list, names, colors, unit, warmup=0, y_min=None, y_max=None, y_ticks=None,
+                         use_raw_as_line=False):
     series = []
     for data, name, color in zip(series_list, names, colors):
         if not data:
             continue
-        rolling = _rolling_avg(data, warmup=warmup)
+        rolling = data if use_raw_as_line else _rolling_avg(data, warmup=warmup)
         series.append({
             "label": name,
             "color": color,
@@ -551,28 +552,29 @@ def generate_html():
 
     if morning or evening:
         config = _build_chart_config(
-            [morning, evening], ["上班通勤", "下班通勤"], [_COLOR_MORNING, _COLOR_EVENING], "minutes"
+            [morning, evening], ["上班通勤", "下班通勤"], [_COLOR_MORNING, _COLOR_EVENING], "minutes",
+            use_raw_as_line=True
         )
         parts.append(_interactive_chart_html(
-            "chart-commute", "通勤時間趨勢", "分鐘 · 30天滾動平均", config,
+            "chart-commute", "上下班耗時", "分鐘 · 每日原始值", config,
             [("上班通勤", _COLOR_MORNING), ("下班通勤", _COLOR_EVENING)]
         ))
     else:
-        parts.append(_no_data_html("通勤時間趨勢", "分鐘"))
+        parts.append(_no_data_html("上下班耗時", "分鐘"))
 
     if my_sleep:
-        config = _build_chart_config([my_sleep], ["睡眠時長"], [_COLOR_SLEEP], "hours")
+        config = _build_chart_config([my_sleep], ["睡眠時長"], [_COLOR_SLEEP], "hours", use_raw_as_line=True)
         parts.append(_interactive_chart_html(
-            "chart-mysleep", "我的睡眠時長", "小時 · 30天滾動平均", config,
+            "chart-mysleep", "我的睡眠時長", "小時 · 每日原始值", config,
             [("睡眠時長", _COLOR_SLEEP)]
         ))
     else:
         parts.append(_no_data_html("我的睡眠時長", "小時"))
 
     if xuan_sleep:
-        config = _build_chart_config([xuan_sleep], ["入睡耗時"], [_COLOR_XUAN], "minutes")
+        config = _build_chart_config([xuan_sleep], ["入睡耗時"], [_COLOR_XUAN], "minutes", use_raw_as_line=True)
         parts.append(_interactive_chart_html(
-            "chart-xuansleep", "璇璇入睡耗時", "分鐘 · 30天滾動平均", config,
+            "chart-xuansleep", "璇璇入睡耗時", "分鐘 · 每日原始值", config,
             [("入睡耗時", _COLOR_XUAN)]
         ))
     else:

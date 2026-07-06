@@ -584,10 +584,10 @@ def generate_html():
         config = _build_chart_config(
             [my_sleep_t, xuan_t, bath_t], ["我的入睡", "璇璇睡著", "洗澡"],
             [_COLOR_SLEEP, _COLOR_XUAN, _COLOR_BATH], "time",
-            y_min=21, y_max=27, y_ticks=list(range(21, 28))
+            y_min=21, y_max=27, y_ticks=list(range(21, 28)), use_raw_as_line=True
         )
         parts.append(_interactive_chart_html(
-            "chart-timepoints", "時間點趨勢", "30天滾動平均", config,
+            "chart-timepoints", "時間點趨勢", "每日原始值", config,
             [("我的入睡", _COLOR_SLEEP), ("璇璇睡著", _COLOR_XUAN), ("洗澡", _COLOR_BATH)]
         ))
     else:

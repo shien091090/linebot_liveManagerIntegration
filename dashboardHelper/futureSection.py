@@ -201,8 +201,12 @@ def _build_purchase_html(items):
 _ALL_SLOT_NAMES = ['早上', '下午', '晚上']
 
 
-def _day_summary_messages(slots_data):
-    """slots_data: list of (slot_name, avg_temp, avg_rain) -> list of plain-text warning sentences"""
+def _classify_day_slots(slots_data):
+    """slots_data: list of (slot_name, avg_temp, avg_rain) -> dict of slot-name lists per warning bucket.
+
+    這是溫度/降雨異常的門檻判斷，dashboard 網頁與朗讀文案共用同一份，
+    確保兩邊對「算不算太熱/太冷/會下雨」的認定一致；文字措辭則各自在下游決定。
+    """
     very_hot, hot, very_cold, cool, rainy = [], [], [], [], []
     for name, temp, rain in slots_data:
         if temp is not None:
@@ -216,21 +220,27 @@ def _day_summary_messages(slots_data):
                 cool.append(name)
         if rain is not None and rain > 50:
             rainy.append(name)
+    return {'very_hot': very_hot, 'hot': hot, 'very_cold': very_cold, 'cool': cool, 'rainy': rainy}
 
-    def fmt(names):
-        return '整天' if set(names) == set(_ALL_SLOT_NAMES) else '、'.join(names)
 
+def _format_slot_names(names):
+    return '整天' if set(names) == set(_ALL_SLOT_NAMES) else '、'.join(names)
+
+
+def _day_summary_messages(slots_data):
+    """slots_data: list of (slot_name, avg_temp, avg_rain) -> list of plain-text warning sentences (dashboard 用詞)"""
+    buckets = _classify_day_slots(slots_data)
     messages = []
-    if very_hot:
-        messages.append(f'{fmt(very_hot)}非常熱，建議不要外出')
-    if hot:
-        messages.append(f'{fmt(hot)}氣溫偏高，注意補水')
-    if very_cold:
-        messages.append(f'{fmt(very_cold)}非常冷，建議不要外出')
-    if cool:
-        messages.append(f'{fmt(cool)}偏涼，注意保暖')
-    if rainy:
-        messages.append(f'{fmt(rainy)}可能會下雨，建議帶傘')
+    if buckets['very_hot']:
+        messages.append(f'{_format_slot_names(buckets["very_hot"])}非常熱，建議不要外出')
+    if buckets['hot']:
+        messages.append(f'{_format_slot_names(buckets["hot"])}氣溫偏高，注意補水')
+    if buckets['very_cold']:
+        messages.append(f'{_format_slot_names(buckets["very_cold"])}非常冷，建議不要外出')
+    if buckets['cool']:
+        messages.append(f'{_format_slot_names(buckets["cool"])}偏涼，注意保暖')
+    if buckets['rainy']:
+        messages.append(f'{_format_slot_names(buckets["rainy"])}可能會下雨，建議帶傘')
     return messages
 
 

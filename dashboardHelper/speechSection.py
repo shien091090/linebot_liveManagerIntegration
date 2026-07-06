@@ -9,9 +9,13 @@ import requests
 import settings
 from dashboardHelper.futureSection import (
     CWA_DATASET, CWA_LOCATION, TIME_SLOTS, TAIWAN_TZ,
-    _day_label, _parse_dt, _avg, _day_summary_messages,
+    _day_label, _parse_dt, _avg, _format_slot_names,
     _has_explicit_date, _parse_explicit_date,
 )
+
+# 朗讀文案的「氣溫偏高」門檻跟 dashboard 網頁不同（28~35 度，dashboard 是 30~35 度），故獨立一份判斷
+_SPEECH_HOT_THRESHOLD = 28
+_SPEECH_VERY_HOT_THRESHOLD = 35
 
 _WEEKDAY_NAMES = ['一', '二', '三', '四', '五', '六', '日']
 _TODO_LOOKAHEAD_DAYS = 2  # 今天、明天、後天 = 0~2 天後
@@ -37,6 +41,41 @@ def _speakify_dated_todo(content, parsed_date):
     if rest:
         spoken += f'，{rest}'
     return spoken
+
+
+def _speech_classify_day_slots(slots_data):
+    """朗讀文案專用的溫度/降雨門檻判斷，跟 dashboard 網頁的 _classify_day_slots 完全獨立（氣溫偏高門檻為28度）"""
+    very_hot, hot, very_cold, cool, rainy = [], [], [], [], []
+    for name, temp, rain in slots_data:
+        if temp is not None:
+            if temp >= _SPEECH_VERY_HOT_THRESHOLD:
+                very_hot.append(name)
+            elif temp >= _SPEECH_HOT_THRESHOLD:
+                hot.append(name)
+            if temp < 10:
+                very_cold.append(name)
+            elif temp < 20:
+                cool.append(name)
+        if rain is not None and rain > 50:
+            rainy.append(name)
+    return {'very_hot': very_hot, 'hot': hot, 'very_cold': very_cold, 'cool': cool, 'rainy': rainy}
+
+
+def _speech_day_messages(slots_data):
+    """朗讀文案專用措辭，跟 dashboard 網頁的 _day_summary_messages 完全獨立"""
+    buckets = _speech_classify_day_slots(slots_data)
+    messages = []
+    if buckets['very_hot']:
+        messages.append(f'{_format_slot_names(buckets["very_hot"])}，大於{_SPEECH_VERY_HOT_THRESHOLD}度，非常熱，建議不要外出')
+    if buckets['hot']:
+        messages.append(f'{_format_slot_names(buckets["hot"])}，大於{_SPEECH_HOT_THRESHOLD}度，氣溫偏高，注意補水')
+    if buckets['very_cold']:
+        messages.append(f'{_format_slot_names(buckets["very_cold"])}非常冷，建議不要外出')
+    if buckets['cool']:
+        messages.append(f'{_format_slot_names(buckets["cool"])}偏涼，注意保暖')
+    if buckets['rainy']:
+        messages.append(f'{_format_slot_names(buckets["rainy"])}可能會下雨，建議帶傘')
+    return messages
 
 
 def _fetch_weather_lines():
@@ -86,7 +125,7 @@ def _fetch_weather_lines():
                 temps = [temp_dh[d][h] for h in temp_hours if h in temp_dh[d]]
                 rains = [rain_dh[d][h] for h in rain_hours if h in rain_dh[d]]
                 slots_data.append((slot_name, _avg(temps), _avg(rains)))
-            messages = _day_summary_messages(slots_data)
+            messages = _speech_day_messages(slots_data)
             if messages:
                 lines.append(f'{label}{"，".join(messages)}')
         return lines

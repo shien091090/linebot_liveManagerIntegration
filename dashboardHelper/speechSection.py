@@ -66,13 +66,13 @@ def _speech_day_messages(slots_data):
     buckets = _speech_classify_day_slots(slots_data)
     messages = []
     if buckets['very_hot']:
-        messages.append(f'{_format_slot_names(buckets["very_hot"])}，大於{_SPEECH_VERY_HOT_THRESHOLD}度，非常熱，建議不要外出')
+        messages.append(f'{_format_slot_names(buckets["very_hot"])}，大於{_SPEECH_VERY_HOT_THRESHOLD}度，非常熱')
     if buckets['hot']:
-        messages.append(f'{_format_slot_names(buckets["hot"])}，大於{_SPEECH_HOT_THRESHOLD}度，氣溫偏高，注意補水')
+        messages.append(f'{_format_slot_names(buckets["hot"])}，大於{_SPEECH_HOT_THRESHOLD}度，氣溫偏高')
     if buckets['very_cold']:
-        messages.append(f'{_format_slot_names(buckets["very_cold"])}非常冷，建議不要外出')
+        messages.append(f'{_format_slot_names(buckets["very_cold"])}低於10度，非常冷')
     if buckets['cool']:
-        messages.append(f'{_format_slot_names(buckets["cool"])}偏涼，注意保暖')
+        messages.append(f'{_format_slot_names(buckets["cool"])}低於20度，氣溫偏涼')
     if buckets['rainy']:
         messages.append(f'{_format_slot_names(buckets["rainy"])}可能會下雨，建議帶傘')
     return messages

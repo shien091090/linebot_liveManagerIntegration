@@ -20,7 +20,7 @@ _SPEECH_VERY_HOT_THRESHOLD = 35
 _WEEKDAY_NAMES = ['一', '二', '三', '四', '五', '六', '日']
 _TODO_LOOKAHEAD_DAYS = 2  # 今天、明天、後天 = 0~2 天後
 _BUDGET_CATEGORIES_TO_ANNOUNCE = ['外食餐費', '生鮮&調味料', '生活用品', '利卡', '璇璇', '娛樂', '醫療保健']
-_BUDGET_ALERT_THRESHOLD_PCT = 60
+_BUDGET_ALERT_THRESHOLD_PCT = 50
 
 # 開頭是 "yyyy/M/d" 或 "M/d" 這種斜線日期寫法會被 TTS 唸成分數，轉成「X月X日星期X」+「X點X分」的口語格式
 _SPEECH_FULL_DATE_RE = re.compile(r'^\d{4}/(\d{1,2})/(\d{1,2})(?:\([^)]*\))?\s*(?:(\d{2})(\d{2}))?\s*(.*)$')
@@ -179,7 +179,7 @@ def _fetch_budget_lines():
             lines.append(f'{cat["name"]}已經超支{cat.get("overspent", 0)}元，沒有剩餘預算')
         else:
             remaining = effective_budget - cat.get('spent', 0)
-            lines.append(f'{cat["name"]}已使用{pct}%，剩餘{remaining}元可以使用')
+            lines.append(f'{cat["name"]}預算已使用過半，剩餘{remaining}元可以使用')
     return lines
 
 
@@ -219,6 +219,6 @@ def generate_text():
     elif budget_lines:
         parts.append('預算方面，' + '；'.join(budget_lines) + '。')
     else:
-        parts.append('預算控制得宜，沒有分類超過六十%。')
+        parts.append('所有預算皆尚未使用過半。')
 
     return '\n\n'.join(parts)

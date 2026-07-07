@@ -153,8 +153,9 @@ def _fetch_upcoming_todo_and_purchase():
         if 0 <= days_until <= _TODO_LOOKAHEAD_DAYS:
             todo_lines.append(_speakify_dated_todo(content, d))
 
+    # 只念短期待買清單，長期的不唸
     purchase_lines = [item.get('name', '').strip() for item in future_data.get('purchase', [])
-                       if item.get('name', '').strip()]
+                       if item.get('name', '').strip() and item.get('category') != '長期']
     return todo_lines, purchase_lines
 
 

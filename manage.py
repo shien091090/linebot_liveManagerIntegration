@@ -167,7 +167,13 @@ def receiveMessage(event):
 
 
 def _purchase_list_text(items):
-    return '\n'.join(f'{i+1}. {item["name"]}' for i, item in enumerate(items)) if items else '(空)'
+    if not items:
+        return '(空)'
+    lines = []
+    for i, item in enumerate(items):
+        prefix = '[長期] ' if item.get('category') == '長期' else ''
+        lines.append(f'{i+1}. {prefix}{item["name"]}')
+    return '\n'.join(lines)
 
 
 def _fetch_purchase_items():
@@ -176,7 +182,9 @@ def _fetch_purchase_items():
                          params={'action': lineActionInfo.API_ACTION_PURCHASE_LIST_GET}, timeout=10)
         resp = json.loads(r.text)
         if resp.get('statusCode') == 200:
-            return json.loads(resp.get('responseMsg', '[]'))
+            items = json.loads(resp.get('responseMsg', '[]'))
+            # 短期排前面、長期統一排在最後面，各自維持原本相對順序
+            return sorted(items, key=lambda item: item.get('category') == '長期')
     except Exception:
         pass
     return []
@@ -480,22 +488,38 @@ def ParseRequestInfo(receive_txt):
                                                   REQUEST_TYPE_GAS,
                                                   send_param)
 
-    # 新增待購買品項
+    # 新增待購買品項（第三個參數為短期/長期，選填，預設短期）
     temp_command_key = 'KEY_PURCHASE_ADD'
     if command_key == keyWordSetting.GetCommandKey(temp_command_key):
-        command_text_structure = [TextStructureType_Content, TextStructureType_Content]
-        text_parse_result = text_parser.ParseTextBySpecificStructure(command_text_structure)
         req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key),
                                               REQUEST_TYPE_BYPASS, None)
-        if text_parse_result is None or \
-                text_parse_result.IsKeyWordMatch(keyWordSetting.GetCommandKey(temp_command_key)) is False:
-            req_info.statusMsg = f"【格式錯誤】\n正確格式為 『{keyWordSetting.GetCommandFormatHint(temp_command_key)}』"
-            req_info.responseMsg = ' '
-        else:
-            item_name = text_parse_result.GetSpecificTextTypeValue(TextType_SubContent)
+
+        item_name = None
+        category = '短期'
+
+        three_part_structure = [TextStructureType_Content, TextStructureType_Content, TextStructureType_Content]
+        text_parse_result = text_parser.ParseTextBySpecificStructure(three_part_structure)
+        if text_parse_result is not None and \
+                text_parse_result.IsKeyWordMatch(keyWordSetting.GetCommandKey(temp_command_key)):
+            last_token = text_parse_result.GetSpecificTextTypeValue(TextType_AdditionalContent)
+            if last_token in ('短期', '長期'):
+                item_name = text_parse_result.GetSpecificTextTypeValue(TextType_SubContent)
+                category = last_token
+
+        if item_name is None:
+            two_part_structure = [TextStructureType_Content, TextStructureType_Content]
+            text_parse_result = text_parser.ParseTextBySpecificStructure(two_part_structure)
+            if text_parse_result is None or \
+                    text_parse_result.IsKeyWordMatch(keyWordSetting.GetCommandKey(temp_command_key)) is False:
+                req_info.statusMsg = f"【格式錯誤】\n正確格式為 『{keyWordSetting.GetCommandFormatHint(temp_command_key)}』"
+                req_info.responseMsg = ' '
+            else:
+                item_name = text_parse_result.GetSpecificTextTypeValue(TextType_SubContent)
+
+        if item_name:
             r = requests.get(settings.URL_GAS_API,
                              params={'action': lineActionInfo.API_ACTION_PURCHASE_LIST_ADD,
-                                     'itemName': item_name}, timeout=10)
+                                     'itemName': item_name, 'category': category}, timeout=10)
             resp = json.loads(r.text)
             req_info.statusMsg = resp.get('statusMsg', '')
             req_info.responseMsg = _purchase_list_text(_fetch_purchase_items())

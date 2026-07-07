@@ -1,5 +1,4 @@
 [
-  {"mallName": "台中大遠百", "url": "https://www.feds.com.tw/m/53/Edm/List"},
-  {"mallName": "廣三SOGO", "url": "https://www.kssogo.com.tw/news.php"},
-  {"mallName": "麗寶OUTLET MALL", "url": "https://www.lihpaooutlet.com.tw/MainActivity"}
+  {"mallName": "廣三SOGO", "url": "https://www.kssogo.com.tw/news.php", "parser": "sogo"},
+  {"mallName": "麗寶OUTLET MALL", "url": "https://www.lihpaooutlet.com.tw/MainActivity", "parser": "lihpao"}
 ]

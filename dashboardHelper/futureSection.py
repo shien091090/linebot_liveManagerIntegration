@@ -186,15 +186,27 @@ def _build_memo_html(items, important_items, today):
 def _build_purchase_html(items):
     if not items:
         return ''
-    rows = ''.join(
-        f'<div class="future-item">'
-        f'<span class="future-item-content">{html_lib.escape(item.get("name", ""))}</span>'
-        f'</div>'
-        for item in items
-    )
+
+    def _rows(item_list):
+        return ''.join(
+            f'<div class="future-item">'
+            f'<span class="future-item-content">{html_lib.escape(item.get("name", ""))}</span>'
+            f'</div>'
+            for item in item_list
+        )
+
+    short_term = [item for item in items if item.get('category') != '長期']
+    long_term = [item for item in items if item.get('category') == '長期']
+
+    body = ''
+    if short_term:
+        body += f'<div class="memo-group-label memo-group-soon">短期</div><div class="future-list-card">{_rows(short_term)}</div>'
+    if long_term:
+        body += f'<div class="memo-group-label memo-group-other">長期</div><div class="future-list-card">{_rows(long_term)}</div>'
+
     return (f'<div class="section">'
             f'<div class="section-title">待買清單</div>'
-            f'<div class="future-list-card">{rows}</div>'
+            f'{body}'
             f'</div>')
 
 

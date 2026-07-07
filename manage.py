@@ -31,6 +31,7 @@ IMGUR_CLIENT_ID = "cd9dac4885101cf"
 MESSAGE_TYPE_TEXT = 'text'
 MESSAGE_TYPE_CHART = 'chart'
 MESSAGE_TYPE_URL = 'url'
+MESSAGE_TYPE_LINE_CHART = 'line_chart'
 
 MEMO_ACTIONS = {
     lineActionInfo.API_ACTION_MEMO_ADD,
@@ -146,6 +147,27 @@ def receiveMessage(event):
         line_bot_api.reply_message(
             event.reply_token,
             FlexSendMessage(alt_text=req_info.title, contents=flex_dict))
+
+    elif req_info.messageType == MESSAGE_TYPE_LINE_CHART:
+        from dashboardHelper.recentSection import generate_chart_image
+        chart_info_dict = json.loads(req_info.responseMsg)
+        chart_name = chart_info_dict['chartName']
+        file_name, error = generate_chart_image(chart_name)
+
+        if file_name is None:
+            reply_flex_message = getFlexMessage('生成圖表', '【錯誤】', error)
+            line_bot_api.reply_message(
+                event.reply_token,
+                FlexSendMessage(alt_text='生成圖表', contents=json.loads(reply_flex_message)))
+        else:
+            im = pyimgur.Imgur(IMGUR_CLIENT_ID)
+            uploaded_image = im.upload_image(file_name, title=chart_name)
+            img_message = ImageSendMessage(
+                original_content_url=uploaded_image.link,
+                preview_image_url=uploaded_image.link)
+            line_bot_api.reply_message(
+                event.reply_token,
+                img_message)
 
     elif req_info.messageType == MESSAGE_TYPE_TEXT:
         if reply_flex_message == '':
@@ -600,19 +622,26 @@ def ParseRequestInfo(receive_txt):
         req_info.responseMsg = url
         req_info.messageType = MESSAGE_TYPE_URL
 
-    temp_command_key = 'KEY_RECENT_STATUS_DASHBOARD'
+    # 生成近期狀況圖表圖片（通勤/睡覺/璇璇睡覺/時間點/忙碌）
+    temp_command_key = 'KEY_GENERATE_CHART'
     if command_key == keyWordSetting.GetCommandKey(temp_command_key):
-        from dashboardHelper.dashboardBuilder import build_recent_status_page
-        try:
-            html = build_recent_status_page()
-        except Exception as e:
-            html = f'<html><body><p>Error: {e}</p></body></html>'
-        mockup_store['recent_status'] = html
-        url = 'https://linebot-livemanagerintegration.herokuapp.com/mockup/recent_status'
-        req_info = lineActionInfo.RequestInfo('分析近期狀況', REQUEST_TYPE_BYPASS, None)
-        req_info.statusMsg = '已生成近期狀況分析報表'
-        req_info.responseMsg = url
-        req_info.messageType = MESSAGE_TYPE_URL
+        command_text_structure = [TextStructureType_Content, TextStructureType_Content]
+        text_parse_result = text_parser.ParseTextBySpecificStructure(command_text_structure)
+        req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key),
+                                              REQUEST_TYPE_BYPASS, None)
+        if text_parse_result is None or \
+                text_parse_result.IsKeyWordMatch(keyWordSetting.GetCommandKey(temp_command_key)) is False:
+            req_info.statusMsg = f"【格式錯誤】\n正確格式為 『{keyWordSetting.GetCommandFormatHint(temp_command_key)}』"
+            req_info.responseMsg = ' '
+        else:
+            chart_name = text_parse_result.GetSpecificTextTypeValue(TextType_SubContent)
+            from dashboardHelper.recentSection import CHART_NAMES
+            if chart_name not in CHART_NAMES:
+                req_info.statusMsg = '【錯誤】'
+                req_info.responseMsg = f"不支援的圖表名稱：{chart_name}\n正確格式為 『{keyWordSetting.GetCommandFormatHint(temp_command_key)}』"
+            else:
+                req_info.messageType = MESSAGE_TYPE_LINE_CHART
+                req_info.responseMsg = json.dumps({'chartName': chart_name}, ensure_ascii=False)
 
     return reply_flex_message, req_info
 

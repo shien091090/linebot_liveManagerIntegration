@@ -3,6 +3,12 @@ import requests
 from collections import defaultdict
 from datetime import datetime, timedelta
 
+import matplotlib
+matplotlib.use('Agg')
+from matplotlib import pyplot as plt
+from matplotlib.font_manager import FontProperties
+import matplotlib.dates as mdates
+
 import settings
 
 _COLOR_MORNING = "#3B82F6"
@@ -12,239 +18,8 @@ _COLOR_XUAN    = "#EC4899"
 _COLOR_BATH    = "#10B981"
 _COLOR_BUSY    = "#EF4444"
 
-_CHART_CSS = """
-.chart-subtitle { font-size: 12px; color: #64748B; margin-bottom: 8px; margin-top: 2px; }
-.chart-card {
-  background: #fff;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.07), 0 0 0 1px rgba(0,0,0,0.04);
-  padding: 10px 8px 4px;
-}
-.chart-legend {
-  display: flex; flex-wrap: wrap; gap: 10px;
-  font-size: 11px; color: #64748B;
-  padding: 6px 4px 2px;
-}
-.chart-legend-item { display: flex; align-items: center; gap: 4px; }
-.legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-.linechart { position: relative; }
-.linechart svg { width: 100%; height: auto; display: block; touch-action: pan-y; }
-.chart-tooltip {
-  display: none; position: absolute;
-  background: #1E293B; color: #F1F5F9;
-  border-radius: 8px; padding: 8px 10px;
-  font-size: 11px; line-height: 1.6;
-  pointer-events: none; white-space: nowrap;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.25);
-  z-index: 50;
-}
-.chart-tooltip .tooltip-date { font-weight: 700; margin-bottom: 2px; color: #fff; }
-.chart-tooltip .tooltip-line { display: flex; align-items: center; gap: 5px; }
-.chart-tooltip .tooltip-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
-"""
-
-_CHART_JS = """
-function renderLineChart(containerId, config) {
-  var container = document.getElementById(containerId);
-  if (!container || !config || !config.series || !config.series.length) return;
-
-  var width = 800, height = 260;
-  var padL = 42, padR = 12, padT = 10, padB = 24;
-  var plotW = width - padL - padR;
-  var plotH = height - padT - padB;
-
-  function parseDay(s) {
-    var p = s.split('-');
-    return Date.UTC(+p[0], +p[1] - 1, +p[2]) / 86400000;
-  }
-
-  var allDays = [], avgVals = [], rawVals = [];
-  config.series.forEach(function(s) {
-    s.avg.forEach(function(pt) { allDays.push(parseDay(pt[0])); avgVals.push(pt[1]); });
-    s.raw.forEach(function(pt) { allDays.push(parseDay(pt[0])); rawVals.push(pt[1]); });
-  });
-  if (!allDays.length) return;
-
-  var minDay = Math.min.apply(null, allDays);
-  var maxDay = Math.max.apply(null, allDays);
-  if (minDay === maxDay) maxDay = minDay + 1;
-
-  var minVal, maxVal;
-  if (config.yMin != null && config.yMax != null) {
-    // 圖表指定固定 Y 軸範圍（例如時間點趨勢固定在特定時段），不依資料動態調整
-    minVal = config.yMin; maxVal = config.yMax;
-  } else {
-    // Y 軸範圍優先依滾動平均線決定，避免單日離群的原始資料點把整個座標軸拉爆；
-    // 但累積天數還不滿一個滾動視窗時 avgVals 會是空的，此時退回用原始資料點決定範圍，避免圖表整個壞掉
-    var valsForRange = avgVals.length ? avgVals : rawVals;
-    minVal = Math.min.apply(null, valsForRange);
-    maxVal = Math.max.apply(null, valsForRange);
-    var vPad = (maxVal - minVal) * 0.15 || 1;
-    minVal -= vPad; maxVal += vPad;
-  }
-
-  function xPix(day) { return padL + (day - minDay) / (maxDay - minDay) * plotW; }
-  function yPix(val) { return padT + (1 - (val - minVal) / (maxVal - minVal)) * plotH; }
-
-  function pad2(n) { return n < 10 ? '0' + n : '' + n; }
-
-  function fmtTime(v) {
-    var h = Math.floor(v), m = Math.round((v - h) * 60);
-    if (m === 60) { h += 1; m = 0; }
-    return pad2(h) + ':' + pad2(m);
-  }
-
-  function fmtVal(v) {
-    if (config.unit === 'minutes') return Math.round(v) + ' 分';
-    if (config.unit === 'hours') return v.toFixed(1) + ' 小時';
-    if (config.unit === 'count') return (Math.round(v * 10) / 10) + ' 件';
-    return fmtTime(v);
-  }
-
-  function fmtAxisVal(v) {
-    if (config.unit === 'minutes') return Math.round(v);
-    if (config.unit === 'hours') return Math.round(v * 10) / 10;
-    if (config.unit === 'count') return Math.round(v * 10) / 10;
-    return fmtTime(v);
-  }
-
-  function fmtAxisDate(day) {
-    var d = new Date(day * 86400000);
-    return pad2(d.getUTCMonth() + 1) + '/' + pad2(d.getUTCDate());
-  }
-
-  function fmtFullDate(day) {
-    var d = new Date(day * 86400000);
-    return d.getUTCFullYear() + '/' + fmtAxisDate(day);
-  }
-
-  var yTicks;
-  if (config.yTicks && config.yTicks.length) {
-    yTicks = config.yTicks;
-  } else {
-    var yTickCount = 5;
-    yTicks = [];
-    for (var i = 0; i <= yTickCount; i++) {
-      yTicks.push(minVal + (maxVal - minVal) * i / yTickCount);
-    }
-  }
-  var xTickCount = Math.max(2, Math.min(5, Math.round((maxDay - minDay) / 5)));
-  var xTicks = [];
-  for (var j = 0; j <= xTickCount; j++) {
-    xTicks.push(minDay + (maxDay - minDay) * j / xTickCount);
-  }
-
-  var svgParts = [];
-  svgParts.push('<svg viewBox="0 0 ' + width + ' ' + height + '">');
-
-  yTicks.forEach(function(v) {
-    var y = yPix(v);
-    svgParts.push('<line x1="' + padL + '" y1="' + y + '" x2="' + (width - padR) + '" y2="' + y + '" stroke="#E2E8F0" stroke-dasharray="3,3" stroke-width="1"/>');
-    svgParts.push('<text x="' + (padL - 6) + '" y="' + (y + 3) + '" text-anchor="end" font-size="9" fill="#64748B">' + fmtAxisVal(v) + '</text>');
-  });
-  xTicks.forEach(function(day) {
-    var x = xPix(day);
-    svgParts.push('<text x="' + x + '" y="' + (height - 7) + '" text-anchor="middle" font-size="9" fill="#64748B">' + fmtAxisDate(day) + '</text>');
-  });
-
-  config.series.forEach(function(s) {
-    s.raw.forEach(function(pt) {
-      var x = xPix(parseDay(pt[0])), y = yPix(pt[1]);
-      svgParts.push('<circle cx="' + x + '" cy="' + y + '" r="2.6" fill="' + s.color + '" fill-opacity="0.25"/>');
-    });
-    if (s.avg.length) {
-      var pts = s.avg.map(function(pt) { return xPix(parseDay(pt[0])) + ',' + yPix(pt[1]); }).join(' ');
-      svgParts.push('<polyline points="' + pts + '" fill="none" stroke="' + s.color + '" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>');
-    }
-  });
-
-  svgParts.push('<line id="' + containerId + '-guide" x1="0" y1="' + padT + '" x2="0" y2="' + (height - padB) + '" stroke="#94A3B8" stroke-width="1" style="display:none"/>');
-  config.series.forEach(function(s, idx) {
-    svgParts.push('<circle id="' + containerId + '-dot-' + idx + '" r="3.4" fill="' + s.color + '" stroke="#fff" stroke-width="1.2" style="display:none"/>');
-  });
-  svgParts.push('<rect id="' + containerId + '-overlay" x="' + padL + '" y="0" width="' + plotW + '" height="' + height + '" fill="transparent"/>');
-  svgParts.push('</svg>');
-  svgParts.push('<div class="chart-tooltip" id="' + containerId + '-tooltip"></div>');
-
-  container.innerHTML = svgParts.join('');
-
-  var svgEl = container.querySelector('svg');
-  var overlay = document.getElementById(containerId + '-overlay');
-  var tooltip = document.getElementById(containerId + '-tooltip');
-  var guide = document.getElementById(containerId + '-guide');
-
-  var dayMap = {};
-  config.series.forEach(function(s) {
-    s.avg.forEach(function(pt) { dayMap[parseDay(pt[0])] = true; });
-  });
-  var masterDays = Object.keys(dayMap).map(Number).sort(function(a, b) { return a - b; });
-
-  function nearestDay(day) {
-    var lo = 0, hi = masterDays.length - 1;
-    if (day <= masterDays[0]) return masterDays[0];
-    if (day >= masterDays[hi]) return masterDays[hi];
-    while (hi - lo > 1) {
-      var mid = (lo + hi) >> 1;
-      if (masterDays[mid] < day) lo = mid; else hi = mid;
-    }
-    return (day - masterDays[lo] <= masterDays[hi] - day) ? masterDays[lo] : masterDays[hi];
-  }
-
-  function showAt(clientX) {
-    var rect = svgEl.getBoundingClientRect();
-    if (!rect.width) return;
-    var scale = width / rect.width;
-    var px = (clientX - rect.left) * scale;
-    var day = nearestDay(minDay + (px - padL) / plotW * (maxDay - minDay));
-    var x = xPix(day);
-
-    guide.setAttribute('x1', x); guide.setAttribute('x2', x);
-    guide.style.display = 'block';
-
-    var rows = [];
-    config.series.forEach(function(s, idx) {
-      var dot = document.getElementById(containerId + '-dot-' + idx);
-      var match = null;
-      for (var k = 0; k < s.avg.length; k++) {
-        if (parseDay(s.avg[k][0]) === day) { match = s.avg[k]; break; }
-      }
-      if (match) {
-        dot.setAttribute('cx', x);
-        dot.setAttribute('cy', yPix(match[1]));
-        dot.style.display = 'block';
-        rows.push('<div class="tooltip-line"><span class="tooltip-dot" style="background:' + s.color + '"></span>' + s.label + '：' + fmtVal(match[1]) + '</div>');
-      } else {
-        dot.style.display = 'none';
-      }
-    });
-
-    if (!rows.length) { hide(); return; }
-
-    tooltip.innerHTML = '<div class="tooltip-date">' + fmtFullDate(day) + '</div>' + rows.join('');
-    tooltip.style.display = 'block';
-
-    var left = (x / width) * rect.width;
-    var maxLeft = rect.width - tooltip.offsetWidth - 4;
-    tooltip.style.left = Math.max(4, Math.min(left + 8, maxLeft)) + 'px';
-    tooltip.style.top = '4px';
-  }
-
-  function hide() {
-    guide.style.display = 'none';
-    config.series.forEach(function(s, idx) {
-      document.getElementById(containerId + '-dot-' + idx).style.display = 'none';
-    });
-    tooltip.style.display = 'none';
-  }
-
-  overlay.addEventListener('mousemove', function(e) { showAt(e.clientX); });
-  overlay.addEventListener('mouseleave', hide);
-  overlay.addEventListener('touchstart', function(e) { showAt(e.touches[0].clientX); }, { passive: true });
-  overlay.addEventListener('touchmove', function(e) { showAt(e.touches[0].clientX); }, { passive: true });
-  overlay.addEventListener('touchend', hide);
-}
-"""
+_FONT_PATH = "fonts/Cubic_11_1.010_R.ttf"
+_FONT_PROP = FontProperties(fname=_FONT_PATH)
 
 SLEEP_EVENT      = "準備睡覺"
 WAKE_EVENT       = "起床"
@@ -255,6 +30,8 @@ EVENING_LEAVE    = "準備下班離開座位"
 EVENING_ARRIVE   = "下班到家"
 XUAN_SLEEP_START = "璇璇準備入睡"
 XUAN_SLEEP_END   = "璇璇睡著"
+
+CHART_NAMES = ['通勤', '睡覺', '璇璇睡覺', '時間點', '忙碌']
 
 
 def _fetch_data():
@@ -468,138 +245,116 @@ def _rolling_avg(data, window=30, warmup=0):
     return result
 
 
-def _build_chart_config(series_list, names, colors, unit, warmup=0, y_min=None, y_max=None, y_ticks=None,
-                         use_raw_as_line=False):
-    series = []
-    for data, name, color in zip(series_list, names, colors):
-        if not data:
-            continue
-        rolling = data if use_raw_as_line else _rolling_avg(data, warmup=warmup)
-        series.append({
-            "label": name,
-            "color": color,
-            "raw": [[d.strftime("%Y-%m-%d"), round(v, 2)] for d, v in data],
-            "avg": [[d.strftime("%Y-%m-%d"), round(v, 2)] for d, v in rolling],
-        })
-    config = {"unit": unit, "series": series}
-    if y_min is not None and y_max is not None:
-        config["yMin"] = y_min
-        config["yMax"] = y_max
-    if y_ticks is not None:
-        config["yTicks"] = y_ticks
-    return config
+def _fmt_hour_label(h):
+    h = h % 24
+    hh = int(h)
+    mm = int(round((h - hh) * 60))
+    if mm == 60:
+        hh = (hh + 1) % 24
+        mm = 0
+    return f'{hh:02d}:{mm:02d}'
 
 
-def _legend_html(items):
-    dots = "".join(
-        f'<span class="chart-legend-item">'
-        f'<span class="legend-dot" style="background:{color}"></span>{label}</span>'
-        for label, color in items
-    )
-    return f'<div class="chart-legend">{dots}</div>'
+def _new_axes():
+    fig, ax = plt.subplots(figsize=(10, 6), dpi=120)
+    return fig, ax
 
 
-def _interactive_chart_html(chart_id, title, subtitle, config, legend_items):
-    legend = _legend_html(legend_items)
-    config_json = json.dumps(config, ensure_ascii=False)
-    return (
-        f'<div class="section">'
-        f'<div class="section-title">{title}</div>'
-        f'<div class="chart-subtitle">{subtitle}</div>'
-        f'<div class="chart-card">'
-        f'<div class="linechart" id="{chart_id}"></div>'
-        f"{legend}"
-        f"</div>"
-        f"</div>"
-        f'<script>renderLineChart("{chart_id}", {config_json});</script>'
-    )
+def _plot_series(ax, data, color, label):
+    dates = [d for d, _ in data]
+    values = [v for _, v in data]
+    ax.plot(dates, values, marker='o', markersize=4, color=color, label=label)
 
 
-def _no_data_html(title, subtitle):
-    return (
-        f'<div class="section">'
-        f'<div class="section-title">{title}</div>'
-        f'<div class="chart-subtitle">{subtitle}</div>'
-        f'<div class="chart-card" style="text-align:center;padding:24px;'
-        f'color:#94A3B8;font-size:13px;">尚無足夠資料</div>'
-        f"</div>"
-    )
+def _finalize_and_save(fig, ax, title, ylabel, file_name):
+    ax.set_title(title, fontproperties=_FONT_PROP, fontsize=18)
+    ax.set_ylabel(ylabel, fontproperties=_FONT_PROP, fontsize=12)
+    ax.legend(prop=_FONT_PROP)
+    ax.grid(True, linestyle='--', alpha=0.4)
+    ax.xaxis.set_major_formatter(mdates.DateFormatter('%m/%d'))
+    fig.autofmt_xdate()
+    fig.tight_layout()
+    fig.savefig(file_name)
+    plt.close(fig)
 
 
-def generate_html():
+def generate_chart_image(chart_name):
+    """回傳 (file_name, error_message)，成功時 error_message 為 None"""
     try:
         status = _fetch_data()
     except Exception as e:
-        return f'<div class="wip">資料載入失敗：{e}</div>'
+        return None, f'資料載入失敗：{e}'
 
     raw          = status.get("dailyTimeRecords", [])
     memo_history = status.get("memoHistory", [])
-
-    if not raw and not memo_history:
-        return '<div class="wip">尚無日常時間紀錄</div>'
-
     by_date = _parse_records(raw)
-    morning, evening           = _calc_commute(by_date)
-    my_sleep                   = _calc_my_sleep(by_date)
-    xuan_sleep                 = _calc_xuan_sleep(by_date)
-    my_sleep_t, xuan_t, bath_t = _calc_time_points(by_date)
 
-    memo_blocks  = _parse_memo_history(memo_history)
-    busy_daily   = _calc_busy_score(memo_blocks)
-    busy_series  = _densify_daily_counts(busy_daily)
+    file_name = 'recent_status_chart.jpg'
 
-    parts = [f"<style>{_CHART_CSS}</style>", f"<script>{_CHART_JS}</script>"]
+    if chart_name == '通勤':
+        morning, evening = _calc_commute(by_date)
+        if not morning and not evening:
+            return None, '尚無足夠資料'
+        fig, ax = _new_axes()
+        if morning:
+            _plot_series(ax, morning, _COLOR_MORNING, '上班通勤')
+        if evening:
+            _plot_series(ax, evening, _COLOR_EVENING, '下班通勤')
+        _finalize_and_save(fig, ax, '上下班耗時', '分鐘', file_name)
+        return file_name, None
 
-    if morning or evening:
-        config = _build_chart_config(
-            [morning, evening], ["上班通勤", "下班通勤"], [_COLOR_MORNING, _COLOR_EVENING], "minutes",
-            use_raw_as_line=True
-        )
-        parts.append(_interactive_chart_html(
-            "chart-commute", "上下班耗時", "分鐘 · 每日原始值", config,
-            [("上班通勤", _COLOR_MORNING), ("下班通勤", _COLOR_EVENING)]
-        ))
-    else:
-        parts.append(_no_data_html("上下班耗時", "分鐘"))
+    if chart_name == '睡覺':
+        my_sleep = _calc_my_sleep(by_date)
+        if not my_sleep:
+            return None, '尚無足夠資料'
+        fig, ax = _new_axes()
+        _plot_series(ax, my_sleep, _COLOR_SLEEP, '睡眠時長')
+        _finalize_and_save(fig, ax, '我的睡眠時長', '小時', file_name)
+        return file_name, None
 
-    if my_sleep:
-        config = _build_chart_config([my_sleep], ["睡眠時長"], [_COLOR_SLEEP], "hours", use_raw_as_line=True)
-        parts.append(_interactive_chart_html(
-            "chart-mysleep", "我的睡眠時長", "小時 · 每日原始值", config,
-            [("睡眠時長", _COLOR_SLEEP)]
-        ))
-    else:
-        parts.append(_no_data_html("我的睡眠時長", "小時"))
+    if chart_name == '璇璇睡覺':
+        xuan_sleep = _calc_xuan_sleep(by_date)
+        if not xuan_sleep:
+            return None, '尚無足夠資料'
+        fig, ax = _new_axes()
+        _plot_series(ax, xuan_sleep, _COLOR_XUAN, '入睡耗時')
+        _finalize_and_save(fig, ax, '璇璇入睡耗時', '分鐘', file_name)
+        return file_name, None
 
-    if xuan_sleep:
-        config = _build_chart_config([xuan_sleep], ["入睡耗時"], [_COLOR_XUAN], "minutes", use_raw_as_line=True)
-        parts.append(_interactive_chart_html(
-            "chart-xuansleep", "璇璇入睡耗時", "分鐘 · 每日原始值", config,
-            [("入睡耗時", _COLOR_XUAN)]
-        ))
-    else:
-        parts.append(_no_data_html("璇璇入睡耗時", "分鐘"))
+    if chart_name == '時間點':
+        my_sleep_t, xuan_t, bath_t = _calc_time_points(by_date)
+        if not my_sleep_t and not xuan_t and not bath_t:
+            return None, '尚無足夠資料'
+        fig, ax = _new_axes()
+        if my_sleep_t:
+            _plot_series(ax, my_sleep_t, _COLOR_SLEEP, '我的入睡')
+        if xuan_t:
+            _plot_series(ax, xuan_t, _COLOR_XUAN, '璇璇睡著')
+        if bath_t:
+            _plot_series(ax, bath_t, _COLOR_BATH, '洗澡')
+        ax.set_ylim(21, 27)
+        ax.set_yticks(range(21, 28))
+        ax.set_yticklabels([_fmt_hour_label(h) for h in range(21, 28)])
+        _finalize_and_save(fig, ax, '時間點趨勢', '時間', file_name)
+        return file_name, None
 
-    if my_sleep_t or xuan_t or bath_t:
-        config = _build_chart_config(
-            [my_sleep_t, xuan_t, bath_t], ["我的入睡", "璇璇睡著", "洗澡"],
-            [_COLOR_SLEEP, _COLOR_XUAN, _COLOR_BATH], "time",
-            y_min=21, y_max=27, y_ticks=list(range(21, 28)), use_raw_as_line=True
-        )
-        parts.append(_interactive_chart_html(
-            "chart-timepoints", "時間點趨勢", "每日原始值", config,
-            [("我的入睡", _COLOR_SLEEP), ("璇璇睡著", _COLOR_XUAN), ("洗澡", _COLOR_BATH)]
-        ))
-    else:
-        parts.append(_no_data_html("時間點趨勢", "入睡 / 璇璇睡著 / 洗澡"))
+    if chart_name == '忙碌':
+        memo_blocks = _parse_memo_history(memo_history)
+        busy_daily  = _calc_busy_score(memo_blocks)
+        busy_series = _densify_daily_counts(busy_daily)
+        if not busy_series:
+            return None, '尚無足夠資料'
+        avg = _rolling_avg(busy_series, warmup=30)
+        if not avg:
+            return None, '尚無足夠資料（累積天數未滿30天）'
+        fig, ax = _new_axes()
+        raw_dates = [d for d, _ in busy_series]
+        raw_values = [v for _, v in busy_series]
+        ax.scatter(raw_dates, raw_values, color=_COLOR_BUSY, alpha=0.25, s=12)
+        avg_dates = [d for d, _ in avg]
+        avg_values = [v for _, v in avg]
+        ax.plot(avg_dates, avg_values, color=_COLOR_BUSY, label='忙碌指數（30天滾動平均）')
+        _finalize_and_save(fig, ax, '忙碌程度', '件', file_name)
+        return file_name, None
 
-    if busy_series:
-        config = _build_chart_config([busy_series], ["忙碌指數"], [_COLOR_BUSY], "count", warmup=30)
-        parts.append(_interactive_chart_html(
-            "chart-busy", "忙碌程度", "新增+完成待辦事項數 · 30天滾動平均", config,
-            [("忙碌指數", _COLOR_BUSY)]
-        ))
-    else:
-        parts.append(_no_data_html("忙碌程度", "新增+完成待辦事項數"))
-
-    return "\n".join(parts)
+    return None, f'未知的圖表名稱：{chart_name}'

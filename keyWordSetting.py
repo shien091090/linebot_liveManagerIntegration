@@ -12,7 +12,7 @@ commandDataEnum = {
     'KEY_SCHEDULE_GET': ['確認行程', '確認行程', '確認週期行程'],
     'KEY_BUY_WITH_BUDGET_TYPE': ['記帳', '記帳 <記帳項目> <價格> <預算種類>', '新增記帳項目'],
     'KEY_EXPENSE_DASHBOARD': ['分析家庭收支', '分析家庭收支', '分析家庭收支報表'],
-    'KEY_RECENT_STATUS_DASHBOARD': ['分析近期狀況', '分析近期狀況', '分析近期忙碌與生活記錄狀況'],
+    'KEY_GENERATE_CHART': ['生成圖表', '生成圖表 <通勤/睡覺/璇璇睡覺/時間點/忙碌>', '產生近期狀況圖表圖片'],
     'KEY_PURCHASE_ADD': ['新增待買', '新增待買 <品項名稱> <短期或長期(選填，預設短期)>', '新增待購買品項'],
     'KEY_PURCHASE_GET': ['確認待買', '確認待買', '確認待購買清單'],
     'KEY_PURCHASE_DELETE': ['刪除待買', '刪除待買 <編號>', '刪除待購買品項'],

@@ -1,7 +1,6 @@
 from concurrent.futures import ThreadPoolExecutor
 from dashboardHelper.economySection import generate_html as economy_html
 from dashboardHelper.futureSection import generate_html as future_html
-from dashboardHelper.recentSection import generate_html as recent_html
 
 _CSS = '''
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -358,21 +357,5 @@ def build_dashboard(gas_url):
   <div id="tab-future" class="tab-content" style="display:none">{fut}</div>
 </div>
 <script>{_JS}</script>
-</body>
-</html>'''
-
-
-def build_recent_status_page():
-    rec = recent_html()
-    return f'''<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>近期狀況</title>
-<style>{_CSS}</style>
-</head>
-<body>
-<div class="container">{rec}</div>
 </body>
 </html>'''

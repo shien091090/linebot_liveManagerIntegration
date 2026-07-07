@@ -2,7 +2,6 @@ from concurrent.futures import ThreadPoolExecutor
 from dashboardHelper.economySection import generate_html as economy_html
 from dashboardHelper.futureSection import generate_html as future_html
 from dashboardHelper.recentSection import generate_html as recent_html
-from dashboardHelper.mallActivitySection import generate_html as mall_activity_html
 
 _CSS = '''
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -335,13 +334,11 @@ document.addEventListener('click', function() {
 
 
 def build_dashboard(gas_url):
-    with ThreadPoolExecutor(max_workers=3) as ex:
+    with ThreadPoolExecutor(max_workers=2) as ex:
         econ_f = ex.submit(economy_html, gas_url)
         fut_f  = ex.submit(future_html)
-        mall_f = ex.submit(mall_activity_html, gas_url)
         econ = econ_f.result()
         fut  = fut_f.result()
-        mall = mall_f.result()
 
     return f'''<!DOCTYPE html>
 <html lang="zh-TW">
@@ -355,12 +352,10 @@ def build_dashboard(gas_url):
 <div class="tabs">
   <button class="tab-btn active" onclick="switchTab(this, 'economy')">經濟狀況</button>
   <button class="tab-btn" onclick="switchTab(this, 'future')">未來安排</button>
-  <button class="tab-btn" onclick="switchTab(this, 'mall')">商場活動</button>
 </div>
 <div class="container">
   <div id="tab-economy" class="tab-content">{econ}</div>
   <div id="tab-future" class="tab-content" style="display:none">{fut}</div>
-  <div id="tab-mall" class="tab-content" style="display:none">{mall}</div>
 </div>
 <script>{_JS}</script>
 </body>

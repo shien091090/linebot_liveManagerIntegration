@@ -2,10 +2,9 @@ from linebot import LineBotApi
 from linebot.models import FlexSendMessage
 from flexMessageManager import getMemoFlexMessage, getFlexMessage, getUrlButtonFlexMessage
 from dateColorHelper import build_colored_memo_items, taiwan_today
-from lineActionInfo import RequestInfo, API_ACTION_DAILY_SCHEDULER, API_ACTION_PURCHASE_LIST_GET
-from manage import REQUEST_TYPE_GAS
+from lineActionInfo import RequestInfo, API_ACTION_DAILY_SCHEDULER
+from manage import REQUEST_TYPE_GAS, _fetch_purchase_items, _purchase_list_text
 import json
-import requests
 import settings
 
 LINE_MAIN_GROUP_ID = 'Cd6af810de75bfc7bc6817373a1fd0562'
@@ -30,14 +29,10 @@ def DailyBroadCast():
     messages = [push_dashboard, push_daily]
 
     try:
-        r = requests.get(settings.URL_GAS_API, params={'action': API_ACTION_PURCHASE_LIST_GET}, timeout=10)
-        purchase_resp = json.loads(r.text)
-        if purchase_resp.get('statusCode') == 200:
-            purchase_items = json.loads(purchase_resp.get('responseMsg', '[]'))
-            if purchase_items:
-                purchase_text = '\n'.join(f'{i+1}. {item["name"]}' for i, item in enumerate(purchase_items))
-                purchase_flex = getFlexMessage('待購買清單', f'共 {len(purchase_items)} 筆', purchase_text)
-                messages.append(FlexSendMessage(alt_text='待購買清單', contents=json.loads(purchase_flex)))
+        purchase_items = _fetch_purchase_items()
+        if purchase_items:
+            purchase_flex = getFlexMessage('待購買清單', f'共 {len(purchase_items)} 筆', _purchase_list_text(purchase_items))
+            messages.append(FlexSendMessage(alt_text='待購買清單', contents=json.loads(purchase_flex)))
     except Exception:
         pass
 

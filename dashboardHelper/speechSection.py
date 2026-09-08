@@ -50,25 +50,43 @@ def _speak_hour_minute(hh, mm):
     return spoken
 
 
+def _speak_date(month, day, parsed_date, today):
+    delta = (parsed_date - today).days
+    if delta == 0:
+        return '今天'
+    if delta == 1:
+        return '明天'
+    if delta == 2:
+        return '後天'
+    weekday_cn = _WEEKDAY_NAMES[parsed_date.weekday()]
+    return f'{month}月{day}日星期{weekday_cn}'
+
+
 def _speakify_dated_todo(content, parsed_date, today):
     m = _SPEECH_FULL_DATE_RE.match(content) or _SPEECH_MD_DATE_RE.match(content)
     if not m:
         return content
 
     month, day, hh, mm, rest = m.groups()
-    delta = (parsed_date - today).days
-    if delta == 0:
-        spoken = '今天'
-    elif delta == 1:
-        spoken = '明天'
-    elif delta == 2:
-        spoken = '後天'
-    else:
-        weekday_cn = _WEEKDAY_NAMES[parsed_date.weekday()]
-        spoken = f'{int(month)}月{int(day)}日星期{weekday_cn}'
+    spoken = _speak_date(int(month), int(day), parsed_date, today)
     if hh and mm:
         spoken += f'，{_speak_hour_minute(int(hh), int(mm))}'
+
     rest = rest.strip()
+    # 橫跨數日的待辦（例："9/9(三)~9/11(五) 前夜祭"）："~" 後面接的是結束日期，
+    # 念成「起始日期到結束日期」，兩邊日期各自套用同一套今天/明天/後天判斷。
+    if rest.startswith('~'):
+        end_content = rest[1:].lstrip()
+        end_date = _parse_explicit_date(end_content, today)
+        end_m = _SPEECH_FULL_DATE_RE.match(end_content) or _SPEECH_MD_DATE_RE.match(end_content)
+        if end_date and end_m:
+            end_month, end_day, end_hh, end_mm, end_rest = end_m.groups()
+            end_spoken = _speak_date(int(end_month), int(end_day), end_date, today)
+            if end_hh and end_mm:
+                end_spoken += f'，{_speak_hour_minute(int(end_hh), int(end_mm))}'
+            spoken += f'到{end_spoken}'
+            rest = end_rest.strip()
+
     if rest:
         spoken += f'，{rest}'
     return spoken

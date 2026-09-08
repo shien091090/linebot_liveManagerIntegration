@@ -27,6 +27,29 @@ _SPEECH_FULL_DATE_RE = re.compile(r'^\d{4}/(\d{1,2})/(\d{1,2})(?:\([^)]*\))?\s*(
 _SPEECH_MD_DATE_RE = re.compile(r'^(\d{1,2})/(\d{1,2})(?:\([^)]*\))?\s*(?:(\d{2})(\d{2}))?\s*(.*)$')
 
 
+def _speak_hour_minute(hh, mm):
+    """把 24 小時制的時分轉成口語時段講法：00:01-05:00 凌晨、05:01-11:00 早上、
+    11:01-13:00 中午、13:01-18:00 下午、18:01-00:00 晚上。時數一律換算成 12 小時制
+    （0 點顯示 12，13-23 點減 12），整點不念「0分」。"""
+    total = hh * 60 + mm
+    if total == 0 or total >= 1081:
+        period = '晚上'
+    elif total <= 300:
+        period = '凌晨'
+    elif total <= 660:
+        period = '早上'
+    elif total <= 780:
+        period = '中午'
+    else:
+        period = '下午'
+
+    display_hour = 12 if hh == 0 else (hh - 12 if hh > 12 else hh)
+    spoken = f'{period}{display_hour}點'
+    if mm:
+        spoken += f'{mm}分'
+    return spoken
+
+
 def _speakify_dated_todo(content, parsed_date, today):
     m = _SPEECH_FULL_DATE_RE.match(content) or _SPEECH_MD_DATE_RE.match(content)
     if not m:
@@ -44,7 +67,7 @@ def _speakify_dated_todo(content, parsed_date, today):
         weekday_cn = _WEEKDAY_NAMES[parsed_date.weekday()]
         spoken = f'{int(month)}月{int(day)}日星期{weekday_cn}'
     if hh and mm:
-        spoken += f'，{int(hh)}點{mm}分'
+        spoken += f'，{_speak_hour_minute(int(hh), int(mm))}'
     rest = rest.strip()
     if rest:
         spoken += f'，{rest}'

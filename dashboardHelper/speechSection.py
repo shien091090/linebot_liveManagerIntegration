@@ -27,14 +27,22 @@ _SPEECH_FULL_DATE_RE = re.compile(r'^\d{4}/(\d{1,2})/(\d{1,2})(?:\([^)]*\))?\s*(
 _SPEECH_MD_DATE_RE = re.compile(r'^(\d{1,2})/(\d{1,2})(?:\([^)]*\))?\s*(?:(\d{2})(\d{2}))?\s*(.*)$')
 
 
-def _speakify_dated_todo(content, parsed_date):
-    weekday_cn = _WEEKDAY_NAMES[parsed_date.weekday()]
+def _speakify_dated_todo(content, parsed_date, today):
     m = _SPEECH_FULL_DATE_RE.match(content) or _SPEECH_MD_DATE_RE.match(content)
     if not m:
         return content
 
     month, day, hh, mm, rest = m.groups()
-    spoken = f'{int(month)}月{int(day)}日星期{weekday_cn}'
+    delta = (parsed_date - today).days
+    if delta == 0:
+        spoken = '今天'
+    elif delta == 1:
+        spoken = '明天'
+    elif delta == 2:
+        spoken = '後天'
+    else:
+        weekday_cn = _WEEKDAY_NAMES[parsed_date.weekday()]
+        spoken = f'{int(month)}月{int(day)}日星期{weekday_cn}'
     if hh and mm:
         spoken += f'，{int(hh)}點{mm}分'
     rest = rest.strip()
@@ -151,7 +159,7 @@ def _fetch_upcoming_todo_and_purchase():
             continue
         days_until = (d - today).days
         if 0 <= days_until <= _TODO_LOOKAHEAD_DAYS:
-            todo_lines.append(_speakify_dated_todo(content, d))
+            todo_lines.append(_speakify_dated_todo(content, d, today))
 
     # 只念短期待買清單，長期的不唸
     purchase_lines = [item.get('name', '').strip() for item in future_data.get('purchase', [])

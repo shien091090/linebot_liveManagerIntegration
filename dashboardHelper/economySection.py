@@ -117,7 +117,9 @@ def _next_income_info(schedule, current_month):
         return None, [], {}
 
     sorted_months = sorted(income_by_month)
-    future = [m for m in sorted_months if m > current_month]
+    # 本月本身也算「下次大筆入帳」（specialMonth 只有月份沒有日期，無法判斷本月的是否已入帳），
+    # 用嚴格大於會把本月跳過、繞回明年最早的那筆
+    future = [m for m in sorted_months if m >= current_month]
     target = future[0] if future else sorted_months[0]
 
     income_items = income_by_month[target]

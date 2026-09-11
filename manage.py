@@ -150,9 +150,13 @@ def receiveMessage(event):
 
     elif req_info.messageType == MESSAGE_TYPE_LINE_CHART:
         from dashboardHelper.recentSection import generate_chart_image
+        from dashboardHelper.stomachSection import STOMACH_CHART_NAMES, generate_stomach_chart
         chart_info_dict = json.loads(req_info.responseMsg)
         chart_name = chart_info_dict['chartName']
-        file_name, error = generate_chart_image(chart_name)
+        if chart_name in STOMACH_CHART_NAMES:
+            file_name, error = generate_stomach_chart()
+        else:
+            file_name, error = generate_chart_image(chart_name)
 
         if file_name is None:
             reply_flex_message = getFlexMessage('生成圖表', '【錯誤】', error)
@@ -636,7 +640,8 @@ def ParseRequestInfo(receive_txt):
         else:
             chart_name = text_parse_result.GetSpecificTextTypeValue(TextType_SubContent)
             from dashboardHelper.recentSection import CHART_NAMES
-            if chart_name not in CHART_NAMES:
+            from dashboardHelper.stomachSection import STOMACH_CHART_NAMES
+            if chart_name not in CHART_NAMES + STOMACH_CHART_NAMES:
                 req_info.statusMsg = '【錯誤】'
                 req_info.responseMsg = f"不支援的圖表名稱：{chart_name}\n正確格式為 『{keyWordSetting.GetCommandFormatHint(temp_command_key)}』"
             else:

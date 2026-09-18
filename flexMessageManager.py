@@ -2,11 +2,16 @@ import json
 
 
 def _escape_json(text):
+    # GAS 字表分頁裡的換行是以「字面的反斜線 + n」兩個字元存放, 而不是真的換行字元,
+    # 所以要先還原成真正的換行, 再交給 json.dumps 做跳脫。
+    # (GAS 程式碼裡直接寫的 '\n' 本來就是真換行, 不受這一步影響)
+    normalized = str(text).replace('\\n', '\n')
+
     # json.dumps 會一併處理反斜線、雙引號、換行與控制字元,
     # [1:-1] 去掉外層引號以便嵌進下面的字串模板。
     # 只 replace 換行的話, GAS 例外訊息裡的雙引號會讓整段 flex JSON 解析失敗,
     # 結果又變成 LINE 完全不回訊息
-    return json.dumps(str(text), ensure_ascii=False)[1:-1]
+    return json.dumps(normalized, ensure_ascii=False)[1:-1]
 
 
 def getFlexMessage(str_title, str_status_message, str_content):

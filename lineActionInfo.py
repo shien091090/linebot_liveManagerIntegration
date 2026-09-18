@@ -2,6 +2,8 @@ import requests
 import settings
 import json
 
+STATUS_CODE_BACKEND_ERROR = 500
+
 
 class RequestInfo:
 
@@ -25,9 +27,28 @@ class RequestInfo:
         print(
             f'[SNTest] [Request Info] title = {self.title}, requestType = {self.requestType}, requestParam = {self.requestParam}')
         if self.requestType == 'request_type_gas':
-            req = requests.get(settings.URL_GAS_API, params=self.requestParam)
-            json.loads(req.text, object_hook=self.parseResponseJsonDct)
+            req = None
+            try:
+                req = requests.get(settings.URL_GAS_API, params=self.requestParam)
+                json.loads(req.text, object_hook=self.parseResponseJsonDct)
+            except Exception as err:
+                # GAS 拋例外時會回 HTML 錯誤頁而非 JSON, 不能讓它炸穿整個 webhook,
+                # 否則 LINE 完全收不到回覆(即使資料已經寫進試算表)
+                self.setBackendError(err, req)
             self.PrintResponseLog()
+
+    def setBackendError(self, err, req=None):
+        raw_body = ''
+        if req is not None:
+            raw_body = (req.text or '')[:200]
+
+        print(f'[SNTest] [Backend Error] {type(err).__name__}: {err}')
+        print(f'[SNTest] [Backend Error] raw body = {raw_body!r}')
+
+        self.statusCode = STATUS_CODE_BACKEND_ERROR
+        self.statusMsg = '【後端異常】\n指令可能已經生效, 請到試算表確認'
+        self.responseMsg = f'{type(err).__name__}: {err}'
+        self.messageType = 'text'
 
     def PrintResponseLog(self):
         print(

@@ -1,6 +1,18 @@
+import json
+
+
+def _escape_json(text):
+    # json.dumps 會一併處理反斜線、雙引號、換行與控制字元,
+    # [1:-1] 去掉外層引號以便嵌進下面的字串模板。
+    # 只 replace 換行的話, GAS 例外訊息裡的雙引號會讓整段 flex JSON 解析失敗,
+    # 結果又變成 LINE 完全不回訊息
+    return json.dumps(str(text), ensure_ascii=False)[1:-1]
+
+
 def getFlexMessage(str_title, str_status_message, str_content):
-    new_status_message = str_status_message.replace("\n", "\\n")
-    new_content = str_content.replace("\n", "\\n")
+    new_title = _escape_json(str_title)
+    new_status_message = _escape_json(str_status_message)
+    new_content = _escape_json(str_content)
 
     return f'{{ \
     "type": "bubble", \
@@ -10,7 +22,7 @@ def getFlexMessage(str_title, str_status_message, str_content):
         "contents": [ \
         {{ \
             "type": "text", \
-            "text": "{str_title}", \
+            "text": "{new_title}", \
             "size": "xl", \
             "weight": "bold", \
             "color": "#587cbe" \
@@ -56,10 +68,6 @@ def getFlexMessage(str_title, str_status_message, str_content):
         "paddingStart": "18px" \
     }} \
     }}'
-
-
-def _escape_json(text):
-    return text.replace('"', '\\"').replace('\n', '\\n')
 
 
 def getMemoFlexMessage(str_title, str_status_message, colored_items):

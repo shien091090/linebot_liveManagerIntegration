@@ -121,7 +121,7 @@ def receiveMessage(event):
 
     if req_info is None:
         print('[SNTest] Invalid Command')
-        quit()
+        return
 
     req_info.sendRequest()
 

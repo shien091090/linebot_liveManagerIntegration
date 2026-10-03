@@ -8,6 +8,9 @@ TAIWAN_TZ = timezone(timedelta(hours=8))
 LARGE_INCOME_NAMES = {'生生收入', '老婆收入'}
 MONTHLY_INCOME_NAMES = {'生生收入', '老婆收入', '租屋補助', '育兒補助'}
 MONTHLY_INCOME_ORDER = ['生生收入', '老婆收入', '租屋補助', '育兒補助']
+# 預算設定表中收入區段的起訖列; 區段內的臨時收入列(如一次性賣東西)也算當月收入
+INCOME_SECTION_START = '收入Memo'
+INCOME_SECTION_END = '每月固定收入'
 MONTH_NAMES = ['', '1月', '2月', '3月', '4月', '5月', '6月',
                '7月', '8月', '9月', '10月', '11月', '12月']
 MEMO_BUY_RE = re.compile(r'(\d{1,2})月(初|中|底)買(.+)')
@@ -170,6 +173,35 @@ def _next_next_income_info(schedule, next_month):
     return target, income_items, expenses
 
 
+def _extra_income_categories(categories):
+    names = [c['name'] for c in categories]
+    if INCOME_SECTION_START not in names:
+        return []
+    start = names.index(INCOME_SECTION_START) + 1
+    end = names.index(INCOME_SECTION_END) if INCOME_SECTION_END in names[start:] else len(names)
+    return [c for c in categories[start:end]
+            if c['name'] not in MONTHLY_INCOME_NAMES and c['effectiveBudget'] != 0]
+
+
+def _income_breakdown(categories, schedule, month):
+    income_cat_map = {c['name']: c for c in categories if c['name'] in MONTHLY_INCOME_NAMES}
+    special_this_month = {}
+    for s in schedule:
+        if s['name'] in MONTHLY_INCOME_NAMES and s['specialMonth'] == month:
+            special_this_month.setdefault(s['name'], []).append(s)
+    breakdown = [
+        {
+            'name': name,
+            'total': income_cat_map.get(name, {}).get('effectiveBudget', 0),
+            'specials': special_this_month.get(name, [])
+        }
+        for name in MONTHLY_INCOME_ORDER
+    ]
+    breakdown += [{'name': c['name'], 'total': c['effectiveBudget'], 'specials': []}
+                  for c in _extra_income_categories(categories)]
+    return breakdown
+
+
 def _render_month_pane(year, month, items, budget, budget_types, schedule, prefix):
     total_spent_all = sum(i['prize'] for i in items)
     active_cats = [c for c in budget.get('categories', [])
@@ -182,19 +214,7 @@ def _render_month_pane(year, month, items, budget, budget_types, schedule, prefi
     diff_cls = 'positive' if diff >= 0 else 'negative'
     diff_prefix = '+' if diff >= 0 else '-'
 
-    income_cat_map = {c['name']: c for c in budget.get('categories', []) if c['name'] in MONTHLY_INCOME_NAMES}
-    special_this_month = {}
-    for s in schedule:
-        if s['name'] in MONTHLY_INCOME_NAMES and s['specialMonth'] == month:
-            special_this_month.setdefault(s['name'], []).append(s)
-    income_breakdown = [
-        {
-            'name': name,
-            'total': income_cat_map.get(name, {}).get('effectiveBudget', 0),
-            'specials': special_this_month.get(name, [])
-        }
-        for name in MONTHLY_INCOME_ORDER
-    ]
+    income_breakdown = _income_breakdown(budget.get('categories', []), schedule, month)
     monthly_income = sum(item['total'] for item in income_breakdown)
     income_diff = monthly_income - total_spent_all
     income_diff_cls = 'positive' if income_diff >= 0 else 'negative'

@@ -1,4 +1,5 @@
 import unittest
+from unittest import mock
 
 from dashboardHelper import economySection as es
 
@@ -61,6 +62,34 @@ class IncomeBreakdownTestCase(unittest.TestCase):
         breakdown = es._income_breakdown(SEPTEMBER_CATEGORIES, schedule, 9)
         wife = next(item for item in breakdown if item['name'] == '老婆收入')
         self.assertEqual([s['specialItem'] for s in wife['specials']], ['中秋禮金半薪'])
+
+
+class GenerateHtmlFallbackTestCase(unittest.TestCase):
+    def setUp(self):
+        es._last_success = None
+
+    def tearDown(self):
+        es._last_success = None
+
+    def test_failure_without_previous_success_shows_error(self):
+        with mock.patch.object(es, '_generate_html_inner', side_effect=Exception('Read timed out')):
+            html = es.generate_html('url')
+        self.assertIn('資料載入失敗', html)
+        self.assertIn('Read timed out', html)
+
+    def test_failure_after_success_shows_last_result_with_notice(self):
+        with mock.patch.object(es, '_generate_html_inner', return_value='<p>九月資料</p>'):
+            es.generate_html('url')
+        with mock.patch.object(es, '_generate_html_inner', side_effect=Exception('Read timed out')):
+            html = es.generate_html('url')
+        self.assertIn('<p>九月資料</p>', html)
+        self.assertIn('暫時無法取得最新資料', html)
+        self.assertNotIn('資料載入失敗', html)
+
+    def test_success_returns_fresh_result_without_notice(self):
+        with mock.patch.object(es, '_generate_html_inner', return_value='<p>新資料</p>'):
+            html = es.generate_html('url')
+        self.assertEqual(html, '<p>新資料</p>')
 
 
 if __name__ == '__main__':

@@ -322,11 +322,22 @@ def _render_month_pane(year, month, items, budget, budget_types, schedule, prefi
     return section1 + section2
 
 
+# 最後一次成功產生的內容與時間; GAS 冷啟動偶爾超過逾時上限, 失敗時先顯示這份
+_last_success = None
+
+
 def generate_html(gas_url):
+    global _last_success
     try:
-        return _generate_html_inner(gas_url)
+        html = _generate_html_inner(gas_url)
+        _last_success = (html, datetime.now(TAIWAN_TZ))
+        return html
     except Exception as e:
-        return f'<div class="wip">資料載入失敗：{html_lib.escape(str(e))}</div>'
+        if _last_success is None:
+            return f'<div class="wip">資料載入失敗：{html_lib.escape(str(e))}</div>'
+        html, fetched_at = _last_success
+        notice = f'<div class="wip">暫時無法取得最新資料，以下為 {fetched_at:%m/%d %H:%M} 的資料</div>'
+        return notice + html
 
 
 def _generate_html_inner(gas_url):

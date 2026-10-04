@@ -9,10 +9,13 @@ from dateColorHelper import build_colored_memo_items, taiwan_today
 from expenseDashboardHelper import fetch_expense_data, generate_expense_dashboard_html
 from chartManager import createPieChartAndGetFileName
 
+from dashboardHelper import economySection
+
 import keyWordSetting
 import textParserManager
 import lineActionInfo
 import settings
+import os
 import re
 import uuid
 import pyimgur
@@ -49,11 +52,26 @@ SCHEDULE_ACTIONS = {
     lineActionInfo.API_ACTION_SCHEDULE_GET,
 }
 
+# 會改動 dashboard 經濟狀況資料的操作(記帳、備忘錄裡的待購項目), 完成後立刻更新快取
+ECONOMY_REFRESH_ACTIONS = {
+    lineActionInfo.API_ACTION_BUY,
+    lineActionInfo.API_ACTION_BUY_WITH_BUDGET_TYPE,
+    lineActionInfo.API_ACTION_MEMO_ADD,
+    lineActionInfo.API_ACTION_MEMO_REMOVE,
+    lineActionInfo.API_ACTION_MEMO_REMOVE_MULTIPLE,
+    lineActionInfo.API_ACTION_MEMO_MODIFY,
+    lineActionInfo.API_ACTION_MEMO_EXTEND,
+}
+
 app = Flask(__name__)
 mockup_store = {}
 
 line_bot_api = LineBotApi(settings.LINE_CHANNEL_ACCESS_TOKEN)
 handler = WebhookHandler(settings.LINE_CHANNEL_SECRET)
+
+# 只在 Heroku 的 web dyno 啟動背景更新, 本機測試與一次性 dyno 不啟動
+if os.environ.get('DYNO', '').startswith('web'):
+    economySection.start_background_refresh(settings.URL_GAS_API)
 
 
 @app.route("/callback", methods=['POST'])
@@ -124,6 +142,10 @@ def receiveMessage(event):
         return
 
     req_info.sendRequest()
+
+    action = req_info.requestParam.get('action') if req_info.requestParam else None
+    if action in ECONOMY_REFRESH_ACTIONS and req_info.statusCode == STATUS_CODE_SUCCESS:
+        economySection.request_refresh(settings.URL_GAS_API)
 
     if req_info.messageType == MESSAGE_TYPE_CHART:
 

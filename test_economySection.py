@@ -1,3 +1,5 @@
+import os
+import tempfile
 import unittest
 from unittest import mock
 
@@ -64,32 +66,56 @@ class IncomeBreakdownTestCase(unittest.TestCase):
         self.assertEqual([s['specialItem'] for s in wife['specials']], ['中秋禮金半薪'])
 
 
-class GenerateHtmlFallbackTestCase(unittest.TestCase):
+class CachedGenerateHtmlTestCase(unittest.TestCase):
     def setUp(self):
-        es._last_success = None
+        self.tmp = tempfile.TemporaryDirectory()
+        self.path_patch = mock.patch.object(es, 'CACHE_PATH', os.path.join(self.tmp.name, 'cache.json'))
+        self.path_patch.start()
 
     def tearDown(self):
-        es._last_success = None
+        self.path_patch.stop()
+        self.tmp.cleanup()
 
-    def test_failure_without_previous_success_shows_error(self):
+    def test_no_cache_and_fetch_fails_shows_error(self):
         with mock.patch.object(es, '_generate_html_inner', side_effect=Exception('Read timed out')):
             html = es.generate_html('url')
         self.assertIn('資料載入失敗', html)
         self.assertIn('Read timed out', html)
 
-    def test_failure_after_success_shows_last_result_with_notice(self):
-        with mock.patch.object(es, '_generate_html_inner', return_value='<p>九月資料</p>'):
-            es.generate_html('url')
-        with mock.patch.object(es, '_generate_html_inner', side_effect=Exception('Read timed out')):
-            html = es.generate_html('url')
-        self.assertIn('<p>九月資料</p>', html)
-        self.assertIn('暫時無法取得最新資料', html)
-        self.assertNotIn('資料載入失敗', html)
-
-    def test_success_returns_fresh_result_without_notice(self):
+    def test_no_cache_fetches_now_and_shows_data_time(self):
         with mock.patch.object(es, '_generate_html_inner', return_value='<p>新資料</p>'):
             html = es.generate_html('url')
-        self.assertEqual(html, '<p>新資料</p>')
+        self.assertIn('<p>新資料</p>', html)
+        self.assertIn('資料時間', html)
+
+    def test_cached_result_is_served_without_fetching(self):
+        with mock.patch.object(es, '_generate_html_inner', return_value='<p>九月資料</p>'):
+            es.refresh_cache('url')
+        with mock.patch.object(es, '_generate_html_inner', side_effect=AssertionError('不該即時抓')):
+            html = es.generate_html('url')
+        self.assertIn('<p>九月資料</p>', html)
+        self.assertIn('資料時間', html)
+
+    def test_refresh_replaces_cached_result(self):
+        with mock.patch.object(es, '_generate_html_inner', return_value='<p>舊</p>'):
+            es.refresh_cache('url')
+        with mock.patch.object(es, '_generate_html_inner', return_value='<p>新</p>'):
+            es.refresh_cache('url')
+        self.assertIn('<p>新</p>', es.generate_html('url'))
+
+    def test_failed_refresh_keeps_previous_result(self):
+        with mock.patch.object(es, '_generate_html_inner', return_value='<p>舊</p>'):
+            es.refresh_cache('url')
+        with mock.patch.object(es, '_generate_html_inner', side_effect=Exception('Read timed out')):
+            with self.assertRaises(Exception):
+                es.refresh_cache('url')
+        self.assertIn('<p>舊</p>', es.generate_html('url'))
+
+    def test_cache_is_stale_only_after_interval(self):
+        self.assertTrue(es._is_cache_stale())
+        with mock.patch.object(es, '_generate_html_inner', return_value='<p>x</p>'):
+            es.refresh_cache('url')
+        self.assertFalse(es._is_cache_stale())
 
 
 if __name__ == '__main__':

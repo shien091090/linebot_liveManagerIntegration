@@ -1,8 +1,18 @@
 import json
+import os
 import re
+import tempfile
+import threading
+import time
 import html as html_lib
+from contextlib import contextmanager
 from datetime import datetime, timezone, timedelta
 import requests
+
+try:
+    import fcntl
+except ImportError:
+    fcntl = None
 
 TAIWAN_TZ = timezone(timedelta(hours=8))
 LARGE_INCOME_NAMES = {'生生收入', '老婆收入'}
@@ -322,22 +332,114 @@ def _render_month_pane(year, month, items, budget, budget_types, schedule, prefi
     return section1 + section2
 
 
-# 最後一次成功產生的內容與時間; GAS 冷啟動偶爾超過逾時上限, 失敗時先顯示這份
-_last_success = None
+# Heroku 向 GAS 取結果偶爾會卡數十秒, 所以改由背景定時抓好存成檔案, 打開 dashboard 時直接讀檔。
+# 存檔案而不是存記憶體, 是因為 gunicorn 有兩個 worker, 要共用同一份結果
+CACHE_PATH = os.path.join(tempfile.gettempdir(), 'economy_dashboard_cache.json')
+REFRESH_INTERVAL_SECONDS = 600
+_CHECK_INTERVAL_SECONDS = 60
+_refresh_thread = None
+
+
+def _read_cache():
+    try:
+        with open(CACHE_PATH, encoding='utf-8') as f:
+            data = json.load(f)
+        return data['html'], datetime.fromisoformat(data['at'])
+    except (OSError, ValueError, KeyError):
+        return None
+
+
+def _write_cache(html, at):
+    tmp_path = f'{CACHE_PATH}.{os.getpid()}.tmp'
+    with open(tmp_path, 'w', encoding='utf-8') as f:
+        json.dump({'html': html, 'at': at.isoformat()}, f, ensure_ascii=False)
+    os.replace(tmp_path, CACHE_PATH)
+
+
+def _is_cache_stale():
+    cached = _read_cache()
+    if cached is None:
+        return True
+    age = (datetime.now(TAIWAN_TZ) - cached[1]).total_seconds()
+    # 提早一個檢查週期視為過期, 避免剛好差幾秒而多等一輪
+    return age >= REFRESH_INTERVAL_SECONDS - _CHECK_INTERVAL_SECONDS
+
+
+@contextmanager
+def _refresh_lock(blocking):
+    # 兩個 worker 同時到期時只讓一個去抓; 本機 Windows 沒有 fcntl, 直接放行
+    if fcntl is None:
+        yield True
+        return
+    with open(CACHE_PATH + '.lock', 'w') as lock_file:
+        try:
+            fcntl.flock(lock_file, fcntl.LOCK_EX | (0 if blocking else fcntl.LOCK_NB))
+        except BlockingIOError:
+            yield False
+            return
+        try:
+            yield True
+        finally:
+            fcntl.flock(lock_file, fcntl.LOCK_UN)
+
+
+def refresh_cache(gas_url, blocking=True, only_if_stale=False):
+    with _refresh_lock(blocking) as acquired:
+        if not acquired:
+            return
+        # 等鎖期間另一個 worker 可能已經更新好了
+        if only_if_stale and not _is_cache_stale():
+            return
+        started = time.time()
+        _write_cache(_generate_html_inner(gas_url), datetime.now(TAIWAN_TZ))
+        print(f'[economySection] cache refreshed pid={os.getpid()} in {time.time() - started:.1f}s')
+
+
+def request_refresh(gas_url):
+    # 記帳等會改動經濟資料的操作完成後呼叫, 不必等下一輪定時更新; 在背景執行不拖慢回覆
+    def run():
+        try:
+            refresh_cache(gas_url)
+        except Exception as e:
+            print(f'[economySection] refresh failed: {e}')
+    threading.Thread(target=run, daemon=True).start()
+
+
+def start_background_refresh(gas_url):
+    global _refresh_thread
+    if _refresh_thread is not None:
+        return
+
+    def loop():
+        while True:
+            if _is_cache_stale():
+                try:
+                    refresh_cache(gas_url, blocking=False, only_if_stale=True)
+                except Exception as e:
+                    print(f'[economySection] refresh failed: {e}')
+            time.sleep(_CHECK_INTERVAL_SECONDS)
+
+    _refresh_thread = threading.Thread(target=loop, daemon=True)
+    _refresh_thread.start()
+
+
+def _with_data_time(html, at):
+    return f'<div class="update-time">資料時間 {at:%m/%d %H:%M}（每 10 分鐘更新）</div>' + html
 
 
 def generate_html(gas_url):
-    global _last_success
+    cached = _read_cache()
+    if cached is not None:
+        return _with_data_time(*cached)
+    # 還沒有快取(剛重啟): 當場抓一次; 若背景正在抓就等它完成直接用
     try:
-        html = _generate_html_inner(gas_url)
-        _last_success = (html, datetime.now(TAIWAN_TZ))
-        return html
+        refresh_cache(gas_url, only_if_stale=True)
     except Exception as e:
-        if _last_success is None:
-            return f'<div class="wip">資料載入失敗：{html_lib.escape(str(e))}</div>'
-        html, fetched_at = _last_success
-        notice = f'<div class="wip">暫時無法取得最新資料，以下為 {fetched_at:%m/%d %H:%M} 的資料</div>'
-        return notice + html
+        return f'<div class="wip">資料載入失敗：{html_lib.escape(str(e))}</div>'
+    cached = _read_cache()
+    if cached is None:
+        return '<div class="wip">資料載入失敗：無法讀取快取</div>'
+    return _with_data_time(*cached)
 
 
 def _generate_html_inner(gas_url):

@@ -111,6 +111,18 @@ class CachedGenerateHtmlTestCase(unittest.TestCase):
                 es.refresh_cache('url')
         self.assertIn('<p>舊</p>', es.generate_html('url'))
 
+    def test_no_cache_while_background_running_does_not_block(self):
+        with mock.patch.object(es, '_refresh_thread', object()), \
+                mock.patch.object(es, '_generate_html_inner', side_effect=AssertionError('不該當場抓')):
+            html = es.generate_html('url')
+        self.assertIn('資料準備中', html)
+
+    def test_background_refresh_uses_longer_timeout(self):
+        with mock.patch.object(es, '_generate_html_inner', return_value='<p>x</p>') as inner:
+            es.refresh_cache('url', timeout=es.BACKGROUND_FETCH_TIMEOUT_SECONDS)
+        inner.assert_called_once_with('url', timeout=es.BACKGROUND_FETCH_TIMEOUT_SECONDS)
+        self.assertGreater(es.BACKGROUND_FETCH_TIMEOUT_SECONDS, 30)
+
     def test_cache_is_stale_only_after_interval(self):
         self.assertTrue(es._is_cache_stale())
         with mock.patch.object(es, '_generate_html_inner', return_value='<p>x</p>'):

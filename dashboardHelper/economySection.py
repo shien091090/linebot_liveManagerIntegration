@@ -336,6 +336,9 @@ def _render_month_pane(year, month, items, budget, budget_types, schedule, prefi
 # 存檔案而不是存記憶體, 是因為 gunicorn 有兩個 worker, 要共用同一份結果
 CACHE_PATH = os.path.join(tempfile.gettempdir(), 'economy_dashboard_cache.json')
 REFRESH_INTERVAL_SECONDS = 600
+# 背景抓取沒有人在等, 可以等久一點; Heroku 對外部請求的 30 秒上限只限制使用者開頁面
+BACKGROUND_FETCH_TIMEOUT_SECONDS = 90
+FOREGROUND_FETCH_TIMEOUT_SECONDS = 25
 _CHECK_INTERVAL_SECONDS = 60
 _refresh_thread = None
 
@@ -383,7 +386,7 @@ def _refresh_lock(blocking):
             fcntl.flock(lock_file, fcntl.LOCK_UN)
 
 
-def refresh_cache(gas_url, blocking=True, only_if_stale=False):
+def refresh_cache(gas_url, blocking=True, only_if_stale=False, timeout=FOREGROUND_FETCH_TIMEOUT_SECONDS):
     with _refresh_lock(blocking) as acquired:
         if not acquired:
             return
@@ -391,7 +394,7 @@ def refresh_cache(gas_url, blocking=True, only_if_stale=False):
         if only_if_stale and not _is_cache_stale():
             return
         started = time.time()
-        _write_cache(_generate_html_inner(gas_url), datetime.now(TAIWAN_TZ))
+        _write_cache(_generate_html_inner(gas_url, timeout=timeout), datetime.now(TAIWAN_TZ))
         print(f'[economySection] cache refreshed pid={os.getpid()} in {time.time() - started:.1f}s')
 
 
@@ -399,7 +402,7 @@ def request_refresh(gas_url):
     # 記帳等會改動經濟資料的操作完成後呼叫, 不必等下一輪定時更新; 在背景執行不拖慢回覆
     def run():
         try:
-            refresh_cache(gas_url)
+            refresh_cache(gas_url, timeout=BACKGROUND_FETCH_TIMEOUT_SECONDS)
         except Exception as e:
             print(f'[economySection] refresh failed: {e}')
     threading.Thread(target=run, daemon=True).start()
@@ -414,7 +417,8 @@ def start_background_refresh(gas_url):
         while True:
             if _is_cache_stale():
                 try:
-                    refresh_cache(gas_url, blocking=False, only_if_stale=True)
+                    refresh_cache(gas_url, blocking=False, only_if_stale=True,
+                                  timeout=BACKGROUND_FETCH_TIMEOUT_SECONDS)
                 except Exception as e:
                     print(f'[economySection] refresh failed: {e}')
             time.sleep(_CHECK_INTERVAL_SECONDS)
@@ -431,7 +435,9 @@ def generate_html(gas_url):
     cached = _read_cache()
     if cached is not None:
         return _with_data_time(*cached)
-    # 還沒有快取(剛重啟): 當場抓一次; 若背景正在抓就等它完成直接用
+    # 還沒有快取(剛重啟): 背景已在抓就不讓使用者乾等, 否則(本機開發)當場抓一次
+    if _refresh_thread is not None:
+        return '<div class="wip">資料準備中，請稍後重新整理</div>'
     try:
         refresh_cache(gas_url, only_if_stale=True)
     except Exception as e:
@@ -442,9 +448,9 @@ def generate_html(gas_url):
     return _with_data_time(*cached)
 
 
-def _generate_html_inner(gas_url):
+def _generate_html_inner(gas_url, timeout=FOREGROUND_FETCH_TIMEOUT_SECONDS):
     now = datetime.now(TAIWAN_TZ)
-    r = requests.get(gas_url, params={'action': 'action_get_dashboard_economy_all_months'}, timeout=25)
+    r = requests.get(gas_url, params={'action': 'action_get_dashboard_economy_all_months'}, timeout=timeout)
     data = json.loads(r.json()['responseMsg'])
 
     year = data['year']

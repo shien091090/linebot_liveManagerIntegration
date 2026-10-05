@@ -36,6 +36,10 @@ MESSAGE_TYPE_CHART = 'chart'
 MESSAGE_TYPE_URL = 'url'
 MESSAGE_TYPE_LINE_CHART = 'line_chart'
 
+# GAS 冷啟動或同時有其他請求時常超過 10 秒, 跟家庭總覽前景請求一致用 25 秒
+GAS_REQUEST_TIMEOUT_SECONDS = 25
+PURCHASE_FETCH_FAILED_TEXT = '待買清單暫時取不到，請稍後再試'
+
 MEMO_ACTIONS = {
     lineActionInfo.API_ACTION_MEMO_ADD,
     lineActionInfo.API_ACTION_MEMO_REMOVE,
@@ -215,6 +219,8 @@ def receiveMessage(event):
 
 
 def _purchase_list_text(items):
+    if items is None:
+        return PURCHASE_FETCH_FAILED_TEXT
     if not items:
         return '(空)'
     lines = []
@@ -224,18 +230,22 @@ def _purchase_list_text(items):
     return '\n'.join(lines)
 
 
+# 取得失敗回傳 None, 跟「清單真的是空的」(回傳 []) 分開, 避免逾時被顯示成空清單
 def _fetch_purchase_items():
     try:
         r = requests.get(settings.URL_GAS_API,
-                         params={'action': lineActionInfo.API_ACTION_PURCHASE_LIST_GET}, timeout=10)
+                         params={'action': lineActionInfo.API_ACTION_PURCHASE_LIST_GET},
+                         timeout=GAS_REQUEST_TIMEOUT_SECONDS)
         resp = json.loads(r.text)
-        if resp.get('statusCode') == 200:
-            items = json.loads(resp.get('responseMsg', '[]'))
-            # 短期排前面、長期統一排在最後面，各自維持原本相對順序
-            return sorted(items, key=lambda item: item.get('category') == '長期')
-    except Exception:
-        pass
-    return []
+        if resp.get('statusCode') != 200:
+            print(f'[SNTest] 取得待購買清單失敗: statusCode={resp.get("statusCode")}, statusMsg={resp.get("statusMsg")}')
+            return None
+        items = json.loads(resp.get('responseMsg', '[]'))
+        # 短期排前面、長期統一排在最後面，各自維持原本相對順序
+        return sorted(items, key=lambda item: item.get('category') == '長期')
+    except Exception as e:
+        print(f'[SNTest] 取得待購買清單失敗: {type(e).__name__}: {e}')
+        return None
 
 
 def ParseRequestInfo(receive_txt):
@@ -567,7 +577,8 @@ def ParseRequestInfo(receive_txt):
         if item_name:
             r = requests.get(settings.URL_GAS_API,
                              params={'action': lineActionInfo.API_ACTION_PURCHASE_LIST_ADD,
-                                     'itemName': item_name, 'category': category}, timeout=10)
+                                     'itemName': item_name, 'category': category},
+                             timeout=GAS_REQUEST_TIMEOUT_SECONDS)
             resp = json.loads(r.text)
             req_info.statusMsg = resp.get('statusMsg', '')
             req_info.responseMsg = _purchase_list_text(_fetch_purchase_items())
@@ -577,8 +588,9 @@ def ParseRequestInfo(receive_txt):
     if command_key == keyWordSetting.GetCommandKey(temp_command_key):
         req_info = lineActionInfo.RequestInfo(keyWordSetting.GetCommandTitle(temp_command_key),
                                               REQUEST_TYPE_BYPASS, None)
-        req_info.statusMsg = keyWordSetting.GetCommandTitle(temp_command_key)
-        req_info.responseMsg = _purchase_list_text(_fetch_purchase_items())
+        items = _fetch_purchase_items()
+        req_info.statusMsg = keyWordSetting.GetCommandTitle(temp_command_key) if items is not None else '【錯誤】'
+        req_info.responseMsg = _purchase_list_text(items)
 
     # 刪除待購買品項
     temp_command_key = 'KEY_PURCHASE_DELETE'
@@ -594,14 +606,17 @@ def ParseRequestInfo(receive_txt):
         else:
             number = int(text_parse_result.GetSpecificTextTypeValue(TextType_Number))
             items = _fetch_purchase_items()
-            if number < 1 or number > len(items):
+            if items is None:
+                req_info.statusMsg = '【錯誤】'
+                req_info.responseMsg = PURCHASE_FETCH_FAILED_TEXT
+            elif number < 1 or number > len(items):
                 req_info.statusMsg = '【錯誤】'
                 req_info.responseMsg = f'編號 {number} 不存在（共 {len(items)} 筆）'
             else:
                 item_name = items[number - 1]['name']
                 r2 = requests.get(settings.URL_GAS_API,
                                   params={'action': lineActionInfo.API_ACTION_PURCHASE_LIST_DELETE,
-                                          'itemName': item_name}, timeout=10)
+                                          'itemName': item_name}, timeout=GAS_REQUEST_TIMEOUT_SECONDS)
                 resp2 = json.loads(r2.text)
                 remaining = [item for i, item in enumerate(items) if i != number - 1]
                 req_info.statusMsg = resp2.get('statusMsg', '')
@@ -621,14 +636,17 @@ def ParseRequestInfo(receive_txt):
         else:
             number = int(text_parse_result.GetSpecificTextTypeValue(TextType_Number))
             items = _fetch_purchase_items()
-            if number < 1 or number > len(items):
+            if items is None:
+                req_info.statusMsg = '【錯誤】'
+                req_info.responseMsg = PURCHASE_FETCH_FAILED_TEXT
+            elif number < 1 or number > len(items):
                 req_info.statusMsg = '【錯誤】'
                 req_info.responseMsg = f'編號 {number} 不存在（共 {len(items)} 筆）'
             else:
                 item_name = items[number - 1]['name']
                 r2 = requests.get(settings.URL_GAS_API,
                                   params={'action': lineActionInfo.API_ACTION_PURCHASE_LIST_MARK_BOUGHT,
-                                          'itemName': item_name}, timeout=10)
+                                          'itemName': item_name}, timeout=GAS_REQUEST_TIMEOUT_SECONDS)
                 resp2 = json.loads(r2.text)
                 remaining = [item for i, item in enumerate(items) if i != number - 1]
                 req_info.statusMsg = resp2.get('statusMsg', '')
